@@ -1,0 +1,4 @@
+
+ComposableRSS
+Version 0.1
+(C) Lost Sidewalk Software, 2023
