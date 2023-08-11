@@ -1,15 +1,15 @@
 package com.lostsidewalk.buffy.app.auth;
 
-import com.lostsidewalk.buffy.*;
+import com.lostsidewalk.buffy.DataAccessException;
+import com.lostsidewalk.buffy.DataUpdateException;
+import com.lostsidewalk.buffy.app.audit.ApiKeyException;
 import com.lostsidewalk.buffy.app.audit.AuthClaimException;
 import com.lostsidewalk.buffy.app.audit.AuthProviderException;
-import com.lostsidewalk.buffy.app.model.request.PasswordResetRequest;
 import com.lostsidewalk.buffy.app.model.AppToken;
-import com.lostsidewalk.buffy.app.token.TokenService;
 import com.lostsidewalk.buffy.app.model.TokenType;
-import com.lostsidewalk.buffy.auth.AuthProvider;
-import com.lostsidewalk.buffy.auth.User;
-import com.lostsidewalk.buffy.auth.UserDao;
+import com.lostsidewalk.buffy.app.model.request.PasswordResetRequest;
+import com.lostsidewalk.buffy.app.token.TokenService;
+import com.lostsidewalk.buffy.auth.*;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,13 +18,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.lostsidewalk.buffy.app.auth.HashingUtils.sha256;
 import static com.lostsidewalk.buffy.app.model.TokenType.*;
+import static com.lostsidewalk.buffy.app.utils.RandomUtils.generateRandomString;
 import static java.nio.charset.Charset.defaultCharset;
 import static java.util.Optional.of;
 import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
@@ -35,6 +38,18 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 @Slf4j
 @Service
 public class AuthService {
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
+    @Autowired
+    UserDao userDao;
+
+    @Autowired
+    ApiKeyDao apiKeyDao;
+
+    @Autowired
+    TokenService tokenService;
 
     @Value("${comprss.development:false}")
     boolean isDevelopment;
@@ -83,12 +98,6 @@ public class AuthService {
         }
     }
 
-    @Autowired
-    UserDao userDao;
-
-    @Autowired
-    TokenService tokenService;
-
     public void requireAuthProvider(String username, AuthProvider authProvider) throws AuthProviderException, DataAccessException {
         User user = userDao.findByName(username);
         if (user == null) {
@@ -108,6 +117,15 @@ public class AuthService {
         }
         return of(user).map(User::getAuthClaim)
                 .orElseThrow(() -> new AuthClaimException("User has no auth claim"));
+    }
+
+    public ApiKey requireApiKey(String username) throws ApiKeyException, DataAccessException {
+        User user = userDao.findByName(username);
+        if (user == null) {
+            throw new UsernameNotFoundException(username);
+        }
+        return of(user).map(User::getId).map(apiKeyDao::findByUserId)
+                .orElseThrow(() -> new ApiKeyException("User has no API key"));
     }
 
     public void finalizeAuthClaim(String username) throws DataAccessException, DataUpdateException {
@@ -231,6 +249,18 @@ public class AuthService {
         return generateAppToken(VERIFICATION, n, verificationClaimSecret);
     }
 
+    public void generateApiKey(String username) throws DataAccessException, DataUpdateException {
+        User user = userDao.findByName(username);
+        if (user == null) {
+            throw new UsernameNotFoundException(username);
+        }
+        String uuid = UUID.randomUUID().toString();
+        String rawApiSecret = generateRandomString(32);
+        String secret = passwordEncoder.encode(rawApiSecret);
+        ApiKey apiKey = ApiKey.from(user.getId(), uuid, secret);
+        apiKeyDao.add(apiKey);
+    }
+
     public void updatePassword(String username, String newPassword) throws DataAccessException, DataUpdateException {
         User user = userDao.findByName(username);
         if (user == null) {
@@ -239,7 +269,9 @@ public class AuthService {
         user.setPassword(newPassword);
         userDao.updatePassword(user);
     }
-
+    //
+    //
+    //
     AppToken generateAppToken(TokenType tokenType, String username, String validationClaim) {
         Map<String, Object> claimsMap = new HashMap<>();
         String validationClaimHash = sha256(validationClaim, defaultCharset());

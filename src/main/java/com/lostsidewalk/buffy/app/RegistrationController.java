@@ -82,8 +82,9 @@ public class RegistrationController {
         authService.finalizeAuthClaim(username);
         authService.finalizePwResetClaim(username);
         //
-        // TODO: (3) generate API keys
+        // (3) generate API key
         //
+        authService.generateApiKey(username);
         //
         // (4) generate and send the verification token
         //
@@ -144,7 +145,8 @@ public class RegistrationController {
         log.info("De-registering username={}", username);
         //
         StopWatch stopWatch = StopWatch.createStarted();
-        // TODO: remove API keys
+        // delete user account
+        // * the delete operation should cascade to all subsidiary entities, i.e., API keys
         userService.deregisterUser(username);
         //
         stopWatch.stop();

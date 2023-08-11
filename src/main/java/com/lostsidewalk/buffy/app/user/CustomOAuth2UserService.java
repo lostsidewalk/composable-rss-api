@@ -1,17 +1,18 @@
 package com.lostsidewalk.buffy.app.user;
 
-import com.lostsidewalk.buffy.*;
+import com.lostsidewalk.buffy.DataAccessException;
+import com.lostsidewalk.buffy.DataUpdateException;
 import com.lostsidewalk.buffy.app.audit.AppLogService;
 import com.lostsidewalk.buffy.app.audit.ErrorLogService;
 import com.lostsidewalk.buffy.app.audit.RegistrationException;
-import com.lostsidewalk.buffy.auth.AuthProvider;
-import com.lostsidewalk.buffy.auth.User;
-import com.lostsidewalk.buffy.auth.UserDao;
+import com.lostsidewalk.buffy.auth.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -19,15 +20,13 @@ import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
-import static com.lostsidewalk.buffy.auth.AuthProvider.byRegistrationId;
 import static com.lostsidewalk.buffy.app.user.CustomOAuth2UserService.CustomOAuth2ErrorCodes.*;
 import static com.lostsidewalk.buffy.app.user.OAuth2UserInfoFactory.getOAuth2UserInfo;
 import static com.lostsidewalk.buffy.app.user.UserPrincipal.create;
+import static com.lostsidewalk.buffy.app.utils.RandomUtils.generateRandomString;
+import static com.lostsidewalk.buffy.auth.AuthProvider.byRegistrationId;
 import static java.lang.String.join;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -41,6 +40,9 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     @Autowired
+    PasswordEncoder passwordEncoder;
+
+    @Autowired
     AppLogService appLogService;
 
     @Autowired
@@ -48,6 +50,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     @Autowired
     private UserDao userDao;
+
+    @Autowired
+    private ApiKeyDao apiKeyDao;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest oAuth2UserRequest) throws OAuth2AuthenticationException {
@@ -125,7 +130,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             //
             User u = userDao.add(newUser);
             //
-            // TODO: (4) generate API keys
+            // (4) generate API keys
+            //
+            generateApiKey(u.getUsername());
+            //
+            //
             //
             stopWatch.stop();
             appLogService.logUserRegistration(u.getUsername(), stopWatch);
@@ -133,6 +142,18 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         } else {
             throw new RegistrationException(join("; ", results));
         }
+    }
+
+    public void generateApiKey(String username) throws DataAccessException, DataUpdateException {
+        User user = userDao.findByName(username);
+        if (user == null) {
+            throw new UsernameNotFoundException(username);
+        }
+        String uuid = UUID.randomUUID().toString();
+        String rawApiSecret = generateRandomString(32);
+        String secret = passwordEncoder.encode(rawApiSecret);
+        ApiKey apiKey = ApiKey.from(user.getId(), uuid, secret);
+        apiKeyDao.add(apiKey);
     }
 
     private void updateUser(User user, String authProviderProfileImgUrl, String authProviderUsername, String emailAddress) throws DataAccessException {

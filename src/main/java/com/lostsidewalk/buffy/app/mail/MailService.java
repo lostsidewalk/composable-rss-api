@@ -1,6 +1,7 @@
 package com.lostsidewalk.buffy.app.mail;
 
 import com.lostsidewalk.buffy.DataAccessException;
+import com.lostsidewalk.buffy.auth.ApiKey;
 import com.lostsidewalk.buffy.auth.User;
 import com.lostsidewalk.buffy.auth.UserDao;
 import com.lostsidewalk.buffy.app.audit.MailException;
@@ -78,6 +79,34 @@ public class MailService {
         String subject = configProps.getVerificationEmailSubject();
         String verificationUrl = String.format(configProps.getVerificationEmailUrlTemplate(), verificationToken.authToken);
         String body = String.format(configProps.getVerificationEmailBodyTemplate(), username, verificationUrl);
+        sendSimpleMessage(from, emailAddress, subject, body);
+    }
+
+    //
+    // API key recovery
+    //
+
+    public void sendApiKeyRecoveryEmail(String username, ApiKey apiKey) throws DataAccessException, MailException {
+        User user = userDao.findByName(username);
+        if (user == null) {
+            throw new UsernameNotFoundException(username);
+        }
+        String n = user.getUsername();
+        String emailAddress = user.getEmailAddress();
+        if (isBlank(emailAddress)) {
+            throw new MailException("Unable to send API recovery email because user has no known email address");
+        }
+        try {
+            generateApiKeyRecoveryEmail(n, emailAddress, apiKey);
+        } catch (Exception e) {
+            throw new MailException("Unable to send API key recovery email due to: " + e.getMessage());
+        }
+    }
+
+    private void generateApiKeyRecoveryEmail(String username, String emailAddress, ApiKey apiKey) {
+        String from = configProps.getApiKeyRecoveryEmailSender();
+        String subject = configProps.getApiKeyRecoveryEmailSubject();
+        String body = String.format(configProps.getApiKeyRecoveryEmailBodyTemplate(), username, apiKey.getApiSecret());
         sendSimpleMessage(from, emailAddress, subject, body);
     }
 

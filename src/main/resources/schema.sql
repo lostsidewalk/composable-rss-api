@@ -79,6 +79,21 @@ create table framework_config
   primary key (id)
 );
 --
+-- api_keys
+--
+drop table if exists api_keys cascade;
+
+create table api_keys
+(
+  id serial not null,
+  user_id integer not null references users(id) on delete cascade,
+  api_key varchar(512) not null,
+  api_secret varchar(512) not null,
+
+  primary key (id)
+);
+
+--
 -- indexes
 --
 drop index if exists idx_roles_name;
@@ -88,6 +103,8 @@ drop index if exists idx_users_customer_id;
 drop index if exists idx_users_auth_provider;
 drop index if exists idx_users_name;
 drop index if exists idx_framework_config_user_id;
+drop index if exists idx_api_keys_user_id;
+drop index if exists idx_api_keys_api_key;
 
 create index idx_roles_name on roles(name);
 create index idx_features_in_roles_role on features_in_roles(role);
@@ -96,3 +113,5 @@ create index idx_users_customer_id on users(customer_id);
 create index idx_users_auth_provider on users(auth_provider);
 create index idx_users_name on users(name);
 create index idx_framework_config_user_id on framework_config(user_id);
+create index idx_api_keys_user_id on api_keys(user_id);
+create index idx_api_keys_api_key on api_keys(api_key);

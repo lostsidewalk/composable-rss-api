@@ -21,7 +21,7 @@ repositories {
 
 dependencies {
     //
-    implementation 'com.lostsidewalk.newsgears:newsgears-data:0.5.4'
+    implementation 'com.lostsidewalk.newsgears:newsgears-data:0.5.5'
 
     // spring-boot-starter-actuator
     implementation 'org.springframework.boot:spring-boot-starter-actuator:3.1.1'

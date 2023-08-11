@@ -10,6 +10,7 @@ import com.lostsidewalk.buffy.app.token.TokenService;
 import com.lostsidewalk.buffy.app.token.TokenService.JwtUtil;
 import com.lostsidewalk.buffy.app.user.LocalUserService;
 import com.lostsidewalk.buffy.app.user.UserRoles;
+import com.lostsidewalk.buffy.auth.ApiKeyDao;
 import com.lostsidewalk.buffy.auth.FeatureDao;
 import com.lostsidewalk.buffy.auth.RoleDao;
 import com.lostsidewalk.buffy.auth.UserDao;
@@ -119,6 +120,9 @@ class BaseWebControllerTest {
 
     @MockBean
     UserDao userDao;
+
+    @MockBean
+    ApiKeyDao apiKeyDao;
 
     protected static final JwtUtil TEST_JWT_UTIL = new JwtUtil() {
         @Override

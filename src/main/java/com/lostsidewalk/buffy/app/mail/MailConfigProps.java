@@ -16,6 +16,12 @@ public class MailConfigProps {
 
     private String pwResetEmailBodyTemplate;
 
+    private String apiKeyRecoveryEmailSender;
+
+    private String apiKeyRecoveryEmailSubject;
+
+    private String apiKeyRecoveryEmailBodyTemplate;
+
     private String verificationEmailSender;
 
     private String verificationEmailSubject;
@@ -62,6 +68,33 @@ public class MailConfigProps {
     @SuppressWarnings("unused")
     public void setPwResetEmailBodyTemplate(String pwResetEmailBodyTemplate) {
         this.pwResetEmailBodyTemplate = pwResetEmailBodyTemplate;
+    }
+
+    public String getApiKeyRecoveryEmailSender() {
+        return apiKeyRecoveryEmailSender;
+    }
+
+    @SuppressWarnings("unused")
+    public void setApiKeyRecoveryEmailSender(String apiKeyRecoveryEmailSender) {
+        this.apiKeyRecoveryEmailSender = apiKeyRecoveryEmailSender;
+    }
+
+    public String getApiKeyRecoveryEmailSubject() {
+        return apiKeyRecoveryEmailSubject;
+    }
+
+    @SuppressWarnings("unused")
+    public void setApiKeyRecoveryEmailSubject(String apiKeyRecoveryEmailSubject) {
+        this.apiKeyRecoveryEmailSubject = apiKeyRecoveryEmailSubject;
+    }
+
+    public String getApiKeyRecoveryEmailBodyTemplate() {
+        return apiKeyRecoveryEmailBodyTemplate;
+    }
+
+    @SuppressWarnings("unused")
+    public void setApiKeyRecoveryEmailBodyTemplate(String apiKeyRecoveryEmailBodyTemplate) {
+        this.apiKeyRecoveryEmailBodyTemplate = apiKeyRecoveryEmailBodyTemplate;
     }
 
     public String getVerificationEmailSender() {

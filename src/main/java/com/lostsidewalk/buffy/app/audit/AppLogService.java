@@ -143,6 +143,10 @@ public class AppLogService {
         auditLog("password-reset-finalize", null, username, stopWatch);
     }
 
+    public void logApiKeyRecoveryInit(String username, StopWatch stopWatch) {
+        auditLog("api-key-recovery-init", null, username, stopWatch);
+    }
+
     public void logUserRegistration(String username, StopWatch stopWatch) {
         auditLog("user-registration", null, username, stopWatch);
     }
