@@ -1,5 +1,6 @@
 package com.lostsidewalk.buffy.app.model.response;
 
+import com.lostsidewalk.buffy.post.StagingPost;
 import lombok.Data;
 
 import java.util.List;
@@ -7,13 +8,13 @@ import java.util.List;
 @Data
 public class PostFetchResponse {
 
-    List<ThumbnailedPostResponse> stagingPosts;
+    List<StagingPost> stagingPosts;
 
-    private PostFetchResponse(List<ThumbnailedPostResponse> stagingPosts) {
+    private PostFetchResponse(List<StagingPost> stagingPosts) {
         this.stagingPosts = stagingPosts;
     }
 
-    public static PostFetchResponse from(List<ThumbnailedPostResponse> stagingPosts) {
+    public static PostFetchResponse from(List<StagingPost> stagingPosts) {
         return new PostFetchResponse(stagingPosts);
     }
 }

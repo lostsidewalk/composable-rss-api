@@ -25,6 +25,17 @@ create table users
   primary key (id)
 );
 --
+--
+--
+drop table if exists thumbnails cascade;
+
+create table thumbnails (
+    id bigserial not null,
+    img_src varchar(10240),
+
+    primary key(id)
+);
+--
 -- roles table
 --
 drop table if exists roles cascade;

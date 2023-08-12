@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.springframework.http.HttpStatus.*;
-import static org.springframework.http.ResponseEntity.unprocessableEntity;
 
 @Slf4j
 @ControllerAdvice
@@ -76,13 +75,6 @@ public class AppErrorHandler {
     @ExceptionHandler(FeedDiscoveryException.class)
     public ResponseEntity<?> handleFeedDiscoveryException(FeedDiscoveryException e, Authentication authentication) {
         errorLogService.logFeedDiscoveryException(ofNullable(authentication).map(Authentication::getName).orElse(null), new Date(), e);
-        updateErrorCount(e);
-        return internalServerErrorResponse();
-    }
-
-    @ExceptionHandler(OpmlException.class)
-    public ResponseEntity<?> handleOpmlException(OpmlException e, Authentication authentication) {
-        errorLogService.logOpmlException(ofNullable(authentication).map(Authentication::getName).orElse(null), new Date(), e);
         updateErrorCount(e);
         return internalServerErrorResponse();
     }
@@ -203,13 +195,6 @@ public class AppErrorHandler {
         errorLogService.logRegistrationException(ofNullable(authentication).map(Authentication::getName).orElse(null), new Date(), e);
         updateErrorCount(e);
         return badRequestResponse("Registration failed", e.getMessage());
-    }
-
-    @ExceptionHandler(ProxyUrlHashException.class)
-    ResponseEntity<?> handleProxyUrlHashException(ProxyUrlHashException e, Authentication authentication) {
-        errorLogService.logProxyUrlHashException(ofNullable(authentication).map(Authentication::getName).orElse(null), new Date(), e);
-        updateErrorCount(e);
-        return unprocessableEntity().build();
     }
     //
     // utility methods

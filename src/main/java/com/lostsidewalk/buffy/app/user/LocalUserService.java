@@ -1,6 +1,7 @@
 package com.lostsidewalk.buffy.app.user;
 
-import com.lostsidewalk.buffy.*;
+import com.lostsidewalk.buffy.DataAccessException;
+import com.lostsidewalk.buffy.DataUpdateException;
 import com.lostsidewalk.buffy.app.audit.AppLogService;
 import com.lostsidewalk.buffy.app.audit.ErrorLogService;
 import com.lostsidewalk.buffy.app.audit.RegistrationException;

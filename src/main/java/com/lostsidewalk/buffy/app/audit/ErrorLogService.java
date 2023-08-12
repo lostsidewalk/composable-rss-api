@@ -37,10 +37,6 @@ public class ErrorLogService {
                 username, timestamp, e.getMessage(), e.exceptionType, e.feedUrl, e.httpStatusCode, e.httpStatusMessage, e.redirectUrl, e.redirectHttpStatusCode, e.redirectHttpStatusMessage);
     }
 
-    public void logOpmlException(String username, Date timestamp, OpmlException e) {
-        auditError("opml-exception", "message={}", username, timestamp, e.getMessage());
-    }
-
     public void logIOException(String username, Date timestamp, IOException e) {
         auditError("io-exception", "message={}", username, timestamp, e.getMessage());
     }
@@ -103,9 +99,6 @@ public class ErrorLogService {
         auditError("client-abort-exception", "message={}", username, timestamp, e.getMessage());
     }
 
-    public void logProxyUrlHashException(String username, Date timestamp, ProxyUrlHashException e) {
-        auditError("proxy-url-hash-exception", "message={}", username, timestamp, e.getMessage());
-    }
     //
     private static void auditError(String logTag, String formatStr, String username, Date timestamp, Object... args) {
         String fullFormatStr = "eventType={}, username={}, timestamp={}";

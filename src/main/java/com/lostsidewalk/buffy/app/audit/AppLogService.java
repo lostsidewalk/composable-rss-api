@@ -18,8 +18,8 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 @Service
 public class AppLogService {
 
-    public void logFeedFetch(String username, StopWatch stopWatch, int feedCt, int queryCt) {
-        auditLog("feed-fetch", "feedCt={}, queryCt={}", username, stopWatch, feedCt, queryCt);
+    public void logFeedFetch(String username, StopWatch stopWatch, int feedCt) {
+        auditLog("feed-fetch", "feedCt={}", username, stopWatch, feedCt);
     }
 
     public void logFeedStatusUpdate(String username, StopWatch stopWatch, Long id, FeedStatusUpdateRequest feedStatusUpdateRequest, int rowsUpdated) {
@@ -162,10 +162,6 @@ public class AppLogService {
     public void logUserUpdate(User user, StopWatch stopWatch) {
         auditLog("user-update", null, user.getUsername(), stopWatch);
     }
-
-//    public void logProxyFetch(String hash, StopWatch stopWatch, String url) {
-//        auditLog("proxy-fetch", "hash={}, url={}", null, stopWatch, hash, url);
-//    }
 
     //
 

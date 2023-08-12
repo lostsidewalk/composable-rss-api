@@ -269,6 +269,15 @@ public class AuthService {
         user.setPassword(newPassword);
         userDao.updatePassword(user);
     }
+
+    public User findUserByApiKey(String apiKey) throws ApiKeyException, DataAccessException {
+        User user = userDao.findByApiKey(apiKey);
+        if (user == null) {
+            throw new ApiKeyException("Unable to locate user by API Key");
+        }
+
+        return user;
+    }
     //
     //
     //

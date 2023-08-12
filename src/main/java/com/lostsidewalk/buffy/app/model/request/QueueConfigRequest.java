@@ -7,8 +7,6 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT;
 
 @Data
@@ -29,8 +27,6 @@ public class QueueConfigRequest {
     @Size(max = 512, message = "{feed.config.error.generator-too-long}")
     String generator;
 
-    List<@Valid Subscription> subscriptions; // optional
-
     @Valid
     ExportConfigRequest exportConfig;
 
@@ -44,7 +40,6 @@ public class QueueConfigRequest {
     String imgSrc;
 
     public QueueConfigRequest(String ident, String title, String description, String generator,
-                              List<Subscription> subscriptions,
                               ExportConfigRequest exportConfig,
                               String copyright, String language, String imgSrc)
     {
@@ -52,7 +47,6 @@ public class QueueConfigRequest {
         this.title = title;
         this.description = description;
         this.generator = generator;
-        this.subscriptions = subscriptions;
         this.exportConfig = exportConfig;
         this.copyright = copyright;
         this.language = language;
@@ -60,7 +54,6 @@ public class QueueConfigRequest {
     }
 
     public static QueueConfigRequest from(String ident, String title, String description, String generator,
-                                          List<Subscription> subscriptions,
                                           ExportConfigRequest exportConfig,
                                           String copyright, String language, String imgSrc)
     {
@@ -69,7 +62,6 @@ public class QueueConfigRequest {
                 title,
                 description,
                 generator,
-                subscriptions,
                 exportConfig,
                 copyright,
                 language,

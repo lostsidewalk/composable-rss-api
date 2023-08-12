@@ -2,10 +2,15 @@ package com.lostsidewalk.buffy.app.auth;
 
 import com.google.common.collect.ImmutableSet;
 import com.lostsidewalk.buffy.DataAccessException;
+import com.lostsidewalk.buffy.app.audit.ApiKeyException;
 import com.lostsidewalk.buffy.app.audit.AuthClaimException;
 import com.lostsidewalk.buffy.app.audit.ErrorLogService;
 import com.lostsidewalk.buffy.app.audit.TokenValidationException;
 import com.lostsidewalk.buffy.app.auth.OptionsAuthHandler.MissingOptionsHeaderException;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -14,13 +19,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Date;
 
+import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 @Slf4j
@@ -38,6 +40,9 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
 	@Autowired
 	PasswordUpdateAuthHandler passwordUpdateAuthHandler;
+
+	@Autowired
+	ApiAuthHandler apiAuthHandler;
 
 	@Autowired
 	ApplicationAuthHandler applicationAuthHandler;
@@ -71,13 +76,19 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 					//
 					passwordUpdateAuthHandler.processPasswordUpdate(request);
 				} else {
-					applicationAuthHandler.processAllOthers(request, response);
+					String apiKey = request.getHeader(API_KEY_HEADER_NAME);
+					String apiSecret = request.getHeader(API_SECRET_HEADER_NAME);
+					if (isNoneBlank(apiKey, apiSecret)) {
+						apiAuthHandler.processApiRequest(apiKey, apiSecret, request.getRequestURL().toString(), request.getMethod(), response);
+					} else {
+						applicationAuthHandler.processAllOthers(request, response);
+					}
 				}
 			} catch (MissingOptionsHeaderException e) {
 				log.error("Invalid OPTIONS call for requestUrl={}, request header names: {}", request.getRequestURL(), e.headerNames);
 			} catch (TokenValidationException | UsernameNotFoundException ignored) {
 				// ignore
-			} catch (AuthClaimException e) {
+			} catch (AuthClaimException | ApiKeyException e) {
 				log.error("Cannot set user authentication for requestUrl={}, requestMethod={}, due to: {}", request.getRequestURL(), request.getMethod(), getRootCauseMessage(e));
 			} catch (DataAccessException e) {
 				errorLogService.logDataAccessException("sys", new Date(), e);
@@ -110,4 +121,12 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 	private boolean isOpenServletPath(String servletPath) {
 		return OPEN_PATHS.contains(servletPath) || OPEN_PATH_PREFIXES.stream().anyMatch(servletPath::startsWith);
 	}
+
+	//
+	//
+	//
+
+	private static final String API_KEY_HEADER_NAME = "X-ComposableRSS-API-Key";
+
+	private static final String API_SECRET_HEADER_NAME = "X-ComposableRSS-API-Secret";
 }

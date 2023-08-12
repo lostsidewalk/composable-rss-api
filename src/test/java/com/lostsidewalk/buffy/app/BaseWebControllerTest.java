@@ -3,8 +3,10 @@ package com.lostsidewalk.buffy.app;
 
 import com.lostsidewalk.buffy.*;
 import com.lostsidewalk.buffy.app.auth.AuthService;
+import com.lostsidewalk.buffy.app.feed.QueueDefinitionService;
 import com.lostsidewalk.buffy.app.mail.MailService;
 import com.lostsidewalk.buffy.app.order.*;
+import com.lostsidewalk.buffy.app.post.StagingPostService;
 import com.lostsidewalk.buffy.app.settings.SettingsService;
 import com.lostsidewalk.buffy.app.token.TokenService;
 import com.lostsidewalk.buffy.app.token.TokenService.JwtUtil;

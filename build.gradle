@@ -20,8 +20,12 @@ repositories {
 }
 
 dependencies {
-    //
-    implementation 'com.lostsidewalk.newsgears:newsgears-data:0.5.5'
+    // NewsGears publisher
+    implementation 'com.lostsidewalk.newsgears:newsgears-publisher:0.5.4'
+    // adds RSS/ATOM to the publishing path
+    implementation 'com.lostsidewalk.newsgears:newsgears-rss-publisher:0.5.3'
+    // add JSON to the publishing path
+    implementation 'com.lostsidewalk.newsgears:newsgears-json-publisher:0.5.3'
 
     // spring-boot-starter-actuator
     implementation 'org.springframework.boot:spring-boot-starter-actuator:3.1.1'
