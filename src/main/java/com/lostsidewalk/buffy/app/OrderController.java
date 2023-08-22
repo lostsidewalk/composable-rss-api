@@ -27,7 +27,7 @@ public class OrderController {
     //
     // stripe callbacks (webhooks)
     //
-    private static final String STRIPE_SIGNATURE_HEADER = "Stripe-Signature";
+    static final String STRIPE_SIGNATURE_HEADER = "Stripe-Signature";
 
     @PostMapping("/stripe")
     public void stripeCallback(@RequestBody String payload, HttpServletRequest request, HttpServletResponse response) throws SignatureVerificationException {

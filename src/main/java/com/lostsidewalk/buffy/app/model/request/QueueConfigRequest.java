@@ -1,6 +1,7 @@
 package com.lostsidewalk.buffy.app.model.request;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.lostsidewalk.buffy.app.model.response.ExportConfigDTO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -9,39 +10,66 @@ import lombok.NoArgsConstructor;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT;
 
+/**
+ * A request model for configuring a queue.
+ */
 @Data
 @NoArgsConstructor
 @JsonInclude(NON_ABSENT)
 public class QueueConfigRequest {
 
-    @NotBlank(message = "{feed.config.error.ident-is-blank}")
-    @Size(max = 256, message = "{feed.config.error.ident-too-long}")
+    /**
+     * The identifier of the queue.
+     */
+    @NotBlank(message = "{queue.config.error.ident-is-blank}")
+    @Size(max = 256, message = "{queue.config.error.ident-too-long}")
     String ident;
 
-    @Size(max = 512, message = "{feed.config.error.title-too-long}")
-    String title; // optional
+    /**
+     * The title of the queue (optional).
+     */
+    @Size(max = 512, message = "{queue.config.error.title-too-long}")
+    String title;
 
-    @Size(max = 1024, message = "{feed.config.error.description-too-long}")
-    String description; // optional
+    /**
+     * The description of the queue (optional).
+     */
+    @Size(max = 1024, message = "{queue.config.error.description-too-long}")
+    String description;
 
-    @Size(max = 512, message = "{feed.config.error.generator-too-long}")
+    /**
+     * The generator of the queue.
+     */
+    @Size(max = 512, message = "{queue.config.error.generator-too-long}")
     String generator;
 
+    /**
+     * The export configuration of the queue.
+     */
     @Valid
-    ExportConfigRequest exportConfig;
+    ExportConfigDTO exportConfig;
 
-    @Size(max = 1024, message = "{feed.config.error.copyright-too-long}")
+    /**
+     * The copyright information of the queue.
+     */
+    @Size(max = 1024, message = "{queue.config.error.copyright-too-long}")
     String copyright;
 
-    @Size(max = 16, message = "{feed.config.error.language-too-long}")
+    /**
+     * The language of the queue.
+     */
+    @Size(max = 16, message = "{queue.config.error.language-too-long}")
     String language;
 
-    @Size(max = 16384, message = "{feed.config.error.img-src-too-long}")
+    /**
+     * The image source of the queue.
+     */
+    @Size(max = 16384, message = "{queue.config.error.img-src-too-long}")
     String imgSrc;
 
-    public QueueConfigRequest(String ident, String title, String description, String generator,
-                              ExportConfigRequest exportConfig,
-                              String copyright, String language, String imgSrc)
+    private QueueConfigRequest(String ident, String title, String description, String generator,
+                               ExportConfigDTO exportConfig,
+                               String copyright, String language, String imgSrc)
     {
         this.ident = ident;
         this.title = title;
@@ -53,8 +81,11 @@ public class QueueConfigRequest {
         this.imgSrc = imgSrc;
     }
 
+    /**
+     * Static factory method to create a Queue data transfer object.
+     */
     public static QueueConfigRequest from(String ident, String title, String description, String generator,
-                                          ExportConfigRequest exportConfig,
+                                          ExportConfigDTO exportConfig,
                                           String copyright, String language, String imgSrc)
     {
         return new QueueConfigRequest(

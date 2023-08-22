@@ -107,7 +107,8 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 	}
 
 	private static final ImmutableSet<String> OPEN_PATHS = ImmutableSet.of(
-			"/authenticate"
+			"/authenticate",
+			"/v3/api-docs"
 	);
 
 	private static final ImmutableSet<String> OPEN_PATH_PREFIXES = ImmutableSet.of(
@@ -126,7 +127,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 	//
 	//
 
-	private static final String API_KEY_HEADER_NAME = "X-ComposableRSS-API-Key";
+	public static final String API_KEY_HEADER_NAME = "X-ComposableRSS-API-Key";
 
-	private static final String API_SECRET_HEADER_NAME = "X-ComposableRSS-API-Secret";
+	public static final String API_SECRET_HEADER_NAME = "X-ComposableRSS-API-Secret";
 }

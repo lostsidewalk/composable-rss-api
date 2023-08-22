@@ -2,7 +2,6 @@ package com.lostsidewalk.buffy.app.audit;
 
 import com.lostsidewalk.buffy.DataAccessException;
 import com.lostsidewalk.buffy.DataUpdateException;
-import com.lostsidewalk.buffy.discovery.FeedDiscoveryInfo.FeedDiscoveryException;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
 import jakarta.validation.ValidationException;
@@ -29,12 +28,6 @@ public class ErrorLogService {
 
     public void logDataUpdateException(String username, Date timestamp, DataUpdateException e) {
         auditError("data-not-found-exception", "message={}", username, timestamp, e.getMessage());
-    }
-
-    public void logFeedDiscoveryException(String username, Date timestamp, FeedDiscoveryException e) {
-        auditError("feed-discovery-exception",
-                "message={}, exceptionType={}, feedUrl={}, httpStatusCode={}, httpStatusMessage={}, redirectUrl={}, redirectHttpStatusCode={}, redirectHttpStatusMessage={}",
-                username, timestamp, e.getMessage(), e.exceptionType, e.feedUrl, e.httpStatusCode, e.httpStatusMessage, e.redirectUrl, e.redirectHttpStatusCode, e.redirectHttpStatusMessage);
     }
 
     public void logIOException(String username, Date timestamp, IOException e) {

@@ -4,7 +4,6 @@ import com.lostsidewalk.buffy.DataAccessException;
 import com.lostsidewalk.buffy.DataUpdateException;
 import com.lostsidewalk.buffy.app.audit.*;
 import com.lostsidewalk.buffy.app.model.error.ErrorDetails;
-import com.lostsidewalk.buffy.discovery.FeedDiscoveryInfo.FeedDiscoveryException;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
 import jakarta.validation.ValidationException;
@@ -51,7 +50,6 @@ public class AppErrorHandler {
     //
     // database access exception
     // data not found exception
-    // feed discovery exception
     // OPML (export) exception
     // IO exception/client abort exception
     // illegal argument exception (runtime)
@@ -59,22 +57,15 @@ public class AppErrorHandler {
     // mail exception
     //
     @ExceptionHandler(DataAccessException.class)
-    public ResponseEntity<?> handleDataAccessException(DataAccessException e, Authentication authentication) {
+    public ResponseEntity<ErrorDetails> handleDataAccessException(DataAccessException e, Authentication authentication) {
         errorLogService.logDataAccessException(ofNullable(authentication).map(Authentication::getName).orElse(null), new Date(), e);
         updateErrorCount(e);
         return internalServerErrorResponse();
     }
 
     @ExceptionHandler(DataUpdateException.class)
-    public ResponseEntity<?> handleDataUpdateException(DataUpdateException e, Authentication authentication) {
+    public ResponseEntity<ErrorDetails> handleDataUpdateException(DataUpdateException e, Authentication authentication) {
         errorLogService.logDataUpdateException(ofNullable(authentication).map(Authentication::getName).orElse(null), new Date(), e);
-        updateErrorCount(e);
-        return internalServerErrorResponse();
-    }
-
-    @ExceptionHandler(FeedDiscoveryException.class)
-    public ResponseEntity<?> handleFeedDiscoveryException(FeedDiscoveryException e, Authentication authentication) {
-        errorLogService.logFeedDiscoveryException(ofNullable(authentication).map(Authentication::getName).orElse(null), new Date(), e);
         updateErrorCount(e);
         return internalServerErrorResponse();
     }
@@ -92,21 +83,21 @@ public class AppErrorHandler {
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<?> handleIllegalArumentException(IllegalArgumentException e, Authentication authentication) {
+    public ResponseEntity<ErrorDetails> handleIllegalArumentException(IllegalArgumentException e, Authentication authentication) {
         errorLogService.logIllegalArgumentException(ofNullable(authentication).map(Authentication::getName).orElse(null), new Date(), e);
         updateErrorCount(e);
         return internalServerErrorResponse();
     }
 
     @ExceptionHandler(StripeException.class)
-    public ResponseEntity<?> handleStripeException(StripeException e, Authentication authentication) {
+    public ResponseEntity<ErrorDetails> handleStripeException(StripeException e, Authentication authentication) {
         errorLogService.logStripeException(ofNullable(authentication).map(Authentication::getName).orElse(null), new Date(), e);
         updateErrorCount(e);
         return internalServerErrorResponse();
     }
 
     @ExceptionHandler(MailException.class)
-    public ResponseEntity<?> hanldeMailException(MailException e, Authentication authentication) {
+    public ResponseEntity<ErrorDetails> hanldeMailException(MailException e, Authentication authentication) {
         errorLogService.logMailException(ofNullable(authentication).map(Authentication::getName).orElse(null), new Date(), e);
         updateErrorCount(e);
         return internalServerErrorResponse();
@@ -123,7 +114,7 @@ public class AppErrorHandler {
     // not a valid token (claims are missing)
     //
     @ExceptionHandler(TokenValidationException.class)
-    public ResponseEntity<?> handleTokenValidationException(TokenValidationException e, Authentication authentication) {
+    public ResponseEntity<ErrorDetails> handleTokenValidationException(TokenValidationException e, Authentication authentication) {
         errorLogService.logTokenValidationException(ofNullable(authentication).map(Authentication::getName).orElse(null), new Date(), e);
         updateErrorCount(e);
         return invalidCredentialsResponse();
@@ -137,7 +128,7 @@ public class AppErrorHandler {
     // user by name NEQ user by email address
     //
     @ExceptionHandler(AuthenticationException.class) // bad credentials exception, username not found, oauth2, etc.
-    public ResponseEntity<?> handleAuthenticationException(AuthenticationException e, Authentication authentication) {
+    public ResponseEntity<ErrorDetails> handleAuthenticationException(AuthenticationException e, Authentication authentication) {
         errorLogService.logAuthenticationException(ofNullable(authentication).map(Authentication::getName).orElse(null), new Date(), e);
         updateErrorCount(e);
         return invalidCredentialsResponse();
@@ -154,7 +145,7 @@ public class AppErrorHandler {
     // proxy URL hash validation failure
     //
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    protected ResponseEntity<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException e, Authentication authentication) {
+    protected ResponseEntity<ErrorDetails> handleMethodArgumentNotValidException(MethodArgumentNotValidException e, Authentication authentication) {
         errorLogService.logMethodArgumentNotValidException(ofNullable(authentication).map(Authentication::getName).orElse(null), new Date(), e);
         updateErrorCount(e);
         String responseMessage = e.getBindingResult().getFieldErrors().stream().map(DefaultMessageSourceResolvable::getDefaultMessage).collect(Collectors.joining(","));
@@ -162,7 +153,7 @@ public class AppErrorHandler {
     }
 
     @ExceptionHandler(ValidationException.class) // runtime exception
-    protected ResponseEntity<?> handleValidationException(ValidationException e, Authentication authentication) {
+    protected ResponseEntity<ErrorDetails> handleValidationException(ValidationException e, Authentication authentication) {
         errorLogService.logValidationException(ofNullable(authentication).map(Authentication::getName).orElse(null), new Date(), e);
         updateErrorCount(e);
 
@@ -170,28 +161,28 @@ public class AppErrorHandler {
     }
 
     @ExceptionHandler
-    public ResponseEntity<?> handleSignatureError(SignatureVerificationException e, Authentication authentication) {
+    public ResponseEntity<ErrorDetails> handleSignatureError(SignatureVerificationException e, Authentication authentication) {
         errorLogService.logSignatureVerificationException(ofNullable(authentication).map(Authentication::getName).orElse(null), new Date(), e);
         updateErrorCount(e);
         return badRequestResponse("Signature verification failed", e.getSigHeader());
     }
 
     @ExceptionHandler(AuthClaimException.class)
-    public ResponseEntity<?> handleAuthClaimException(AuthClaimException e, Authentication authentication) {
+    public ResponseEntity<ErrorDetails> handleAuthClaimException(AuthClaimException e, Authentication authentication) {
         errorLogService.logAuthClaimException(ofNullable(authentication).map(Authentication::getName).orElse(null), new Date(), e);
         updateErrorCount(e);
         return badRequestResponse( "Authentication failed", EMPTY);
     }
 
     @ExceptionHandler(AuthProviderException.class)
-    public ResponseEntity<?> handleUserProviderException(AuthProviderException e, Authentication authentication) {
+    public ResponseEntity<ErrorDetails> handleUserProviderException(AuthProviderException e, Authentication authentication) {
         errorLogService.logAuthProviderException(ofNullable(authentication).map(Authentication::getName).orElse(null), new Date(), e);
         updateErrorCount(e);
         return badRequestResponse("Authentication failed", EMPTY);
     }
 
     @ExceptionHandler(RegistrationException.class)
-    ResponseEntity<?> handleRegistrationException(RegistrationException e, Authentication authentication) {
+    ResponseEntity<ErrorDetails> handleRegistrationException(RegistrationException e, Authentication authentication) {
         errorLogService.logRegistrationException(ofNullable(authentication).map(Authentication::getName).orElse(null), new Date(), e);
         updateErrorCount(e);
         return badRequestResponse("Registration failed", e.getMessage());
@@ -199,14 +190,14 @@ public class AppErrorHandler {
     //
     // utility methods
     //
-    private static ResponseEntity<?> internalServerErrorResponse() {
+    private static ResponseEntity<ErrorDetails> internalServerErrorResponse() {
         return new ResponseEntity<>(getErrorDetails( "Something horrible happened, please try again later.", EMPTY), INTERNAL_SERVER_ERROR);
     }
-    private static ResponseEntity<?> invalidCredentialsResponse() {
+    private static ResponseEntity<ErrorDetails> invalidCredentialsResponse() {
         return new ResponseEntity<>(getErrorDetails("Invalid credentials", EMPTY), FORBIDDEN);
     }
 
-    private static ResponseEntity<?> badRequestResponse(String message, String messageDetails) {
+    private static ResponseEntity<ErrorDetails> badRequestResponse(String message, String messageDetails) {
         return new ResponseEntity<>(getErrorDetails(message, messageDetails), BAD_REQUEST);
     }
 

@@ -1,8 +1,11 @@
 // 
 // docker build --build-arg JAR_FILE=build/libs/*.jar -t lostsidewalk/composable-rss-api .
-// 
+//
+// ./gradlew openApiGenerate generateFinalMarkdown
+//
 plugins {
     id "org.springframework.boot" version "2.0.1.RELEASE"
+    id "org.openapi.generator" version "6.6.0"
 }
 
 apply plugin: 'java'
@@ -21,11 +24,11 @@ repositories {
 
 dependencies {
     // NewsGears publisher
-    implementation 'com.lostsidewalk.newsgears:newsgears-publisher:0.5.4'
+    implementation 'com.lostsidewalk.newsgears:newsgears-publisher:0.5.5'
     // adds RSS/ATOM to the publishing path
-    implementation 'com.lostsidewalk.newsgears:newsgears-rss-publisher:0.5.3'
+    implementation 'com.lostsidewalk.newsgears:newsgears-rss-publisher:0.5.4'
     // add JSON to the publishing path
-    implementation 'com.lostsidewalk.newsgears:newsgears-json-publisher:0.5.3'
+    implementation 'com.lostsidewalk.newsgears:newsgears-json-publisher:0.5.4'
 
     // spring-boot-starter-actuator
     implementation 'org.springframework.boot:spring-boot-starter-actuator:3.1.1'
@@ -39,12 +42,16 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-mail:3.1.1'
     // spring-boot-starter-validation
     implementation 'org.springframework.boot:spring-boot-starter-validation:3.1.1'
+    // spring-boot-starter-bucket4j
+    implementation 'com.giffing.bucket4j.spring.boot.starter:bucket4j-spring-boot-starter:0.9.1'
     // spring-security-oauth2
     implementation 'org.springframework.security.oauth:spring-security-oauth2:2.5.2.RELEASE'
     // spring-security-oauth2-core
     implementation 'org.springframework.security:spring-security-oauth2-core:6.1.1'
     // spring-security-oauth2-client
     implementation 'org.springframework.security:spring-security-oauth2-client:6.1.1'
+    // springdoc-openapi-starter-webmvc-ui
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-api:2.2.0'
     // stripe
     //noinspection GradlePackageUpdate
     implementation 'com.stripe:stripe-java:21.0.0' // DO NOT UPGRADE, CHECK VERSION COMPAT WITH REMOTE FIRST
@@ -70,6 +77,11 @@ dependencies {
     implementation 'com.rometools:rome-modules:2.1.0'
     // jsoup
     implementation 'org.jsoup:jsoup:1.15.4'
+    // bucket4j
+    implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:7.6.0'
+    // bucket4j-redis
+    implementation 'com.github.vladimir-bukhtoyarov:bucket4j-redis:7.6.0'
+
 
     // postgresql driver
     runtimeOnly 'org.postgresql:postgresql:42.5.4'
@@ -86,6 +98,10 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.26'
     testCompileOnly 'org.projectlombok:lombok:1.18.26'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.26'
+
+    // therapi-runtime-javadoc
+    annotationProcessor 'com.github.therapi:therapi-runtime-javadoc-scribe:0.15.0'
+    implementation 'com.github.therapi:therapi-runtime-javadoc:0.15.0'
 }
 
 springBoot {
@@ -94,4 +110,33 @@ springBoot {
 
 test {
     useJUnitPlatform()
+}
+
+/**
+ * (openapi tools) openApiValidate validates the spec produced by the `generateOpenApiDocs` task (above)
+ */
+openApiValidate {
+    inputSpec.set("$rootDir/specs/composable-rss.json")
+}
+
+/**
+ * (openapi tools) openApiGenerate generates documentation in build/generated from the spec produced by `openApi' task (above)
+ */
+openApiGenerate {
+    verbose.set(false)
+    validateSpec.set(true)
+    generatorName.set("html")
+    outputDir.set("$buildDir/generated")
+    inputSpec.set("$rootDir/specs/composable-rss.json")
+    cleanupOutput.set(true)
+    packageName.set("com.lostsidewalk.buffy.app")
+    apiPackage.set("com.lostsidewalk.buffy.app")
+    invokerPackage.set("com.lostsidewalk.buffy.app")
+    modelPackage.set("com.lostsidewalk.buffy.app")
+    configOptions.set([
+            groupId: 'com.lostsidewalk',
+            artifactId: 'composable-rss-client',
+            packageName: 'com.lostsidewalk.buffy.app',
+            dateLibrary: "java8"
+    ])
 }

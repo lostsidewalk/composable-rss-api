@@ -2,7 +2,6 @@ package com.lostsidewalk.buffy.app.user;
 
 import com.lostsidewalk.buffy.DataAccessException;
 import com.lostsidewalk.buffy.DataUpdateException;
-import com.lostsidewalk.buffy.app.audit.AppLogService;
 import com.lostsidewalk.buffy.app.audit.ErrorLogService;
 import com.lostsidewalk.buffy.app.audit.RegistrationException;
 import com.lostsidewalk.buffy.auth.*;
@@ -33,9 +32,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 @Service
 @Slf4j
 public class LocalUserService implements UserDetailsService {
-
-    @Autowired
-    AppLogService appLogService;
 
     @Autowired
     ErrorLogService errorLogService;
@@ -187,24 +183,6 @@ public class LocalUserService implements UserDetailsService {
     //
     public void markAsVerified(String username) throws DataAccessException, DataUpdateException {
         userDao.setVerified(username, true);
-    }
-    //
-    //
-    //
-    public AuthProvider getAuthProvider(String username) throws DataAccessException {
-        User user = userDao.findByName(username);
-        if (user == null) {
-            throw new UsernameNotFoundException(username);
-        }
-        return user.getAuthProvider();
-    }
-
-    public String getAuthProviderProfileImgUrl(String username) throws DataAccessException {
-        User user = userDao.findByName(username);
-        if (user == null) {
-            throw new UsernameNotFoundException(username);
-        }
-        return user.getAuthProviderProfileImgUrl();
     }
     //
     // utility methods

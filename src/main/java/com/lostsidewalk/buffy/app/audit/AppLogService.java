@@ -1,10 +1,10 @@
 package com.lostsidewalk.buffy.app.audit;
 
-import com.lostsidewalk.buffy.publisher.Publisher.PubResult;
-import com.lostsidewalk.buffy.auth.User;
-import com.lostsidewalk.buffy.app.model.request.FeedStatusUpdateRequest;
 import com.lostsidewalk.buffy.app.model.request.PostStatusUpdateRequest;
+import com.lostsidewalk.buffy.app.model.request.QueueStatusUpdateRequest;
 import com.lostsidewalk.buffy.app.model.request.SettingsUpdateRequest;
+import com.lostsidewalk.buffy.auth.User;
+import com.lostsidewalk.buffy.publisher.Publisher.PubResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.stereotype.Service;
@@ -18,65 +18,52 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 @Service
 public class AppLogService {
 
-    public void logFeedFetch(String username, StopWatch stopWatch, int feedCt) {
-        auditLog("feed-fetch", "feedCt={}", username, stopWatch, feedCt);
+    public void logQueueFetch(String username, StopWatch stopWatch, int queueCt) {
+        auditLog("queue-fetch", "queueCt={}", username, stopWatch, queueCt);
     }
 
-    public void logFeedStatusUpdate(String username, StopWatch stopWatch, Long id, FeedStatusUpdateRequest feedStatusUpdateRequest, int rowsUpdated) {
-        auditLog("feed-status-update", "id={}, feedStatusUpdateRequest={}, rowsUpdated={}", username, stopWatch, id, feedStatusUpdateRequest, rowsUpdated);
+    public void logQueueStatusUpdate(String username, StopWatch stopWatch, Long id, QueueStatusUpdateRequest queueStatusUpdateRequest, int rowsUpdated) {
+        auditLog("queue-status-update", "id={}, feedStatusUpdateRequest={}, rowsUpdated={}", username, stopWatch, id, queueStatusUpdateRequest, rowsUpdated);
     }
 
-    public void logFeedUpdate(String username, StopWatch stopWatch, Long id) {
-        auditLog("feed-update", "id={}", username, stopWatch, id);
+    public void logQueueUpdate(String username, StopWatch stopWatch, Long id) {
+        auditLog("queue-update", "id={}", username, stopWatch, id);
     }
 
-    public void logFeedCreate(String username, StopWatch stopWatch, int length, int size) {
-        auditLog("feed-create", "length={}, size={}", username, stopWatch, length, size);
+    public void logQueueCreate(String username, StopWatch stopWatch, int length, int size) {
+        auditLog("queue-create", "length={}, size={}", username, stopWatch, length, size);
     }
 
-    public void logAddQueries(String username, StopWatch stopWatch, int size) {
-        auditLog("add-queries", "size={}", username, stopWatch, size);
+    public void logQueueDelete(String username, StopWatch stopWatch, int deleteCt) {
+        auditLog("queue-delete", "deleteCt={}", username, stopWatch, deleteCt);
     }
 
-    public void logUpdateSubscriptions(String username, StopWatch stopWatch, int size) {
-        auditLog("updates-queries", "size={}", username, stopWatch, size);
+    public void logQueueAttributeFetch(String username, StopWatch stopWatch, Long id, String attrName) {
+        auditLog("queue-attribute-fetch", "id={}, attrName={}", username, stopWatch, id, attrName);
     }
 
-    public void logOpmlPreview(String username, StopWatch stopWatch, int opmlFileCt, int queueConfigRequestCt, int errorCt) {
-        auditLog("opml-preview", "opmlFileCt={}, queueConfigRequestCt={}, errorCt={}",
-                username, stopWatch, opmlFileCt, queueConfigRequestCt, errorCt);
+    public void logQueueAttributeUpdate(String username, StopWatch stopWatch, Long id, String attrName) {
+        auditLog("queue-attribute-update", "id={}, attrName={}", username, stopWatch, id, attrName);
     }
 
-    public void logThumbnailPreview(String username, StopWatch stopWatch, int errorCt) {
-        auditLog("thumbnail-preview", "errorCt={}", username, stopWatch, errorCt);
+    public void logQueueAttributeDelete(String username, StopWatch stopWatch, Long id, String attrName) {
+        auditLog("queue-attribute-delete", "id={}, attrName={}", username, stopWatch, id, attrName);
     }
 
-    public void logRandomThumbnailPreview(String username, StopWatch stopWatch) {
-        auditLog("random-thumbnail-preview", null, username, stopWatch);
+    public void logQueueCredentialCreate(String username, StopWatch stopWatch, Long id) {
+        auditLog("queue-credential-create", "id={}", username, stopWatch, id);
     }
 
-    public void logFeedDelete(String username, StopWatch stopWatch, int deleteCt) {
-        auditLog("feed-delete", "deleteCt={}", username, stopWatch, deleteCt);
+    public void logQueueCredentialsFetch(String username, StopWatch stopWatch, Long id) {
+        auditLog("queue-credentials-fetch", "id={}", username, stopWatch, id);
     }
 
-    public void logQueryDelete(String username, StopWatch stopWatch, int deleteCt) {
-        auditLog("query-delete", "deleteCt={}", username, stopWatch, deleteCt);
+    public void logQueueCredentialUpdate(String username, StopWatch stopWatch, Long id) {
+        auditLog("queue-credential-update", "id={}", username, stopWatch, id);
     }
 
-    public void logLatestQueryMetricsFetch(String username, StopWatch stopWatch, int resultCt) {
-        auditLog("latest-query-metrics-fetch", "resultCt={}", username, stopWatch, resultCt);
-    }
-
-    public void logFeedDiscovery(String username, StopWatch stopWatch, String url) {
-        auditLog("feed-discovery", "url={}", username, stopWatch, url);
-    }
-
-    public void logCollectionFetch(String username, StopWatch stopWatch, String collectionName) {
-        auditLog("collection-fetch", "collectionName={}", username, stopWatch, collectionName);
-    }
-
-    public void logFeedRecommendation(String username, StopWatch stopWatch, String url) {
-        auditLog("feed-recommendation", "url={}", username, stopWatch, url);
+    public void logQueueCredentialDelete(String username, StopWatch stopWatch, Long id) {
+        auditLog("queue-credential-delete", "id={}", username, stopWatch, id);
     }
 
     public void logCheckoutSessionCreate(String username, StopWatch stopWatch) {
@@ -95,9 +82,9 @@ public class AppLogService {
         auditLog("subscription-resume", null, username, stopWatch);
     }
 
-    public void logOpmlExport(String username, StopWatch stopWatch) {
-        auditLog("opml-export", null, username, stopWatch);
-    }
+//    public void logOpmlExport(String username, StopWatch stopWatch) {
+//        auditLog("opml-export", null, username, stopWatch);
+//    }
 
     public void logSettingsFetch(String username, StopWatch stopWatch) {
         auditLog("settings-fetch", null, username, stopWatch);
@@ -119,16 +106,112 @@ public class AppLogService {
         auditLog("staging-post-fetch", "queueIdCt={}, stagingPostCt={}, queryMetricsCt={}", username, stopWatch, queueIdCt, stagingPostCt);
     }
 
-    public void logStagingPostReadStatusUpdate(String username, StopWatch stopWatch, Long id, PostStatusUpdateRequest postStatusUpdateRequest, int rowsUpdated) {
-        auditLog("staging-post-read-status-update", "id={}, postStatusUpdateRequest={}, rowsUpdated={}", username, stopWatch, id, postStatusUpdateRequest, rowsUpdated);
+    public void logStagingPostCreate(String username, StopWatch stopWatch, int postConfigRequestCt, int stagingPostCt) {
+        auditLog("staging-post-create", "queueIdCt={}, postConfigRequestCt={}, stagingPostCt={}", username, stopWatch, postConfigRequestCt, stagingPostCt);
     }
 
-    public void logFeedReadStatusUpdate(String username, StopWatch stopWatch, Long id, PostStatusUpdateRequest postStatusUpdateRequest, int rowsUpdated) {
-        auditLog("feed-read-status-update", "id={}, postStatusUpdateRequest={}, rowsUpdated={}", username, stopWatch, id, postStatusUpdateRequest, rowsUpdated);
+    public void logStagingPostUpdate(String username, StopWatch stopWatch, Long id) {
+        auditLog("staging-post-update", "id={}", username, stopWatch, id);
     }
 
-    public void logStagingPostPubStatusUpdate(String username, StopWatch stopWatch, Long id, PostStatusUpdateRequest postStatusUpdateRequest, int rowsUpdated, List<PubResult> publicationResults) {
-        auditLog("staging-post-pub-status-update", "id={}, postStatusUpdateRequest={}, rowsUpdated={}, publicationResults={}", username, stopWatch, id, postStatusUpdateRequest, rowsUpdated, publicationResults);
+    public void logStagingPostDelete(String username, StopWatch stopWatch, int deleteCt) {
+        auditLog("staging-post-delete", "deleteCt={}", username, stopWatch, deleteCt);
+    }
+
+    public void logStagingPostPubStatusUpdate(String username, StopWatch stopWatch, Long id, PostStatusUpdateRequest postStatusUpdateRequest, List<PubResult> publicationResults) {
+        auditLog("staging-post-pub-status-update", "id={}, postStatusUpdateRequest={}, publicationResults={}", username, stopWatch, id, postStatusUpdateRequest, publicationResults);
+    }
+
+    public void logStagingPostAttributeFetch(String username, StopWatch stopWatch, Long id, String attrName) {
+        auditLog("staging-post-attribute-fetch", "id={}, attrName={}", username, stopWatch, id, attrName);
+    }
+
+    public void logStagingPostAttributeUpdate(String username, StopWatch stopWatch, Long id, String attrName) {
+        auditLog("staging-post-attribute-update", "id={}, attrName={}", username, stopWatch, id, attrName);
+    }
+
+    public void logStagingPostAttributeDelete(String username, StopWatch stopWatch, Long id, String attrName) {
+        auditLog("staging-post-attribute-delete", "id={}, attrName={}", username, stopWatch, id, attrName);
+    }
+
+    public void logStagingPostAddContent(String username, StopWatch stopWatch, Long id) {
+        auditLog("staging-post-add-content", "id={}", username, stopWatch, id);
+    }
+
+    public void logStagingPostContentsFetch(String username, StopWatch stopWatch, Long id, int contentCt) {
+        auditLog("staging-post-content-fetch", "id={}, contentCt={}", username, stopWatch, id, contentCt);
+    }
+
+    public void logStagingPostContentUpdate(String username, StopWatch stopWatch, Long id, int contentIdx) {
+        auditLog("staging-post-content-update", "id={}, contentIdx={}", username, stopWatch, id, contentIdx);
+    }
+
+    public void logStagingPostContentDelete(String username, StopWatch stopWatch, Long id, int contentIdx) {
+        auditLog("staging-post-content-delete", "id={}, contentIdx={}", username, stopWatch, id, contentIdx);
+    }
+
+    public void logStagingPostAddUrl(String username, StopWatch stopWatch, Long id) {
+        auditLog("staging-post-add-url", "id={}", username, stopWatch, id);
+    }
+
+    public void logStagingPostUrlsFetch(String username, StopWatch stopWatch, Long id, int urlCt) {
+        auditLog("staging-post-url-fetch", "id={}, urlCt={}", username, stopWatch, id, urlCt);
+    }
+
+    public void logStagingPostUrlUpdate(String username, StopWatch stopWatch, Long id, int urlIdx) {
+        auditLog("staging-post-url-update", "id={}, urlIdx={}", username, stopWatch, id, urlIdx);
+    }
+
+    public void logStagingPostUrlDelete(String username, StopWatch stopWatch, Long id, int urlIdx) {
+        auditLog("staging-post-url-delete", "id={}, urlIdx={}", username, stopWatch, id, urlIdx);
+    }
+
+    public void logStagingPostAddContributor(String username, StopWatch stopWatch, Long id) {
+        auditLog("staging-post-add-contributor", "id={}", username, stopWatch, id);
+    }
+
+    public void logStagingPostContributorsFetch(String username, StopWatch stopWatch, Long id, int contributorCt) {
+        auditLog("staging-post-contributor-fetch", "id={}, contributorCt={}", username, stopWatch, id, contributorCt);
+    }
+
+    public void logStagingPostContributorUpdate(String username, StopWatch stopWatch, Long id, int contributorIdx) {
+        auditLog("staging-post-contributor-update", "id={}, contributorIdx={}", username, stopWatch, id, contributorIdx);
+    }
+
+    public void logStagingPostContributorDelete(String username, StopWatch stopWatch, Long id, int contributorIdx) {
+        auditLog("staging-post-contributor-delete", "id={}, contributorIdx={}", username, stopWatch, id, contributorIdx);
+    }
+
+    public void logStagingPostAddAuthor(String username, StopWatch stopWatch, Long id) {
+        auditLog("staging-post-add-author", "id={}", username, stopWatch, id);
+    }
+
+    public void logStagingPostAuthorsFetch(String username, StopWatch stopWatch, Long id, int authorCt) {
+        auditLog("staging-post-author-fetch", "id={}, authorCt={}", username, stopWatch, id, authorCt);
+    }
+
+    public void logStagingPostAuthorUpdate(String username, StopWatch stopWatch, Long id, int authorIdx) {
+        auditLog("staging-post-author-update", "id={}, authorIdx={}", username, stopWatch, id, authorIdx);
+    }
+
+    public void logStagingPostAuthorDelete(String username, StopWatch stopWatch, Long id, int authorIdx) {
+        auditLog("staging-post-author-delete", "id={}, authorIdx={}", username, stopWatch, id, authorIdx);
+    }
+
+    public void logStagingPostAddEnclosure(String username, StopWatch stopWatch, Long id) {
+        auditLog("staging-post-add-enclosure", "id={}", username, stopWatch, id);
+    }
+
+    public void logStagingPostEnclosuresFetch(String username, StopWatch stopWatch, Long id, int enclosureCt) {
+        auditLog("staging-post-enclosure-fetch", "id={}, enclosureCt={}", username, stopWatch, id, enclosureCt);
+    }
+
+    public void logStagingPostEnclosureUpdate(String username, StopWatch stopWatch, Long id, int enclosureIdx) {
+        auditLog("staging-post-enclosure-update", "id={}, enclosureIdx={}", username, stopWatch, id, enclosureIdx);
+    }
+
+    public void logStagingPostEnclosureDelete(String username, StopWatch stopWatch, Long id, int enclosureIdx) {
+        auditLog("staging-post-enclosure-delete", "id={}, enclosureIdx={}", username, stopWatch, id, enclosureIdx);
     }
 
     public void logPasswordResetInit(String username, StopWatch stopWatch) {

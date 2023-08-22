@@ -1,9 +1,6 @@
 package com.lostsidewalk.buffy.app.security;
 
-import com.lostsidewalk.buffy.app.auth.AuthTokenFilter;
-import com.lostsidewalk.buffy.app.auth.HttpCookieOAuth2AuthorizationRequestRepository;
-import com.lostsidewalk.buffy.app.auth.OAuth2AuthenticationFailureHandler;
-import com.lostsidewalk.buffy.app.auth.OAuth2AuthenticationSuccessHandler;
+import com.lostsidewalk.buffy.app.auth.*;
 import com.lostsidewalk.buffy.app.user.CustomOAuth2UserService;
 import com.lostsidewalk.buffy.app.user.LocalUserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +36,9 @@ class WebSecurityConfig {
 
     @Autowired
     AuthTokenFilter authTokenFilter;
+
+    @Autowired
+    RateLimitingFilter rateLimitingFilter;
 
     @Autowired
     PasswordEncoder passwordEncoder;
@@ -120,6 +120,9 @@ class WebSecurityConfig {
                                 .requestMatchers(OPTIONS, "/**").permitAll() // OPTIONS calls are validated downstream by checking for the presence of required headers
                                 // permit image proxy calls
                                 .requestMatchers("/proxy/unsecured/**").permitAll()
+                                // permit API docs V3
+                                .requestMatchers("/v3/api-docs").permitAll()
+                                .requestMatchers("/v3/api-docs/**").permitAll()
                                 // (all others require authentication)
                                 .anyRequest().authenticated()
                 ).sessionManagement(s -> s.sessionCreationPolicy(STATELESS))
@@ -132,6 +135,7 @@ class WebSecurityConfig {
                                 .successHandler(oAuth2AuthenticationSuccessHandler)
                                 .failureHandler(oAuth2AuthenticationFailureHandler));
         http.addFilterBefore(this.authTokenFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterAfter(this.rateLimitingFilter, AuthTokenFilter.class);
 
         return http.build();
     }

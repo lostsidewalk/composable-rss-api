@@ -3,13 +3,9 @@ package com.lostsidewalk.buffy.app;
 import com.lostsidewalk.buffy.DataAccessException;
 import com.lostsidewalk.buffy.DataUpdateException;
 import com.lostsidewalk.buffy.app.audit.AppLogService;
-import com.lostsidewalk.buffy.app.model.request.DisplaySettingsUpdateRequest;
 import com.lostsidewalk.buffy.app.model.request.SettingsUpdateRequest;
 import com.lostsidewalk.buffy.app.model.request.UpdateSubscriptionRequest;
-import com.lostsidewalk.buffy.app.model.response.DisplaySettingsResponse;
-import com.lostsidewalk.buffy.app.model.response.SettingsResponse;
-import com.lostsidewalk.buffy.app.model.response.StripeResponse;
-import com.lostsidewalk.buffy.app.model.response.SubscriptionResponse;
+import com.lostsidewalk.buffy.app.model.response.*;
 import com.lostsidewalk.buffy.app.order.StripeOrderService;
 import com.lostsidewalk.buffy.app.settings.SettingsService;
 import com.stripe.exception.StripeException;
@@ -27,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import static com.lostsidewalk.buffy.app.ResponseMessageUtils.buildResponseMessage;
 import static com.lostsidewalk.buffy.app.model.request.SubscriptionStatus.ACTIVE;
 import static com.lostsidewalk.buffy.app.model.request.SubscriptionStatus.CANCELED;
 import static com.lostsidewalk.buffy.app.user.UserRoles.UNVERIFIED_ROLE;
@@ -51,31 +48,31 @@ public class SettingsController {
     @Autowired
     StripeOrderService stripeOrderService;
 
-    @Secured({UNVERIFIED_ROLE})
-    @GetMapping("/settings/display")
-    public ResponseEntity<DisplaySettingsResponse> getDisplaySettings(Authentication authentication) throws DataAccessException {
-        UserDetails userDetails = (UserDetails) authentication.getDetails();
-        String username = userDetails.getUsername();
-        StopWatch stopWatch = StopWatch.createStarted();
-        DisplaySettingsResponse displaySettingsResponse = settingsService.getDisplaySettings(username);
-        stopWatch.stop();
-        appLogService.logDisplaySettingsFetch(username, stopWatch);
-        //
-        return ok(displaySettingsResponse);
-    }
-
-    @Secured({UNVERIFIED_ROLE})
-    @Transactional
-    @PutMapping("/settings/display")
-    public ResponseEntity<?> updateDisplaySettings(@Valid @RequestBody DisplaySettingsUpdateRequest displaySettingsUpdateRequest, Authentication authentication) throws DataAccessException, DataUpdateException {
-        UserDetails userDetails = (UserDetails) authentication.getDetails();
-        String username = userDetails.getUsername();
-        StopWatch stopWatch = StopWatch.createStarted();
-        settingsService.updateDisplaySettings(username, displaySettingsUpdateRequest);
-        stopWatch.stop();
-        appLogService.logDisplaySettingsUpdate(username, stopWatch);
-        return ok(EMPTY);
-    }
+//    @Secured({UNVERIFIED_ROLE})
+//    @GetMapping("/settings/display")
+//    public ResponseEntity<DisplaySettingsResponse> getDisplaySettings(Authentication authentication) throws DataAccessException {
+//        UserDetails userDetails = (UserDetails) authentication.getDetails();
+//        String username = userDetails.getUsername();
+//        StopWatch stopWatch = StopWatch.createStarted();
+//        DisplaySettingsResponse displaySettingsResponse = settingsService.getDisplaySettings(username);
+//        stopWatch.stop();
+//        appLogService.logDisplaySettingsFetch(username, stopWatch);
+//        //
+//        return ok(displaySettingsResponse);
+//    }
+//
+//    @Secured({UNVERIFIED_ROLE})
+//    @Transactional
+//    @PutMapping("/settings/display")
+//    public ResponseEntity<ResponseMessage> updateDisplaySettings(@Valid @RequestBody DisplaySettingsUpdateRequest displaySettingsUpdateRequest, Authentication authentication) throws DataAccessException, DataUpdateException {
+//        UserDetails userDetails = (UserDetails) authentication.getDetails();
+//        String username = userDetails.getUsername();
+//        StopWatch stopWatch = StopWatch.createStarted();
+//        settingsService.updateDisplaySettings(username, displaySettingsUpdateRequest);
+//        stopWatch.stop();
+//        appLogService.logDisplaySettingsUpdate(username, stopWatch);
+//        return ok().body(buildResponseMessage(EMPTY));
+//    }
 
     @Secured({UNVERIFIED_ROLE})
     @GetMapping("/settings")
@@ -100,14 +97,14 @@ public class SettingsController {
     @Secured({UNVERIFIED_ROLE})
     @Transactional
     @PutMapping("/settings")
-    public ResponseEntity<?> updateSettings(@Valid @RequestBody SettingsUpdateRequest settingsUpdateRequest, Authentication authentication) throws DataAccessException, DataUpdateException {
+    public ResponseEntity<ResponseMessage> updateSettings(@Valid @RequestBody SettingsUpdateRequest settingsUpdateRequest, Authentication authentication) throws DataAccessException, DataUpdateException {
         UserDetails userDetails = (UserDetails) authentication.getDetails();
         String username = userDetails.getUsername();
         StopWatch stopWatch = StopWatch.createStarted();
         settingsService.updateFrameworkConfig(username, settingsUpdateRequest);
         stopWatch.stop();
         appLogService.logSettingsUpdate(username, stopWatch, settingsUpdateRequest);
-        return ok(EMPTY);
+        return ok().body(buildResponseMessage(EMPTY));
     }
     //
     // order initialization (checkout)
@@ -129,7 +126,7 @@ public class SettingsController {
     @PutMapping("/subscriptions")
     @Secured({UNVERIFIED_ROLE})
     @Transactional
-    public ResponseEntity<?> updateSubscription(@Valid @RequestBody UpdateSubscriptionRequest updateSubscriptionRequest, Authentication authentication) throws StripeException, DataAccessException {
+    public ResponseEntity<ResponseMessage> updateSubscription(@Valid @RequestBody UpdateSubscriptionRequest updateSubscriptionRequest, Authentication authentication) throws StripeException, DataAccessException {
         UserDetails userDetails = (UserDetails) authentication.getDetails();
         String username = userDetails.getUsername();
         log.debug("updateSubscription for user={}", username);
@@ -146,6 +143,6 @@ public class SettingsController {
             return badRequest().build();
         }
 
-        return ok(EMPTY);
+        return ok().body(buildResponseMessage(EMPTY));
     }
 }

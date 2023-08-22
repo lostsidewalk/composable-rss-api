@@ -2,7 +2,7 @@ package com.lostsidewalk.buffy.app.auth;
 
 import com.lostsidewalk.buffy.DataAccessException;
 import com.lostsidewalk.buffy.app.audit.ApiKeyException;
-import com.lostsidewalk.buffy.app.user.LocalUserService;
+import com.lostsidewalk.buffy.app.user.ApiUserService;
 import com.lostsidewalk.buffy.auth.ApiKey;
 import com.lostsidewalk.buffy.auth.User;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,7 +23,7 @@ class ApiAuthHandler {
     AuthService authService;
 
     @Autowired
-    LocalUserService userService;
+    ApiUserService userService;
 
     void processApiRequest(String apiKey, String apiSecret, String requestUrl, String requestMethod, @SuppressWarnings("unused") HttpServletResponse response)
             throws DataAccessException, ApiKeyException {

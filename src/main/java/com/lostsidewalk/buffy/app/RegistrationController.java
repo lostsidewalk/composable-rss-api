@@ -8,6 +8,7 @@ import com.lostsidewalk.buffy.app.mail.MailService;
 import com.lostsidewalk.buffy.app.model.AppToken;
 import com.lostsidewalk.buffy.app.model.request.RegistrationRequest;
 import com.lostsidewalk.buffy.app.model.response.RegistartionResponse;
+import com.lostsidewalk.buffy.app.model.response.ResponseMessage;
 import com.lostsidewalk.buffy.app.token.TokenService;
 import com.lostsidewalk.buffy.app.token.TokenService.JwtUtil;
 import com.lostsidewalk.buffy.app.user.LocalUserService;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
+import static com.lostsidewalk.buffy.app.ResponseMessageUtils.buildResponseMessage;
 import static com.lostsidewalk.buffy.app.model.TokenType.VERIFICATION;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.springframework.http.ResponseEntity.ok;
@@ -139,7 +141,7 @@ public class RegistrationController {
 
     @RequestMapping(path = "/deregister", method = DELETE)
     @Transactional
-    public ResponseEntity<?> deregister(Authentication authentication) throws DataAccessException, DataUpdateException {
+    public ResponseEntity<ResponseMessage> deregister(Authentication authentication) throws DataAccessException, DataUpdateException {
         UserDetails userDetails = (UserDetails) authentication.getDetails();
         String username = userDetails.getUsername();
         log.info("De-registering username={}", username);
@@ -152,6 +154,6 @@ public class RegistrationController {
         stopWatch.stop();
         appLogService.logUserDeregistration(username, stopWatch);
 
-        return ok(EMPTY);
+        return ok().body(buildResponseMessage(EMPTY));
     }
 }
