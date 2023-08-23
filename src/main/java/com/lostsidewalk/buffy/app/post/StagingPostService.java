@@ -98,6 +98,14 @@ public class StagingPostService {
         stagingPostDao.updatePostEnclosures(username, id, postEnclosures);
     }
 
+    public void addPostCategory(String username, Long id, String category) throws DataAccessException, DataUpdateException {
+        List<String> postCategories = stagingPostDao.findById(username, id).getPostCategories();
+        if (!postCategories.contains(category)) {
+            postCategories.add(category);
+            stagingPostDao.updatePostCategories(username, id, postCategories);
+        }
+    }
+
     public StagingPost updatePost(String username, Long id, PostConfigRequest postUpdateRequest) throws DataAccessException, DataUpdateException {
         stagingPostDao.updatePost(
                 username,
@@ -264,5 +272,12 @@ public class StagingPostService {
         List<PostEnclosure> enclosures = stagingPostDao.findById(username, id).getEnclosures();
         enclosures.remove(enclosureIdx.intValue());
         stagingPostDao.updatePostEnclosures(username, id, enclosures);
+    }
+
+    public void deletePostCategory(String username, Long id, String categoryName) throws DataAccessException, DataUpdateException {
+        List<String> postCategories = stagingPostDao.findById(username, id).getPostCategories();
+        if (postCategories.remove(categoryName)) {
+            stagingPostDao.updatePostCategories(username, id, postCategories);
+        }
     }
 }
