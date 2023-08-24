@@ -33,6 +33,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -41,8 +43,11 @@ import static com.lostsidewalk.buffy.app.ResponseMessageUtils.buildResponseMessa
 import static com.lostsidewalk.buffy.post.StagingPost.PostPubStatus.DEPUB_PENDING;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.collections4.CollectionUtils.size;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.time.StopWatch.createStarted;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.http.ResponseEntity.ok;
 
 /**
@@ -83,7 +88,7 @@ public class PostController {
     @ApiResponse(responseCode = "200", description = "Successfully created posts",
             content = @Content(mediaType = "application/json",
                     array = @ArraySchema(schema = @Schema(implementation = PostDTO.class))))
-    @PostMapping("/posts/{queueId}")
+    @PostMapping(value = "/posts/{queueId}", produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<List<PostDTO>> createPosts(
             @PathVariable("queueId")
@@ -131,7 +136,7 @@ public class PostController {
     @ApiResponse(responseCode = "200", description = "Successfully fetched posts",
             content = @Content(mediaType = "application/json",
                     array = @ArraySchema(schema = @Schema(implementation = PostDTO.class))))
-    @GetMapping("/posts/{queueId}")
+    @GetMapping(value = "/posts/{queueId}", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<List<PostDTO>> getPosts(
             @PathVariable("queueId")
@@ -190,7 +195,7 @@ public class PostController {
     @Operation(summary = "Get the status of a post given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched post status",
             content = @Content(schema = @Schema(implementation = PostPubStatus.class)))
-    @GetMapping("/posts/{postId}/status")
+    @GetMapping(value = "/posts/{postId}/status", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<PostPubStatus> getPostStatus(
             @PathVariable("postId")
@@ -222,10 +227,10 @@ public class PostController {
      */
     @Operation(summary = "Get the queue Id of a post given by its Id.", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched post queue Id",
-            content = @Content(schema = @Schema(implementation = Long.class)))
-    @GetMapping("/posts/{postId}/queue")
+            content = @Content(schema = @Schema(implementation = String.class)))
+    @GetMapping(value = "/posts/{postId}/queue", produces = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
-    public ResponseEntity<Long> getPostQueueId(
+    public ResponseEntity<String> getPostQueueId(
             @PathVariable("postId")
             @Parameter(description = "The Id of the post to fetch queue Id from", required = true)
             Long postId,
@@ -239,7 +244,7 @@ public class PostController {
         StagingPost stagingPost = stagingPostService.findById(username, postId);
         stopWatch.stop();
         appLogService.logStagingPostAttributeFetch(username, stopWatch, stagingPost.getId(), "queueId");
-        return ok(stagingPost.getQueueId());
+        return ok(stagingPost.getQueueId().toString()); // toString retains only numerals (i.e., no formatting)
     }
 
     /**
@@ -256,7 +261,7 @@ public class PostController {
     @Operation(summary = "Get the title of a post given by its Id.", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched post title",
             content = @Content(schema = @Schema(implementation = ContentObject.class)))
-    @GetMapping("/posts/{postId}/title")
+    @GetMapping(value = "/posts/{postId}/title", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<ContentObject> getPostTitle(
             @PathVariable("postId")
@@ -289,7 +294,7 @@ public class PostController {
     @Operation(summary = "Get the description of a post given by its Id.", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched post description",
             content = @Content(schema = @Schema(implementation = ContentObject.class)))
-    @GetMapping("/posts/{postId}/desc")
+    @GetMapping(value = "/posts/{postId}/desc", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<ContentObject> getPostDesc(
             @PathVariable("postId")
@@ -322,7 +327,7 @@ public class PostController {
     @Operation(summary = "Get the iTunes descriptor of a post given by its Id.", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched post iTunes descriptor",
             content = @Content(schema = @Schema(implementation = PostITunes.class)))
-    @GetMapping("/posts/{postId}/itunes")
+    @GetMapping(value = "/posts/{postId}/itunes", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<PostITunes> getPostITunes(
             @PathVariable("postId")
@@ -355,7 +360,7 @@ public class PostController {
     @Operation(summary = "Get the comment string of a post given by its Id.", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched post comment string",
             content = @Content(schema = @Schema(implementation = String.class)))
-    @GetMapping("/posts/{postId}/comment")
+    @GetMapping(value = "/posts/{postId}/comment", produces = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getPostComment(
             @PathVariable("postId")
@@ -388,7 +393,7 @@ public class PostController {
     @Operation(summary = "Get the rights string of a post given by its Id.", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched post rights string",
             content = @Content(schema = @Schema(implementation = String.class)))
-    @GetMapping("/posts/{postId}/rights")
+    @GetMapping(value = "/posts/{postId}/rights", produces = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getPostRights(
             @PathVariable("postId")
@@ -407,6 +412,8 @@ public class PostController {
         return ok(stagingPost.getPostRights());
     }
 
+    private static final SimpleDateFormat ISO_8601_TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+
     /**
      * Get the expiration timestamp of a post given by its Id.
      *
@@ -420,10 +427,10 @@ public class PostController {
      */
     @Operation(summary = "Get the expiration timestamp of a post given by its Id.", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched post expiration timestamp",
-            content = @Content(schema = @Schema(implementation = Date.class)))
-    @GetMapping("/posts/{postId}/expiration")
+            content = @Content(schema = @Schema(implementation = String.class)))
+    @GetMapping(value = "/posts/{postId}/expiration", produces = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
-    public ResponseEntity<Date> getExpirationTimestamp(
+    public ResponseEntity<String> getExpirationTimestamp(
             @PathVariable("postId")
             @Parameter(description = "The Id of the post to fetch expiration timestamp from", required = true)
             Long postId,
@@ -437,7 +444,11 @@ public class PostController {
         StagingPost stagingPost = stagingPostService.findById(username, postId);
         stopWatch.stop();
         appLogService.logStagingPostAttributeFetch(username, stopWatch, stagingPost.getId(), "expirationTimestamp");
-        return ok(stagingPost.getExpirationTimestamp());
+        Date expirationTimestamp = stagingPost.getExpirationTimestamp();
+        return ok(expirationTimestamp != null ?
+                ISO_8601_TIMESTAMP_FORMAT.format(expirationTimestamp) :
+                EMPTY // default response
+        );
     }
 
     /**
@@ -453,10 +464,10 @@ public class PostController {
      */
     @Operation(summary = "Get the published timestamp of a post given by its Id.", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched post published timestamp",
-            content = @Content(schema = @Schema(implementation = Date.class)))
-    @GetMapping("/posts/{postId}/published")
+            content = @Content(schema = @Schema(implementation = String.class)))
+    @GetMapping(value = "/posts/{postId}/published", produces = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
-    public ResponseEntity<Date> getPublishedTimestamp(
+    public ResponseEntity<String> getPublishedTimestamp(
             @PathVariable("postId")
             @Parameter(description = "The Id of the post to fetch published timestamp from", required = true)
             Long postId,
@@ -470,7 +481,11 @@ public class PostController {
         StagingPost stagingPost = stagingPostService.findById(username, postId);
         stopWatch.stop();
         appLogService.logStagingPostAttributeFetch(username, stopWatch, stagingPost.getId(), "publishTimestamp");
-        return ok(stagingPost.getPublishTimestamp());
+        Date publishTimestamp = stagingPost.getPublishTimestamp();
+        return ok(publishTimestamp != null ?
+                ISO_8601_TIMESTAMP_FORMAT.format(publishTimestamp) :
+                EMPTY // default response
+        );
     }
 
     /**
@@ -486,10 +501,10 @@ public class PostController {
      */
     @Operation(summary = "Get the last updated timestamp of a post given by its Id.", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched post last updated timestamp",
-            content = @Content(schema = @Schema(implementation = Date.class)))
-    @GetMapping("/posts/{postId}/updated")
+            content = @Content(schema = @Schema(implementation = String.class)))
+    @GetMapping(value = "/posts/{postId}/updated", produces = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
-    public ResponseEntity<Date> getLastUpdatedTimestamp(
+    public ResponseEntity<String> getLastUpdatedTimestamp(
             @PathVariable("postId")
             @Parameter(description = "The Id of the post to fetch last updated timestamp from", required = true)
             Long postId,
@@ -503,7 +518,11 @@ public class PostController {
         StagingPost stagingPost = stagingPostService.findById(username, postId);
         stopWatch.stop();
         appLogService.logStagingPostAttributeFetch(username, stopWatch, stagingPost.getId(), "lastUpdatedTimestamp");
-        return ok(stagingPost.getLastUpdatedTimestamp());
+        Date lastUpdatedTimestamp = stagingPost.getLastUpdatedTimestamp();
+        return ok(lastUpdatedTimestamp != null ?
+                ISO_8601_TIMESTAMP_FORMAT.format(lastUpdatedTimestamp) :
+                EMPTY // default response
+        );
     }
 
     //
@@ -527,7 +546,7 @@ public class PostController {
     @ApiResponse(responseCode = "200", description = "Successfully updated post",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = PostDTO.class)))
-    @PutMapping("/posts/{id}")
+    @PutMapping(value = "/posts/{id}", produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<PostDTO> updatePost(
@@ -561,9 +580,9 @@ public class PostController {
      * publication status of a post identified by its Id. The status can be 'PUB_PENDING',
      * 'DEPUB_PENDING', or null.
      *
-     * @param id                   The Id of the post to update.
-     * @param postStatusUpdateRequest The request containing the updated post status.
-     * @param authentication      The authentication details of the user making the request.
+     * @param id                                The Id of the post to update.
+     * @param postStatusUpdateRequest           The request containing the updated post status.
+     * @param authentication                    The authentication details of the user making the request.
      * @return A ResponseEntity indicating the success of the update operation.
      * @throws DataAccessException If there's an issue accessing data.
      * @throws DataUpdateException If there's an issue updating data.
@@ -572,7 +591,7 @@ public class PostController {
     @ApiResponse(responseCode = "200", description = "Successfully updated post publication status",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = DeployResponse.class)))
-    @PutMapping("/posts/{id}/status")
+    @PutMapping(value = "/posts/{id}/status", produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<DeployResponse> updatePostStatus(
@@ -580,7 +599,10 @@ public class PostController {
             @Parameter(description = "The Id of the post to update", required = true)
             Long id,
             //
-            @Valid @RequestBody PostStatusUpdateRequest postStatusUpdateRequest,
+            @Valid
+            @RequestBody
+            @Parameter(description = "The updated post status", required = true)
+            PostStatusUpdateRequest postStatusUpdateRequest,
             //
             Authentication authentication
     ) throws DataAccessException, DataUpdateException {
@@ -617,7 +639,7 @@ public class PostController {
     @ApiResponse(responseCode = "200", description = "Successfully updated post title",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = ContentObject.class)))
-    @PutMapping("/posts/{id}/title")
+    @PutMapping(value = "/posts/{id}/title", produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ContentObject> updatePostTitle(
@@ -657,7 +679,7 @@ public class PostController {
     @ApiResponse(responseCode = "200", description = "Successfully updated post description",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = ContentObject.class)))
-    @PutMapping("/posts/{id}/desc")
+    @PutMapping(value = "/posts/{id}/desc", produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ContentObject> updatePostDescription(
@@ -697,7 +719,7 @@ public class PostController {
     @ApiResponse(responseCode = "200", description = "Successfully updated post iTunes descriptor",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = PostITunes.class)))
-    @PutMapping("/posts/{id}/itunes")
+    @PutMapping(value = "/posts/{id}/itunes", produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<PostITunes> updatePostITunes(
@@ -737,7 +759,7 @@ public class PostController {
     @ApiResponse(responseCode = "200", description = "Successfully updated post comment string",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = String.class)))
-    @PutMapping("/posts/{id}/comment")
+    @PutMapping(value = "/posts/{id}/comment", produces = {TEXT_PLAIN_VALUE}, consumes = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<String> updatePostComment(
@@ -777,7 +799,7 @@ public class PostController {
     @ApiResponse(responseCode = "200", description = "Successfully updated post rights string",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = String.class)))
-    @PutMapping("/posts/{id}/rights")
+    @PutMapping(value = "/posts/{id}/rights", produces = {TEXT_PLAIN_VALUE}, consumes = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<String> updatePostRights(
@@ -816,16 +838,16 @@ public class PostController {
     @Operation(summary = "Update the expiration timestamp of the post given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully updated post expiration timestamp",
             content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = Date.class)))
-    @PutMapping("/posts/{id}/expiration")
+                    schema = @Schema(implementation = String.class)))
+    @PutMapping(value = "/posts/{id}/expiration", produces = {TEXT_PLAIN_VALUE}, consumes = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
-    public ResponseEntity<Date> updateExpirationTimestamp(
+    public ResponseEntity<String> updateExpirationTimestamp(
             @PathVariable("id")
             @Parameter(description = "The Id of the post to update", required = true)
             Long id,
             //
-            @Valid @RequestBody Date expirationTimestamp,
+            @Valid @RequestBody String expirationTimestamp,
             //
             Authentication authentication
     ) throws DataAccessException, DataUpdateException {
@@ -833,11 +855,18 @@ public class PostController {
         String username = userDetails.getUsername();
         log.debug("updateExpirationTimestamp for user={}, postId={}, expirationTimestamp={}", username, id, expirationTimestamp);
         StopWatch stopWatch = createStarted();
-        Date updatedExpirationTimestamp = stagingPostService.updateExpirationTimestamp(username, id, expirationTimestamp);
+        Date updatedExpirationTimestamp = null;
+        try {
+            updatedExpirationTimestamp = stagingPostService.updateExpirationTimestamp(username, id, ISO_8601_TIMESTAMP_FORMAT.parse(expirationTimestamp));
+        } catch (ParseException e) {
+            //
+        }
         stopWatch.stop();
         appLogService.logStagingPostAttributeUpdate(username, stopWatch, id, "expirationTimestamp");
-
-        return ok(updatedExpirationTimestamp);
+        return ok(updatedExpirationTimestamp != null ?
+                ISO_8601_TIMESTAMP_FORMAT.format(updatedExpirationTimestamp) :
+                EMPTY // default response
+        );
     }
 
     //
@@ -858,7 +887,7 @@ public class PostController {
      */
     @Operation(summary = "Delete the post given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully deleted post")
-    @DeleteMapping("/posts/{id}")
+    @DeleteMapping(value = "/posts/{id}", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> deletePost(
@@ -897,7 +926,7 @@ public class PostController {
      */
     @Operation(summary = "Delete the iTunee descriptor from a post given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully deleted post iTunes descriptor")
-    @DeleteMapping("/posts/{id}/itunes")
+    @DeleteMapping(value = "/posts/{id}/itunes", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> deletePostITunes(
@@ -931,7 +960,7 @@ public class PostController {
      */
     @Operation(summary = "Delete the comment string from a post given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully deleted post comment string")
-    @DeleteMapping("/posts/{id}/comment")
+    @DeleteMapping(value = "/posts/{id}/comment", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> deletePostComment(
@@ -965,7 +994,7 @@ public class PostController {
      */
     @Operation(summary = "Delete the rights string from a post given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully deleted post rights string")
-    @DeleteMapping("/posts/{id}/rights")
+    @DeleteMapping(value = "/posts/{id}/rights", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> deletePostRights(
@@ -999,7 +1028,7 @@ public class PostController {
      */
     @Operation(summary = "Delete the expiration timestamp from a post given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully deleted post expiration timestamp")
-    @DeleteMapping("/posts/{id}/expiration")
+    @DeleteMapping(value = "/posts/{id}/expiration", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> deleteExpirationTimestamp(

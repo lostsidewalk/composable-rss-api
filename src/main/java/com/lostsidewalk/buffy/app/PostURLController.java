@@ -31,6 +31,7 @@ import java.util.List;
 import static com.lostsidewalk.buffy.app.ResponseMessageUtils.buildResponseMessage;
 import static org.apache.commons.collections4.CollectionUtils.size;
 import static org.apache.commons.lang3.time.StopWatch.createStarted;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.ResponseEntity.ok;
 
 /**
@@ -69,7 +70,7 @@ public class PostURLController {
      */
     @Operation(summary = "Add a new URL to the post given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully added URL to post")
-    @PostMapping("/posts/{postId}/urls")
+    @PostMapping(value = "/posts/{postId}/urls", produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<ResponseMessage> addPostUrl(
             @PathVariable("postId")
@@ -112,7 +113,7 @@ public class PostURLController {
     @ApiResponse(responseCode = "200", description = "Successfully fetched post URLs",
             content = @Content(mediaType = "application/json",
                     array = @ArraySchema(schema = @Schema(implementation = PostUrl.class))))
-    @GetMapping("/posts/{postId}/urls")
+    @GetMapping(value = "/posts/{postId}/urls", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<List<PostUrl>> getPostUrls(
             @PathVariable("postId")
@@ -152,7 +153,7 @@ public class PostURLController {
      */
     @Operation(summary = "Update the post URL given by idx, on a post given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully updated post URL")
-    @PutMapping("/posts/{postId}/urls/{urlIdx}")
+    @PutMapping(value = "/posts/{postId}/urls/{urlIdx}", produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> updatePostUrl(
@@ -197,7 +198,7 @@ public class PostURLController {
      */
     @Operation(summary = "Delete the post URL given by idx, on a post given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully deleted post URL")
-    @DeleteMapping("/posts/{postId}/urls/{urlIdx}")
+    @DeleteMapping(value = "/posts/{postId}/urls/{urlIdx}", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> deletePostUrl(

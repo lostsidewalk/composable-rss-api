@@ -3,6 +3,7 @@ package com.lostsidewalk.buffy.app;
 import com.lostsidewalk.buffy.DataAccessException;
 import com.lostsidewalk.buffy.DataUpdateException;
 import com.lostsidewalk.buffy.app.audit.AppLogService;
+import com.lostsidewalk.buffy.app.model.request.QueueAuthUpdateRequest;
 import com.lostsidewalk.buffy.app.model.request.QueueConfigRequest;
 import com.lostsidewalk.buffy.app.model.request.QueueStatusUpdateRequest;
 import com.lostsidewalk.buffy.app.model.response.QueueDTO;
@@ -31,6 +32,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -38,8 +40,12 @@ import java.util.List;
 import static com.lostsidewalk.buffy.app.ResponseMessageUtils.buildResponseMessage;
 import static com.lostsidewalk.buffy.post.StagingPost.PostPubStatus.DEPUB_PENDING;
 import static org.apache.commons.collections4.CollectionUtils.size;
+import static org.apache.commons.lang3.BooleanUtils.isTrue;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.length;
 import static org.apache.commons.lang3.time.StopWatch.createStarted;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.http.ResponseEntity.ok;
 
 /**
@@ -84,7 +90,7 @@ public class QueueController {
             content = @Content(mediaType = "application/json",
                     array = @ArraySchema(schema = @Schema(implementation = QueueDTO.class))))
 //    @ApiResponse(responseCode = "400", description = "Validation error in request body")
-    @PostMapping("/queues")
+    @PostMapping(value = "/queues", produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<List<QueueDTO>> createQueue(
             @RequestBody
@@ -128,7 +134,7 @@ public class QueueController {
      * @throws DataAccessException If there's an issue accessing data.
      */
     @Operation(summary = "Get all queue definitions", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
-    @GetMapping("/queues")
+    @GetMapping(value = "/queues", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @ApiResponse(responseCode = "200", description = "Successfully fetched queue definitions",
             content = @Content(mediaType = "application/json",
@@ -181,7 +187,7 @@ public class QueueController {
     @Operation(summary = "Get the status of a queue given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched queue status",
             content = @Content(schema = @Schema(implementation = QueueStatus.class)))
-    @GetMapping("/queues/{queueId}/status")
+    @GetMapping(value = "/queues/{queueId}/status", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<QueueStatus> getQueueStatus(
             @PathVariable("queueId")
@@ -213,7 +219,7 @@ public class QueueController {
      */
     @Operation(summary = "Get the ident string of a queue given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched queue ident string")
-    @GetMapping("/queues/{queueId}/ident")
+    @GetMapping(value = "/queues/{queueId}/ident", produces = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getQueueIdent(
             @PathVariable("queueId")
@@ -245,7 +251,7 @@ public class QueueController {
      */
     @Operation(summary = "Get the title of a queue given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched queue title")
-    @GetMapping("/queues/{queueId}/title")
+    @GetMapping(value = "/queues/{queueId}/title", produces = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getQueueTitle(
             @PathVariable("queueId")
@@ -277,7 +283,7 @@ public class QueueController {
      */
     @Operation(summary = "Get the description of a queue given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched queue description")
-    @GetMapping("/queues/{queueId}/desc")
+    @GetMapping(value = "/queues/{queueId}/desc", produces = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getQueueDescription(
             @PathVariable("queueId")
@@ -309,7 +315,7 @@ public class QueueController {
      */
     @Operation(summary = "Get the generator of a queue given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched queue generator")
-    @GetMapping("/queues/{queueId}/generator")
+    @GetMapping(value = "/queues/{queueId}/generator", produces = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getQueueGenerator(
             @PathVariable("queueId")
@@ -341,7 +347,7 @@ public class QueueController {
      */
     @Operation(summary = "Get the transport identifier of a queue given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched queue transport identifier")
-    @GetMapping("/queues/{queueId}/transport")
+    @GetMapping(value = "/queues/{queueId}/transport", produces = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getQueueTransport(
             @PathVariable("queueId")
@@ -373,7 +379,7 @@ public class QueueController {
      */
     @Operation(summary = "Get the copyright of a queue given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched queue copyright")
-    @GetMapping("/queues/{queueId}/copyright")
+    @GetMapping(value = "/queues/{queueId}/copyright", produces = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getQueueCopyright(
             @PathVariable("queueId")
@@ -405,7 +411,7 @@ public class QueueController {
      */
     @Operation(summary = "Get the language of a queue given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched queue language")
-    @GetMapping("/queues/{queueId}/language")
+    @GetMapping(value = "/queues/{queueId}/language", produces = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getQueueLanguage(
             @PathVariable("queueId")
@@ -424,6 +430,8 @@ public class QueueController {
         return ok(queueDefinition.getLanguage());
     }
 
+    private static final SimpleDateFormat ISO_8601_TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+
     /**
      * Get the deployed timestamp of a queue given by its Id.
      *
@@ -437,9 +445,9 @@ public class QueueController {
      */
     @Operation(summary = "Get the deployed timestamp of a queue given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched queue deployed timestamp")
-    @GetMapping("/queues/{queueId}/deployed")
+    @GetMapping(value = "/queues/{queueId}/deployed", produces = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
-    public ResponseEntity<Date> getQueueDeployedTimestamp(
+    public ResponseEntity<String> getQueueDeployedTimestamp(
             @PathVariable("queueId")
             @Parameter(description = "The Id of the queue to fetch the deployed timestamp from", required = true)
             Long queueId,
@@ -453,7 +461,11 @@ public class QueueController {
         QueueDefinition queueDefinition = queueDefinitionService.findByQueueId(username, queueId);
         stopWatch.stop();
         appLogService.logQueueAttributeFetch(username, stopWatch, queueDefinition.getId(), "lastDeployed");
-        return ok(queueDefinition.getLastDeployed());
+        Date lastDeployedTimestamp = queueDefinition.getLastDeployed();
+        return ok(lastDeployedTimestamp != null ?
+                ISO_8601_TIMESTAMP_FORMAT.format(lastDeployedTimestamp) :
+                EMPTY // default response
+        );
     }
 
     /**
@@ -469,9 +481,9 @@ public class QueueController {
      */
     @Operation(summary = "Get the authentication requirement of a queue given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched queue authentication requirement")
-    @GetMapping("/queues/{queueId}/auth")
+    @GetMapping(value = "/queues/{queueId}/auth", produces = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
-    public ResponseEntity<Boolean> getQueueAuthRequirement(
+    public ResponseEntity<String> getQueueAuthRequirement(
             @PathVariable("queueId")
             @Parameter(description = "The Id of the queue to fetch the authentication requirement from", required = true)
             Long queueId,
@@ -485,7 +497,7 @@ public class QueueController {
         QueueDefinition queueDefinition = queueDefinitionService.findByQueueId(username, queueId);
         stopWatch.stop();
         appLogService.logQueueAttributeFetch(username, stopWatch, queueDefinition.getId(), "isAuthenticated");
-        return ok(queueDefinition.getIsAuthenticated());
+        return ok(Boolean.toString(isTrue(queueDefinition.getIsAuthenticated())));
     }
 
     /**
@@ -501,7 +513,7 @@ public class QueueController {
      */
     @Operation(summary = "Get the image source of a queue given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched queue image source")
-    @GetMapping("/queues/{queueId}/imgsrc")
+    @GetMapping(value = "/queues/{queueId}/imgsrc", produces = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getQueueImageSource(
             @PathVariable("queueId")
@@ -542,7 +554,7 @@ public class QueueController {
     @ApiResponse(responseCode = "200", description = "Successfully updated queue configuration",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = QueueDTO.class)))
-    @PutMapping("/queues/{id}")
+    @PutMapping(value = "/queues/{id}", produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<QueueDTO> updateQueue(
@@ -593,7 +605,7 @@ public class QueueController {
     @ApiResponse(responseCode = "200", description = "Successfully updated queue status")
 //    @ApiResponse(responseCode = "400", description = "Validation error in request body")
 //    @ApiResponse(responseCode = "500", description = "Internal server error")
-    @PutMapping("/queues/{id}/status")
+    @PutMapping(value = "/queues/{id}/status", produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> updateQueueStatus(
@@ -636,7 +648,7 @@ public class QueueController {
     @ApiResponse(responseCode = "200", description = "Successfully updated queue ident")
 //    @ApiResponse(responseCode = "400", description = "Validation error in request body")
 //    @ApiResponse(responseCode = "500", description = "Internal server error")
-    @PutMapping("/queues/{id}/ident")
+    @PutMapping(value = "/queues/{id}/ident", produces = {TEXT_PLAIN_VALUE}, consumes = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<String> updateQueueIdent(
@@ -678,7 +690,7 @@ public class QueueController {
     @ApiResponse(responseCode = "200", description = "Successfully updated queue title")
 //    @ApiResponse(responseCode = "400", description = "Validation error in request body")
 //    @ApiResponse(responseCode = "500", description = "Internal server error")
-    @PutMapping("/queues/{id}/title")
+    @PutMapping(value = "/queues/{id}/title", produces = {APPLICATION_JSON_VALUE}, consumes = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> updateQueueTitle(
@@ -720,7 +732,7 @@ public class QueueController {
     @ApiResponse(responseCode = "200", description = "Successfully updated queue description")
 //    @ApiResponse(responseCode = "400", description = "Validation error in request body")
 //    @ApiResponse(responseCode = "500", description = "Internal server error")
-    @PutMapping("/queues/{id}/desc")
+    @PutMapping(value = "/queues/{id}/desc", produces = {APPLICATION_JSON_VALUE}, consumes = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> updateQueueDescription(
@@ -762,7 +774,7 @@ public class QueueController {
     @ApiResponse(responseCode = "200", description = "Successfully updated queue generator")
 //    @ApiResponse(responseCode = "400", generator = "Validation error in request body")
 //    @ApiResponse(responseCode = "500", generator = "Internal server error")
-    @PutMapping("/queues/{id}/generator")
+    @PutMapping(value = "/queues/{id}/generator", produces = {APPLICATION_JSON_VALUE}, consumes = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> updateQueueGenerator(
@@ -804,7 +816,7 @@ public class QueueController {
     @ApiResponse(responseCode = "200", description = "Successfully updated queue copyright")
 //    @ApiResponse(responseCode = "400", copyright = "Validation error in request body")
 //    @ApiResponse(responseCode = "500", copyright = "Internal server error")
-    @PutMapping("/queues/{id}/copyright")
+    @PutMapping(value = "/queues/{id}/copyright", produces = {APPLICATION_JSON_VALUE}, consumes = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> updateQueueCopyright(
@@ -846,7 +858,7 @@ public class QueueController {
     @ApiResponse(responseCode = "200", description = "Successfully updated queue language")
 //    @ApiResponse(responseCode = "400", language = "Validation error in request body")
 //    @ApiResponse(responseCode = "500", language = "Internal server error")
-    @PutMapping("/queues/{id}/language")
+    @PutMapping(value = "/queues/{id}/language", produces = {APPLICATION_JSON_VALUE}, consumes = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> updateQueueLanguage(
@@ -877,15 +889,16 @@ public class QueueController {
      * This endpoint allows authenticated users with the "VERIFIED_ROLE" to update the authentication requirement
      * of an existing queue.
      *
-     * @param id                  The Id of the queue to fetch.
-     * @param isRequired          'true' if this queue requires authentication.
-     * @param authentication      The authentication details of the user making the request.
+     * @param id                             The Id of the queue to fetch.
+     * @param queueAuthUpdateRequest          The request containing the updated authentication requirement.
+     * @param authentication                 The authentication details of the user making the request.
      * @return A ResponseEntity indicating the success of the language update.
      * @throws DataAccessException If there's an issue accessing data.
+     * @throws DataUpdateException If there's an issue update data.
      */
     @Operation(summary = "Change the authentication requirements of an existing queue", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully updated queue authentication requirement")
-    @PutMapping("/queues/{id}/auth")
+    @PutMapping(value = "/queues/{id}/auth", produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<ResponseMessage> updateQueueAuthRequirement(
             @PathVariable("id")
@@ -895,14 +908,15 @@ public class QueueController {
             @Valid
             @RequestBody
             @Parameter(description = "The updated authentication requirement", required = true)
-            Boolean isRequired,
+            QueueAuthUpdateRequest queueAuthUpdateRequest,
             //
             Authentication authentication
     ) throws DataAccessException, DataUpdateException {
         UserDetails userDetails = (UserDetails) authentication.getDetails();
         String username = userDetails.getUsername();
-        log.debug("updateQueueAuthRequirement for user={}, queue={}, isRequired={}", username, id, isRequired);
+        log.debug("updateQueueAuthRequirement for user={}, queue={}, queueAuthUpdateRequest={}", username, id, queueAuthUpdateRequest);
         StopWatch stopWatch = createStarted();
+        boolean isRequired = queueAuthUpdateRequest.getIsRequired();
         Boolean updatedAuthRequirement = queueDefinitionService.updateQueueAuthenticationRequirement(username, id, isRequired);
         stopWatch.stop();
         appLogService.logQueueAttributeUpdate(username, stopWatch, id, "isAuthenticated");
@@ -923,7 +937,7 @@ public class QueueController {
      */
     @Operation(summary = "Change the image source of an existing queue", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully updated queue image source")
-    @PutMapping("/queues/{id}/imgsrc")
+    @PutMapping(value = "/queues/{id}/imgsrc", produces = {APPLICATION_JSON_VALUE}, consumes = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<ResponseMessage> updateQueueImageSource(
             @PathVariable("id")
@@ -963,7 +977,7 @@ public class QueueController {
     @Operation(summary = "Delete a queue", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully deleted queue")
 //    @ApiResponse(responseCode = "500", description = "Internal server error")
-    @DeleteMapping("/queues/{id}")
+    @DeleteMapping(value = "/queues/{id}", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> deleteQueue(
@@ -1002,7 +1016,7 @@ public class QueueController {
      */
     @Operation(summary = "Delete the title from a queue given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully deleted queue title")
-    @DeleteMapping("/queues/{id}/title")
+    @DeleteMapping(value = "/queues/{id}/title", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> deleteQueueTitle(
@@ -1036,7 +1050,7 @@ public class QueueController {
      */
     @Operation(summary = "Delete the description from a queue given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully deleted queue description")
-    @DeleteMapping("/queues/{id}/desc")
+    @DeleteMapping(value = "/queues/{id}/desc", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> deleteQueueDescription(
@@ -1070,7 +1084,7 @@ public class QueueController {
      */
     @Operation(summary = "Delete the generator from a queue given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully deleted queue generator")
-    @DeleteMapping("/queues/{id}/generator")
+    @DeleteMapping(value = "/queues/{id}/generator", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> deleteQueueGenerator(
@@ -1104,7 +1118,7 @@ public class QueueController {
      */
     @Operation(summary = "Delete the copyright from a queue given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully deleted queue copyright")
-    @DeleteMapping("/queues/{id}/copyright")
+    @DeleteMapping(value = "/queues/{id}/copyright", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> deleteQueueCopyright(
@@ -1138,7 +1152,7 @@ public class QueueController {
      */
     @Operation(summary = "Delete the image source from a queue given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully deleted queue image source")
-    @DeleteMapping("/queues/{id}/imgsrc")
+    @DeleteMapping(value = "/queues/{id}/imgsrc", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<ResponseMessage> deleteQueueImageSource(
             @PathVariable("id")

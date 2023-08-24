@@ -14,7 +14,7 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,7 +28,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import static com.lostsidewalk.buffy.app.model.TokenType.APP_AUTH_REFRESH;
 import static com.lostsidewalk.buffy.app.user.UserRoles.SUBSCRIBER_AUTHORITY;
-import static com.lostsidewalk.buffy.app.user.UserRoles.UNVERIFIED_ROLE;
 import static com.lostsidewalk.buffy.auth.AuthProvider.LOCAL;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.springframework.http.ResponseEntity.ok;
@@ -66,7 +65,7 @@ class AuthenticationController {
     //
     // auth check
     //
-    @Secured({UNVERIFIED_ROLE})
+    @PreAuthorize("hasAuthority('ROLE_UNVERIFIED')")
     @RequestMapping(value = "/currentuser", method = GET)
     public ResponseEntity<LoginResponse> getCurrentUser(Authentication authentication) throws AuthClaimException, DataAccessException {
         UserDetails userDetails = (UserDetails) authentication.getDetails();

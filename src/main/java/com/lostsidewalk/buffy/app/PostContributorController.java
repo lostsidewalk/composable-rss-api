@@ -31,6 +31,7 @@ import java.util.List;
 import static com.lostsidewalk.buffy.app.ResponseMessageUtils.buildResponseMessage;
 import static org.apache.commons.collections4.CollectionUtils.size;
 import static org.apache.commons.lang3.time.StopWatch.createStarted;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.ResponseEntity.ok;
 
 /**
@@ -69,7 +70,7 @@ public class PostContributorController {
      */
     @Operation(summary = "Add new contributor to the post given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully added contributor to post")
-    @PostMapping("/posts/{postId}/contributors")
+    @PostMapping(value = "/posts/{postId}/contributors", produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<ResponseMessage> addPostContributor(
             @PathVariable("postId")
@@ -112,7 +113,7 @@ public class PostContributorController {
     @ApiResponse(responseCode = "200", description = "Successfully fetched post contributors",
             content = @Content(mediaType = "application/json",
                     array = @ArraySchema(schema = @Schema(implementation = PostPerson.class))))
-    @GetMapping("/posts/{postId}/contributors")
+    @GetMapping(value = "/posts/{postId}/contributors", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<List<PostPerson>> getPostContributor(
             @PathVariable("postId")
@@ -152,7 +153,7 @@ public class PostContributorController {
      */
     @Operation(summary = "Update the post contributor given by idx, on a post given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully updated post contributor")
-    @PutMapping("/posts/{postId}/contributors/{contributorIdx}")
+    @PutMapping(value = "/posts/{postId}/contributors/{contributorIdx}", produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> updatePostContributor(
@@ -197,7 +198,7 @@ public class PostContributorController {
      */
     @Operation(summary = "Delete the post contributor given by idx, on a post given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully deleted post contributor")
-    @DeleteMapping("/posts/{postId}/contributors/{contributorIdx}")
+    @DeleteMapping(value = "/posts/{postId}/contributors/{contributorIdx}", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> deletePostContributor(

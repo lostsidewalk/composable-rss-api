@@ -31,6 +31,7 @@ import java.util.List;
 import static com.lostsidewalk.buffy.app.ResponseMessageUtils.buildResponseMessage;
 import static org.apache.commons.collections4.CollectionUtils.size;
 import static org.apache.commons.lang3.time.StopWatch.createStarted;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.ResponseEntity.ok;
 
 /**
@@ -69,7 +70,7 @@ public class PostContentController {
      */
     @Operation(summary = "Add new content to the post given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully add content to post")
-    @PostMapping("/posts/{postId}/content")
+    @PostMapping(value = "/posts/{postId}/content", produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<ResponseMessage> addPostContent(
             @PathVariable("postId")
@@ -112,7 +113,7 @@ public class PostContentController {
     @ApiResponse(responseCode = "200", description = "Successfully fetched post content",
             content = @Content(mediaType = "application/json",
                     array = @ArraySchema(schema = @Schema(implementation = ContentObject.class))))
-    @GetMapping("/posts/{postId}/content")
+    @GetMapping(value = "/posts/{postId}/content", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<List<ContentObject>> getPostContent(
             @PathVariable("postId")
@@ -152,7 +153,7 @@ public class PostContentController {
      */
     @Operation(summary = "Update the post content given by idx, on a post given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully updated post content")
-    @PutMapping("/posts/{postId}/content/{contentIdx}")
+    @PutMapping(value = "/posts/{postId}/content/{contentIdx}", produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> updatePostContent(
@@ -197,7 +198,7 @@ public class PostContentController {
      */
     @Operation(summary = "Delete the post content given by idx, on a post given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully deleted post content")
-    @DeleteMapping("/posts/{postId}/content/{contentIdx}")
+    @DeleteMapping(value = "/posts/{postId}/content/{contentIdx}", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> deletePostContent(

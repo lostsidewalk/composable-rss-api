@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 
 import static com.lostsidewalk.buffy.app.ResponseMessageUtils.buildResponseMessage;
 import static org.apache.commons.lang3.time.StopWatch.createStarted;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.ResponseEntity.ok;
 
 /**
@@ -64,7 +65,7 @@ public class PostMediaController {
     @Operation(summary = "Get all medias in the post given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched post medias",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = PostMedia.class)))
-    @GetMapping("/posts/{postId}/media")
+    @GetMapping(value = "/posts/{postId}/media", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<PostMedia> getPostMedia(
             @PathVariable("postId")
@@ -103,7 +104,7 @@ public class PostMediaController {
      */
     @Operation(summary = "Update the post media object on a post given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully updated post media")
-    @PutMapping("/posts/{postId}/media")
+    @PutMapping(value = "/posts/{postId}/media", produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> updatePostMedia(
@@ -143,7 +144,7 @@ public class PostMediaController {
      */
     @Operation(summary = "Delete the post media object on a post given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully deleted post media")
-    @DeleteMapping("/posts/{postId}/media")
+    @DeleteMapping(value = "/posts/{postId}/media", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> deletePostMedia(

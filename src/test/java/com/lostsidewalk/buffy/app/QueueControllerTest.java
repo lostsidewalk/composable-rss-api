@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.lostsidewalk.buffy.app.model.request.QueueAuthUpdateRequest;
 import com.lostsidewalk.buffy.app.model.request.QueueConfigRequest;
 import com.lostsidewalk.buffy.app.model.request.QueueStatusUpdateRequest;
 import com.lostsidewalk.buffy.queue.QueueDefinition;
@@ -14,15 +15,18 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
 import static com.lostsidewalk.buffy.app.auth.AuthTokenFilter.API_KEY_HEADER_NAME;
 import static com.lostsidewalk.buffy.app.auth.AuthTokenFilter.API_SECRET_HEADER_NAME;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
@@ -154,7 +158,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
                         .get("/queues/1/ident")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(TEXT_PLAIN_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
@@ -172,7 +176,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
                         .get("/queues/1/title")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(TEXT_PLAIN_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals("Test Queue Title", responseContent);
@@ -187,7 +191,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
                         .get("/queues/1/desc")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(TEXT_PLAIN_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals("Test Queue Description", responseContent);
@@ -202,7 +206,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
                         .get("/queues/1/generator")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(TEXT_PLAIN_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals("Test Queue Feed Generator", responseContent);
@@ -217,7 +221,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
                         .get("/queues/1/transport")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(TEXT_PLAIN_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals("Test Queue Transport Identifier", responseContent);
@@ -247,13 +251,15 @@ public class QueueControllerTest extends BaseWebControllerTest {
                         .get("/queues/1/language")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(TEXT_PLAIN_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals("en-US", responseContent);
                 })
                 .andExpect(status().isOk());
     }
+
+    private static final SimpleDateFormat ISO_8601_TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
     @Test
     void test_getQueueDeployedTimestamp() throws Exception {
@@ -262,13 +268,17 @@ public class QueueControllerTest extends BaseWebControllerTest {
                         .get("/queues/1/deployed")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(TEXT_PLAIN_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(
-                            GSON.fromJson("\"1970-01-01T02:46:40.000+00:00\"", Date.class),
-                            GSON.fromJson(responseContent, Date.class)
-                    );
+                    assertTrue(isNotBlank(responseContent));
+                    Date deployedTimestamp = null;
+                    try {
+                        deployedTimestamp = ISO_8601_TIMESTAMP_FORMAT.parse(responseContent);
+                    } catch (Exception e) {
+                        fail(e.getMessage());
+                    }
+                    assertEquals(deployedTimestamp, YESTERDAY);
                 })
                 .andExpect(status().isOk());
     }
@@ -280,7 +290,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
                         .get("/queues/1/auth")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(TEXT_PLAIN_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
@@ -298,7 +308,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
                         .get("/queues/1/imgsrc")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(TEXT_PLAIN_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
@@ -362,6 +372,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
                         .put("/queues/1/ident")
                         .servletPath("/queues/1/ident")
                         .content("newIdent")
+                        .contentType(TEXT_PLAIN_VALUE)
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
                 )
@@ -378,6 +389,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/queues/1/title")
                         .servletPath("/queues/1/title")
+                        .contentType(TEXT_PLAIN_VALUE)
                         .content("newTitle")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
@@ -398,6 +410,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/queues/1/desc")
                         .servletPath("/queues/1/desc")
+                        .contentType(TEXT_PLAIN_VALUE)
                         .content("newDescription")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
@@ -419,6 +432,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
                         .put("/queues/1/generator")
                         .servletPath("/queues/1/generator")
                         .content("newGenerator")
+                        .contentType(TEXT_PLAIN_VALUE)
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
                 )
@@ -438,6 +452,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/queues/1/copyright")
                         .servletPath("/queues/1/copyright")
+                        .contentType(TEXT_PLAIN_VALUE)
                         .content("newCopyright")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
@@ -458,6 +473,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/queues/1/language")
                         .servletPath("/queues/1/language")
+                        .contentType(TEXT_PLAIN_VALUE)
                         .content("newLanguage")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
@@ -472,14 +488,19 @@ public class QueueControllerTest extends BaseWebControllerTest {
         verify(this.queueDefinitionService).updateQueueLanguage("me", 1L, "newLanguage");
     }
 
+    private static final QueueAuthUpdateRequest TEST_QUEUE_AUTH_UPDATE_REQUEST = new QueueAuthUpdateRequest();
+    static {
+        TEST_QUEUE_AUTH_UPDATE_REQUEST.setIsRequired(true);
+    }
+
     @Test
     void test_updateQueueAuthRequirement() throws Exception {
         when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_DEPLOYED_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/queues/1/auth")
                         .servletPath("/queues/1/auth")
-                        .content("\"true\"")
                         .contentType(APPLICATION_JSON)
+                        .content(GSON.toJson(TEST_QUEUE_AUTH_UPDATE_REQUEST))
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
                 )
@@ -499,8 +520,8 @@ public class QueueControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/queues/1/imgsrc")
                         .servletPath("/queues/1/imgsrc")
-                        .content("\"testImageSource\"")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(TEXT_PLAIN_VALUE)
+                        .content("testImageSource")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
                 )
@@ -511,7 +532,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
                             GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
-        verify(this.queueDefinitionService).updateQueueImageSource("me", 1L, "\"testImageSource\"");
+        verify(this.queueDefinitionService).updateQueueImageSource("me", 1L, "testImageSource");
     }
 
     @Test

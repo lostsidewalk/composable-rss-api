@@ -30,6 +30,8 @@ import java.util.List;
 
 import static com.lostsidewalk.buffy.app.ResponseMessageUtils.buildResponseMessage;
 import static org.apache.commons.lang3.time.StopWatch.createStarted;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.http.ResponseEntity.ok;
 
 /**
@@ -68,7 +70,7 @@ public class QueueCredentialsController {
      */
     @Operation(summary = "Add new credential to the queue given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully added credential to queue")
-    @PostMapping("/queues/{queueId}/credentials")
+    @PostMapping(value = "/queues/{queueId}/credentials", produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<ResponseMessage> addQueueCredential(
             @PathVariable("queueId")
@@ -111,7 +113,7 @@ public class QueueCredentialsController {
     @ApiResponse(responseCode = "200", description = "Successfully fetched queue credentials",
             content = @Content(mediaType = "application/json",
                     array = @ArraySchema(schema = @Schema(implementation = QueueCredential.class))))
-    @GetMapping("/queues/{queueId}/credentials")
+    @GetMapping(value = "/queues/{queueId}/credentials", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<List<QueueCredential>> getQueueCredential(
             @PathVariable("queueId")
@@ -149,7 +151,7 @@ public class QueueCredentialsController {
      */
     @Operation(summary = "Update the password on the queue credential given by username, on a queue given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully updated password")
-    @PutMapping("/queues/{queueId}/credentials/{basicUsername}")
+    @PutMapping(value = "/queues/{queueId}/credentials/{basicUsername}", produces = {APPLICATION_JSON_VALUE}, consumes = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> updatePassword(
@@ -194,7 +196,7 @@ public class QueueCredentialsController {
      */
     @Operation(summary = "Delete the queue credential given by username, on a queue given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully deleted queue credential")
-    @DeleteMapping("/queues/{queueId}/credentials/{basicUsername}")
+    @DeleteMapping(value = "/queues/{queueId}/credentials/{basicUsername}", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> deleteQueueCredential(

@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
@@ -76,6 +77,7 @@ public class QueueCredentialControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/queues/1/credentials/customer")
                         .servletPath("/queues/1/credentials/customer")
+                        .contentType(TEXT_PLAIN_VALUE)
                         .content("testPassword")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")

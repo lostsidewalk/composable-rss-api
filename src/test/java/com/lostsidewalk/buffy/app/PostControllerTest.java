@@ -20,6 +20,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -33,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
@@ -244,7 +246,7 @@ public class PostControllerTest extends BaseWebControllerTest {
                         .get("/posts/1/queue")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(TEXT_PLAIN_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals("1", responseContent);
@@ -306,7 +308,7 @@ public class PostControllerTest extends BaseWebControllerTest {
                         .get("/posts/1/comment")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(TEXT_PLAIN_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals("testPostComment", responseContent);
@@ -321,13 +323,15 @@ public class PostControllerTest extends BaseWebControllerTest {
                         .get("/posts/1/rights")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(TEXT_PLAIN_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals("testPostRights", responseContent);
                 })
                 .andExpect(status().isOk());
     }
+
+    private static final SimpleDateFormat ISO_8601_TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
     @Test
     void test_getExpirationTimestamp() throws Exception {
@@ -336,13 +340,13 @@ public class PostControllerTest extends BaseWebControllerTest {
                         .get("/posts/1/expiration")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(TEXT_PLAIN_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertTrue(isNotBlank(responseContent));
                     Date expirationDate = null;
                     try {
-                        expirationDate = GSON.fromJson(responseContent, Date.class);
+                        expirationDate = ISO_8601_TIMESTAMP_FORMAT.parse(responseContent);
                     } catch (Exception e) {
                         fail(e.getMessage());
                     }
@@ -358,13 +362,13 @@ public class PostControllerTest extends BaseWebControllerTest {
                         .get("/posts/1/published")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(TEXT_PLAIN_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertTrue(isNotBlank(responseContent));
                     Date published = null;
                     try {
-                        published = GSON.fromJson(responseContent, Date.class);
+                        published = ISO_8601_TIMESTAMP_FORMAT.parse(responseContent);
                     } catch (Exception e) {
                         fail(e.getMessage());
                     }
@@ -380,13 +384,13 @@ public class PostControllerTest extends BaseWebControllerTest {
                         .get("/posts/1/updated")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(TEXT_PLAIN_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertTrue(isNotBlank(responseContent));
                     Date lastUpdated = null;
                     try {
-                        lastUpdated = GSON.fromJson(responseContent, Date.class);
+                        lastUpdated = ISO_8601_TIMESTAMP_FORMAT.parse(responseContent);
                     } catch (Exception e) {
                         fail(e.getMessage());
                     }
@@ -506,7 +510,7 @@ public class PostControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/posts/1/comment")
                         .servletPath("/posts/1/comment")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(TEXT_PLAIN_VALUE)
                         .content(GSON.toJson("testComment"))
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
@@ -524,7 +528,7 @@ public class PostControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/posts/1/rights")
                         .servletPath("/posts/1/rights")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(TEXT_PLAIN_VALUE)
                         .content(GSON.toJson("testRights"))
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
@@ -542,14 +546,15 @@ public class PostControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/posts/1/expiration")
                         .servletPath("/posts/1/expiration")
-                        .contentType(APPLICATION_JSON)
-                        .content(GSON.toJson(THIRTY_DAYS_FROM_NOW))
+                        .contentType(TEXT_PLAIN_VALUE)
+                        .content(ISO_8601_TIMESTAMP_FORMAT.format(THIRTY_DAYS_FROM_NOW))
+                        .accept(TEXT_PLAIN_VALUE)
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(THIRTY_DAYS_FROM_NOW, GSON.fromJson(responseContent, Date.class));
+                    assertEquals(THIRTY_DAYS_FROM_NOW, ISO_8601_TIMESTAMP_FORMAT.parse(responseContent));
                 })
                 .andExpect(status().isOk());
     }

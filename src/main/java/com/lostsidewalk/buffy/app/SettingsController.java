@@ -5,7 +5,10 @@ import com.lostsidewalk.buffy.DataUpdateException;
 import com.lostsidewalk.buffy.app.audit.AppLogService;
 import com.lostsidewalk.buffy.app.model.request.SettingsUpdateRequest;
 import com.lostsidewalk.buffy.app.model.request.UpdateSubscriptionRequest;
-import com.lostsidewalk.buffy.app.model.response.*;
+import com.lostsidewalk.buffy.app.model.response.ResponseMessage;
+import com.lostsidewalk.buffy.app.model.response.SettingsResponse;
+import com.lostsidewalk.buffy.app.model.response.StripeResponse;
+import com.lostsidewalk.buffy.app.model.response.SubscriptionResponse;
 import com.lostsidewalk.buffy.app.order.StripeOrderService;
 import com.lostsidewalk.buffy.app.settings.SettingsService;
 import com.stripe.exception.StripeException;
@@ -15,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
@@ -26,11 +29,11 @@ import java.util.List;
 import static com.lostsidewalk.buffy.app.ResponseMessageUtils.buildResponseMessage;
 import static com.lostsidewalk.buffy.app.model.request.SubscriptionStatus.ACTIVE;
 import static com.lostsidewalk.buffy.app.model.request.SubscriptionStatus.CANCELED;
-import static com.lostsidewalk.buffy.app.user.UserRoles.UNVERIFIED_ROLE;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.collections4.CollectionUtils.size;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.ResponseEntity.badRequest;
 import static org.springframework.http.ResponseEntity.ok;
 
@@ -48,7 +51,7 @@ public class SettingsController {
     @Autowired
     StripeOrderService stripeOrderService;
 
-//    @Secured({UNVERIFIED_ROLE})
+//    @PreAuthorize("hasAuthority('ROLE_UNVERIFIED')")
 //    @GetMapping("/settings/display")
 //    public ResponseEntity<DisplaySettingsResponse> getDisplaySettings(Authentication authentication) throws DataAccessException {
 //        UserDetails userDetails = (UserDetails) authentication.getDetails();
@@ -61,7 +64,7 @@ public class SettingsController {
 //        return ok(displaySettingsResponse);
 //    }
 //
-//    @Secured({UNVERIFIED_ROLE})
+//    @PreAuthorize("hasAuthority('ROLE_UNVERIFIED')")
 //    @Transactional
 //    @PutMapping("/settings/display")
 //    public ResponseEntity<ResponseMessage> updateDisplaySettings(@Valid @RequestBody DisplaySettingsUpdateRequest displaySettingsUpdateRequest, Authentication authentication) throws DataAccessException, DataUpdateException {
@@ -74,8 +77,8 @@ public class SettingsController {
 //        return ok().body(buildResponseMessage(EMPTY));
 //    }
 
-    @Secured({UNVERIFIED_ROLE})
-    @GetMapping("/settings")
+    @PreAuthorize("hasAuthority('ROLE_UNVERIFIED')")
+    @GetMapping(value = "/settings", produces = {APPLICATION_JSON_VALUE})
     public ResponseEntity<SettingsResponse> getSettings(Authentication authentication) throws DataAccessException, StripeException {
         UserDetails userDetails = (UserDetails) authentication.getDetails();
         String username = userDetails.getUsername();
@@ -94,9 +97,9 @@ public class SettingsController {
         return ok(settingsResponse);
     }
 
-    @Secured({UNVERIFIED_ROLE})
+    @PreAuthorize("hasAuthority('ROLE_UNVERIFIED')")
     @Transactional
-    @PutMapping("/settings")
+    @PutMapping(value = "/settings", produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     public ResponseEntity<ResponseMessage> updateSettings(@Valid @RequestBody SettingsUpdateRequest settingsUpdateRequest, Authentication authentication) throws DataAccessException, DataUpdateException {
         UserDetails userDetails = (UserDetails) authentication.getDetails();
         String username = userDetails.getUsername();
@@ -109,8 +112,8 @@ public class SettingsController {
     //
     // order initialization (checkout)
     //
-    @PostMapping("/order")
-    @Secured({UNVERIFIED_ROLE})
+    @PostMapping(value = "/order", produces = {APPLICATION_JSON_VALUE})
+    @PreAuthorize("hasAuthority('ROLE_UNVERIFIED')")
     @Transactional
     public ResponseEntity<StripeResponse> initCheckout(Authentication authentication) throws StripeException, DataAccessException {
         UserDetails userDetails = (UserDetails) authentication.getDetails();
@@ -123,8 +126,8 @@ public class SettingsController {
         return new ResponseEntity<>(stripeResponse, OK);
     }
 
-    @PutMapping("/subscriptions")
-    @Secured({UNVERIFIED_ROLE})
+    @PutMapping(value = "/subscriptions", produces = {APPLICATION_JSON_VALUE})
+    @PreAuthorize("hasAuthority('ROLE_UNVERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> updateSubscription(@Valid @RequestBody UpdateSubscriptionRequest updateSubscriptionRequest, Authentication authentication) throws StripeException, DataAccessException {
         UserDetails userDetails = (UserDetails) authentication.getDetails();

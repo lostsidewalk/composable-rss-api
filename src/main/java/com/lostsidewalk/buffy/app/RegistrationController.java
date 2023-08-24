@@ -31,6 +31,7 @@ import java.io.IOException;
 import static com.lostsidewalk.buffy.app.ResponseMessageUtils.buildResponseMessage;
 import static com.lostsidewalk.buffy.app.model.TokenType.VERIFICATION;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.web.bind.annotation.RequestMethod.*;
 
@@ -65,7 +66,7 @@ public class RegistrationController {
     //
     // the initial registration process starts here
     //
-    @RequestMapping(path = "/register", method = POST)
+    @RequestMapping(path = "/register", method = POST, produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     @Transactional
     public ResponseEntity<RegistartionResponse> register(@Valid @RequestBody RegistrationRequest registrationRequest) throws RegistrationException, AuthClaimException, DataAccessException, DataUpdateException {
         //
@@ -139,7 +140,7 @@ public class RegistrationController {
         response.sendRedirect(this.verificationContinueRedirectUrl);
     }
 
-    @RequestMapping(path = "/deregister", method = DELETE)
+    @RequestMapping(path = "/deregister", method = DELETE, produces = {APPLICATION_JSON_VALUE})
     @Transactional
     public ResponseEntity<ResponseMessage> deregister(Authentication authentication) throws DataAccessException, DataUpdateException {
         UserDetails userDetails = (UserDetails) authentication.getDetails();

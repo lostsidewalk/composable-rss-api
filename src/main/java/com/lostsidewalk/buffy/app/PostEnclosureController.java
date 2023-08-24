@@ -31,6 +31,7 @@ import java.util.List;
 import static com.lostsidewalk.buffy.app.ResponseMessageUtils.buildResponseMessage;
 import static org.apache.commons.collections4.CollectionUtils.size;
 import static org.apache.commons.lang3.time.StopWatch.createStarted;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.ResponseEntity.ok;
 
 /**
@@ -69,7 +70,7 @@ public class PostEnclosureController {
      */
     @Operation(summary = "Add new enclosure to the post given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully added enclosure to post")
-    @PostMapping("/posts/{postId}/enclosures")
+    @PostMapping(value = "/posts/{postId}/enclosures", produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<ResponseMessage> addPostEnclosure(
             @PathVariable("postId")
@@ -112,7 +113,7 @@ public class PostEnclosureController {
     @ApiResponse(responseCode = "200", description = "Successfully fetched post enclosures",
             content = @Content(mediaType = "application/json",
                     array = @ArraySchema(schema = @Schema(implementation = PostEnclosure.class))))
-    @GetMapping("/posts/{postId}/enclosures")
+    @GetMapping(value = "/posts/{postId}/enclosures", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<List<PostEnclosure>> getPostEnclosures(
             @PathVariable("postId")
@@ -152,7 +153,7 @@ public class PostEnclosureController {
      */
     @Operation(summary = "Update the post enclosure given by idx, on a post given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully updated post enclosure")
-    @PutMapping("/posts/{postId}/enclosures/{enclosureIdx}")
+    @PutMapping(value = "/posts/{postId}/enclosures/{enclosureIdx}", produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> updatePostEnclosure(
@@ -197,7 +198,7 @@ public class PostEnclosureController {
      */
     @Operation(summary = "Delete the post enclosure given by idx, on a post given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully deleted post enclosure")
-    @DeleteMapping("/posts/{postId}/enclosures/{enclosureIdx}")
+    @DeleteMapping(value = "/posts/{postId}/enclosures/{enclosureIdx}", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> deletePostEnclosure(
