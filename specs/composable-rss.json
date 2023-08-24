@@ -493,9 +493,9 @@
           "200" : {
             "description" : "Successfully updated queue ident",
             "content" : {
-              "text/plain" : {
+              "application/json" : {
                 "schema" : {
-                  "type" : "string"
+                  "$ref" : "#/components/schemas/ResponseMessage"
                 }
               }
             }
@@ -1519,6 +1519,13 @@
         "description" : "Update the rights string of the post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n rights string of a post identified by its Id.",
         "operationId" : "updatePostRights",
         "parameters" : [ {
+          "name" : "Accept",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "id",
           "in" : "path",
           "description" : "The Id of the post to update",
@@ -1669,6 +1676,13 @@
         "description" : "Update the expiration timestamp of the post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n expiration timestamp of a post identified by its Id.",
         "operationId" : "updateExpirationTimestamp",
         "parameters" : [ {
+          "name" : "Accept",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "id",
           "in" : "path",
           "description" : "The Id of the post to update",
@@ -1788,6 +1802,13 @@
         "description" : "Update the comment string of the post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n comment string of a post identified by its Id.",
         "operationId" : "updatePostComment",
         "parameters" : [ {
+          "name" : "Accept",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "id",
           "in" : "path",
           "description" : "The Id of the post to update",
@@ -2552,6 +2573,13 @@
         "description" : "Get the transport identifier of a queue given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to get the transport identifier of a\n queue identified by its Id.",
         "operationId" : "getQueueTransport",
         "parameters" : [ {
+          "name" : "Accept",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "queueId",
           "in" : "path",
           "description" : "The Id of the queue to fetch the transport identifier from",
@@ -2566,6 +2594,11 @@
             "description" : "Successfully fetched queue transport identifier",
             "content" : {
               "text/plain" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "application/json" : {
                 "schema" : {
                   "type" : "string"
                 }
@@ -2585,6 +2618,13 @@
         "description" : "Get the title of a queue given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to get the title of a\n queue identified by its Id.",
         "operationId" : "getQueueTitle",
         "parameters" : [ {
+          "name" : "Accept",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "queueId",
           "in" : "path",
           "description" : "The Id of the queue to fetch the title from",
@@ -2599,6 +2639,11 @@
             "description" : "Successfully fetched queue title",
             "content" : {
               "text/plain" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "application/json" : {
                 "schema" : {
                   "type" : "string"
                 }
@@ -2652,6 +2697,13 @@
         "description" : "Get the language of a queue given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to get the language of a\n queue identified by its Id.",
         "operationId" : "getQueueLanguage",
         "parameters" : [ {
+          "name" : "Accept",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "queueId",
           "in" : "path",
           "description" : "The Id of the queue to fetch the language from",
@@ -2666,6 +2718,11 @@
             "description" : "Successfully fetched queue language",
             "content" : {
               "text/plain" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "application/json" : {
                 "schema" : {
                   "type" : "string"
                 }
@@ -2685,6 +2742,13 @@
         "description" : "Get the image source of a queue given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to get the image source of a\n queue identified by its Id.",
         "operationId" : "getQueueImageSource",
         "parameters" : [ {
+          "name" : "Accept",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "queueId",
           "in" : "path",
           "description" : "The Id of the queue to fetch the image source from",
@@ -2699,6 +2763,11 @@
             "description" : "Successfully fetched queue image source",
             "content" : {
               "text/plain" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "application/json" : {
                 "schema" : {
                   "type" : "string"
                 }
@@ -2718,6 +2787,13 @@
         "description" : "Get the ident string of a queue given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to get the ident string of a\n queue identified by its Id.",
         "operationId" : "getQueueIdent",
         "parameters" : [ {
+          "name" : "Accept",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "queueId",
           "in" : "path",
           "description" : "The Id of the queue to fetch the ident string from",
@@ -2732,6 +2808,11 @@
             "description" : "Successfully fetched queue ident string",
             "content" : {
               "text/plain" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "application/json" : {
                 "schema" : {
                   "type" : "string"
                 }
@@ -2751,6 +2832,13 @@
         "description" : "Get the generator of a queue given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to get the generator of a\n queue identified by its Id.",
         "operationId" : "getQueueGenerator",
         "parameters" : [ {
+          "name" : "Accept",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "queueId",
           "in" : "path",
           "description" : "The Id of the queue to fetch the generator from",
@@ -2765,6 +2853,11 @@
             "description" : "Successfully fetched queue generator",
             "content" : {
               "text/plain" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "application/json" : {
                 "schema" : {
                   "type" : "string"
                 }
@@ -2784,6 +2877,13 @@
         "description" : "Get the description of a queue given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to get description of a\n queue identified by its Id.",
         "operationId" : "getQueueDescription",
         "parameters" : [ {
+          "name" : "Accept",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "queueId",
           "in" : "path",
           "description" : "The Id of the queue to fetch the description from",
@@ -2798,6 +2898,11 @@
             "description" : "Successfully fetched queue description",
             "content" : {
               "text/plain" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "application/json" : {
                 "schema" : {
                   "type" : "string"
                 }
@@ -2817,6 +2922,13 @@
         "description" : "Get the deployed timestamp of a queue given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to get the deployed timestamp of a\n queue identified by its Id.",
         "operationId" : "getQueueDeployedTimestamp",
         "parameters" : [ {
+          "name" : "Accept",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "queueId",
           "in" : "path",
           "description" : "The Id of the queue to fetch the deployed timestamp from",
@@ -2831,6 +2943,11 @@
             "description" : "Successfully fetched queue deployed timestamp",
             "content" : {
               "text/plain" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "application/json" : {
                 "schema" : {
                   "type" : "string"
                 }
@@ -2850,6 +2967,13 @@
         "description" : "Get the copyright of a queue given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to get the copyright of a\n queue identified by its Id.",
         "operationId" : "getQueueCopyright",
         "parameters" : [ {
+          "name" : "Accept",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "queueId",
           "in" : "path",
           "description" : "The Id of the queue to fetch the copyright from",
@@ -2864,6 +2988,11 @@
             "description" : "Successfully fetched queue copyright",
             "content" : {
               "text/plain" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "application/json" : {
                 "schema" : {
                   "type" : "string"
                 }
@@ -2883,6 +3012,13 @@
         "description" : "Get the authentication requirement of a queue given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to get the authentication requirement of a\n queue identified by its Id.",
         "operationId" : "getQueueAuthRequirement",
         "parameters" : [ {
+          "name" : "Accept",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "queueId",
           "in" : "path",
           "description" : "The Id of the queue to fetch the authentication requirement from",
@@ -2897,6 +3033,11 @@
             "description" : "Successfully fetched queue authentication requirement",
             "content" : {
               "text/plain" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "application/json" : {
                 "schema" : {
                   "type" : "string"
                 }
@@ -2916,6 +3057,13 @@
         "description" : "Get the last updated timestamp of a post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n last updated timestamp of a post identified by its Id.",
         "operationId" : "getLastUpdatedTimestamp",
         "parameters" : [ {
+          "name" : "Accept",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "postId",
           "in" : "path",
           "description" : "The Id of the post to fetch last updated timestamp from",
@@ -2930,6 +3078,11 @@
             "description" : "Successfully fetched post last updated timestamp",
             "content" : {
               "text/plain" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "application/json" : {
                 "schema" : {
                   "type" : "string"
                 }
@@ -3016,6 +3169,13 @@
         "description" : "Get the rights string of a post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n rights string of a post identified by its Id.",
         "operationId" : "getPostRights",
         "parameters" : [ {
+          "name" : "Accept",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "postId",
           "in" : "path",
           "description" : "The Id of the post to fetch rights string from",
@@ -3030,6 +3190,11 @@
             "description" : "Successfully fetched post rights string",
             "content" : {
               "text/plain" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "application/json" : {
                 "schema" : {
                   "type" : "string"
                 }
@@ -3049,6 +3214,13 @@
         "description" : "Get the queue Id of a post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n queue Id of a post identified by its Id.",
         "operationId" : "getPostQueueId",
         "parameters" : [ {
+          "name" : "Accept",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "postId",
           "in" : "path",
           "description" : "The Id of the post to fetch queue Id from",
@@ -3063,6 +3235,11 @@
             "description" : "Successfully fetched post queue Id",
             "content" : {
               "text/plain" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "application/json" : {
                 "schema" : {
                   "type" : "string"
                 }
@@ -3082,6 +3259,13 @@
         "description" : "Get the published timestamp of a post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n published timestamp of a post identified by its Id.",
         "operationId" : "getPublishedTimestamp",
         "parameters" : [ {
+          "name" : "Accept",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "postId",
           "in" : "path",
           "description" : "The Id of the post to fetch published timestamp from",
@@ -3096,6 +3280,11 @@
             "description" : "Successfully fetched post published timestamp",
             "content" : {
               "text/plain" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "application/json" : {
                 "schema" : {
                   "type" : "string"
                 }
@@ -3148,6 +3337,13 @@
         "description" : "Get the expiration timestamp of a post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n expiration timestamp of a post identified by its Id.",
         "operationId" : "getExpirationTimestamp",
         "parameters" : [ {
+          "name" : "Accept",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "postId",
           "in" : "path",
           "description" : "The Id of the post to fetch expiration timestamp from",
@@ -3162,6 +3358,11 @@
             "description" : "Successfully fetched post expiration timestamp",
             "content" : {
               "text/plain" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "application/json" : {
                 "schema" : {
                   "type" : "string"
                 }
@@ -3214,6 +3415,13 @@
         "description" : "Get the comment string of a post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n comment string of a post identified by its Id.",
         "operationId" : "getPostComment",
         "parameters" : [ {
+          "name" : "Accept",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "postId",
           "in" : "path",
           "description" : "The Id of the post to fetch comment string from",
@@ -3228,6 +3436,11 @@
             "description" : "Successfully fetched post comment string",
             "content" : {
               "text/plain" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "application/json" : {
                 "schema" : {
                   "type" : "string"
                 }

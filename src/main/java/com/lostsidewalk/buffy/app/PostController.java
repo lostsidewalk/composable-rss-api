@@ -1,5 +1,7 @@
 package com.lostsidewalk.buffy.app;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.lostsidewalk.buffy.DataAccessException;
 import com.lostsidewalk.buffy.DataUpdateException;
 import com.lostsidewalk.buffy.app.audit.AppLogService;
@@ -26,6 +28,7 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -46,8 +49,8 @@ import static org.apache.commons.collections4.CollectionUtils.size;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.time.StopWatch.createStarted;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
+import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.MediaType.*;
 import static org.springframework.http.ResponseEntity.ok;
 
 /**
@@ -214,6 +217,10 @@ public class PostController {
         return ok(stagingPost.getPostPubStatus());
     }
 
+    private static final Gson GSON = new GsonBuilder()
+            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX")
+            .create();
+
     /**
      * Get the queue Id of a post given by its Id.
      *
@@ -228,9 +235,11 @@ public class PostController {
     @Operation(summary = "Get the queue Id of a post given by its Id.", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched post queue Id",
             content = @Content(schema = @Schema(implementation = String.class)))
-    @GetMapping(value = "/posts/{postId}/queue", produces = {TEXT_PLAIN_VALUE})
+    @GetMapping(value = "/posts/{postId}/queue", produces = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getPostQueueId(
+            @RequestHeader("Accept") String acceptHeader,
+            //
             @PathVariable("postId")
             @Parameter(description = "The Id of the post to fetch queue Id from", required = true)
             Long postId,
@@ -244,7 +253,13 @@ public class PostController {
         StagingPost stagingPost = stagingPostService.findById(username, postId);
         stopWatch.stop();
         appLogService.logStagingPostAttributeFetch(username, stopWatch, stagingPost.getId(), "queueId");
-        return ok(stagingPost.getQueueId().toString()); // toString retains only numerals (i.e., no formatting)
+        if (acceptHeader.contains(APPLICATION_JSON_VALUE)) {
+            return ok(GSON.toJson(stagingPost.getQueueId()));
+        } else {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(TEXT_PLAIN);
+            return new ResponseEntity<>(stagingPost.getQueueId().toString(), headers, OK);
+        }
     }
 
     /**
@@ -360,9 +375,11 @@ public class PostController {
     @Operation(summary = "Get the comment string of a post given by its Id.", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched post comment string",
             content = @Content(schema = @Schema(implementation = String.class)))
-    @GetMapping(value = "/posts/{postId}/comment", produces = {TEXT_PLAIN_VALUE})
+    @GetMapping(value = "/posts/{postId}/comment", produces = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getPostComment(
+            @RequestHeader("Accept") String acceptHeader,
+            //
             @PathVariable("postId")
             @Parameter(description = "The Id of the post to fetch comment string from", required = true)
             Long postId,
@@ -376,7 +393,13 @@ public class PostController {
         StagingPost stagingPost = stagingPostService.findById(username, postId);
         stopWatch.stop();
         appLogService.logStagingPostAttributeFetch(username, stopWatch, stagingPost.getId(), "postComment");
-        return ok(stagingPost.getPostComment());
+        if (acceptHeader.contains(APPLICATION_JSON_VALUE)) {
+            return ok(GSON.toJson(stagingPost.getPostComment()));
+        } else {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(TEXT_PLAIN);
+            return new ResponseEntity<>(stagingPost.getPostComment(), headers, OK);
+        }
     }
 
     /**
@@ -393,9 +416,11 @@ public class PostController {
     @Operation(summary = "Get the rights string of a post given by its Id.", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched post rights string",
             content = @Content(schema = @Schema(implementation = String.class)))
-    @GetMapping(value = "/posts/{postId}/rights", produces = {TEXT_PLAIN_VALUE})
+    @GetMapping(value = "/posts/{postId}/rights", produces = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getPostRights(
+            @RequestHeader("Accept") String acceptHeader,
+            //
             @PathVariable("postId")
             @Parameter(description = "The Id of the post to fetch rights string from", required = true)
             Long postId,
@@ -409,7 +434,13 @@ public class PostController {
         StagingPost stagingPost = stagingPostService.findById(username, postId);
         stopWatch.stop();
         appLogService.logStagingPostAttributeFetch(username, stopWatch, stagingPost.getId(), "postRights");
-        return ok(stagingPost.getPostRights());
+        if (acceptHeader.contains(APPLICATION_JSON_VALUE)) {
+            return ok(GSON.toJson(stagingPost.getPostRights()));
+        } else {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(TEXT_PLAIN);
+            return new ResponseEntity<>(stagingPost.getPostRights(), headers, OK);
+        }
     }
 
     private static final SimpleDateFormat ISO_8601_TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
@@ -428,9 +459,11 @@ public class PostController {
     @Operation(summary = "Get the expiration timestamp of a post given by its Id.", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched post expiration timestamp",
             content = @Content(schema = @Schema(implementation = String.class)))
-    @GetMapping(value = "/posts/{postId}/expiration", produces = {TEXT_PLAIN_VALUE})
+    @GetMapping(value = "/posts/{postId}/expiration", produces = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getExpirationTimestamp(
+            @RequestHeader("Accept") String acceptHeader,
+            //
             @PathVariable("postId")
             @Parameter(description = "The Id of the post to fetch expiration timestamp from", required = true)
             Long postId,
@@ -445,10 +478,16 @@ public class PostController {
         stopWatch.stop();
         appLogService.logStagingPostAttributeFetch(username, stopWatch, stagingPost.getId(), "expirationTimestamp");
         Date expirationTimestamp = stagingPost.getExpirationTimestamp();
-        return ok(expirationTimestamp != null ?
+        String responseStr = expirationTimestamp != null ?
                 ISO_8601_TIMESTAMP_FORMAT.format(expirationTimestamp) :
-                EMPTY // default response
-        );
+                EMPTY; // default response
+        if (acceptHeader.contains(APPLICATION_JSON_VALUE)) {
+            return ok(GSON.toJson(responseStr));
+        } else {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(TEXT_PLAIN);
+            return new ResponseEntity<>(responseStr, headers, OK);
+        }
     }
 
     /**
@@ -465,9 +504,11 @@ public class PostController {
     @Operation(summary = "Get the published timestamp of a post given by its Id.", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched post published timestamp",
             content = @Content(schema = @Schema(implementation = String.class)))
-    @GetMapping(value = "/posts/{postId}/published", produces = {TEXT_PLAIN_VALUE})
+    @GetMapping(value = "/posts/{postId}/published", produces = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getPublishedTimestamp(
+            @RequestHeader("Accept") String acceptHeader,
+            //
             @PathVariable("postId")
             @Parameter(description = "The Id of the post to fetch published timestamp from", required = true)
             Long postId,
@@ -482,10 +523,16 @@ public class PostController {
         stopWatch.stop();
         appLogService.logStagingPostAttributeFetch(username, stopWatch, stagingPost.getId(), "publishTimestamp");
         Date publishTimestamp = stagingPost.getPublishTimestamp();
-        return ok(publishTimestamp != null ?
+        String responseStr = publishTimestamp != null ?
                 ISO_8601_TIMESTAMP_FORMAT.format(publishTimestamp) :
-                EMPTY // default response
-        );
+                EMPTY; // default response
+        if (acceptHeader.contains(APPLICATION_JSON_VALUE)) {
+            return ok(GSON.toJson(responseStr));
+        } else {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(TEXT_PLAIN);
+            return new ResponseEntity<>(responseStr, headers, OK);
+        }
     }
 
     /**
@@ -502,9 +549,11 @@ public class PostController {
     @Operation(summary = "Get the last updated timestamp of a post given by its Id.", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched post last updated timestamp",
             content = @Content(schema = @Schema(implementation = String.class)))
-    @GetMapping(value = "/posts/{postId}/updated", produces = {TEXT_PLAIN_VALUE})
+    @GetMapping(value = "/posts/{postId}/updated", produces = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getLastUpdatedTimestamp(
+            @RequestHeader("Accept") String acceptHeader,
+            //
             @PathVariable("postId")
             @Parameter(description = "The Id of the post to fetch last updated timestamp from", required = true)
             Long postId,
@@ -519,10 +568,16 @@ public class PostController {
         stopWatch.stop();
         appLogService.logStagingPostAttributeFetch(username, stopWatch, stagingPost.getId(), "lastUpdatedTimestamp");
         Date lastUpdatedTimestamp = stagingPost.getLastUpdatedTimestamp();
-        return ok(lastUpdatedTimestamp != null ?
+        String responseStr = lastUpdatedTimestamp != null ?
                 ISO_8601_TIMESTAMP_FORMAT.format(lastUpdatedTimestamp) :
-                EMPTY // default response
-        );
+                EMPTY; // default response
+        if (acceptHeader.contains(APPLICATION_JSON_VALUE)) {
+            return ok(GSON.toJson(responseStr));
+        } else {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(TEXT_PLAIN);
+            return new ResponseEntity<>(responseStr, headers, OK);
+        }
     }
 
     //
@@ -759,10 +814,12 @@ public class PostController {
     @ApiResponse(responseCode = "200", description = "Successfully updated post comment string",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = String.class)))
-    @PutMapping(value = "/posts/{id}/comment", produces = {TEXT_PLAIN_VALUE}, consumes = {TEXT_PLAIN_VALUE})
+    @PutMapping(value = "/posts/{id}/comment", produces = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE}, consumes = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<String> updatePostComment(
+            @RequestHeader("Accept") String acceptHeader,
+            //
             @PathVariable("id")
             @Parameter(description = "The Id of the post to update", required = true)
             Long id,
@@ -778,8 +835,13 @@ public class PostController {
         String updatedPostComment = stagingPostService.updatePostComment(username, id, postComment);
         stopWatch.stop();
         appLogService.logStagingPostAttributeUpdate(username, stopWatch, id, "postComment");
-
-        return ok(updatedPostComment);
+        if (acceptHeader.contains(APPLICATION_JSON_VALUE)) {
+            return ok(GSON.toJson(updatedPostComment));
+        } else {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(TEXT_PLAIN);
+            return new ResponseEntity<>(updatedPostComment, headers, OK);
+        }
     }
 
     /**
@@ -799,10 +861,12 @@ public class PostController {
     @ApiResponse(responseCode = "200", description = "Successfully updated post rights string",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = String.class)))
-    @PutMapping(value = "/posts/{id}/rights", produces = {TEXT_PLAIN_VALUE}, consumes = {TEXT_PLAIN_VALUE})
+    @PutMapping(value = "/posts/{id}/rights", produces = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE}, consumes = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<String> updatePostRights(
+            @RequestHeader("Accept") String acceptHeader,
+            //
             @PathVariable("id")
             @Parameter(description = "The Id of the post to update", required = true)
             Long id,
@@ -818,8 +882,13 @@ public class PostController {
         String updatedPostRights = stagingPostService.updatePostRights(username, id, postRights);
         stopWatch.stop();
         appLogService.logStagingPostAttributeUpdate(username, stopWatch, id, "postRights");
-
-        return ok(updatedPostRights);
+        if (acceptHeader.contains(APPLICATION_JSON_VALUE)) {
+            return ok(GSON.toJson(updatedPostRights));
+        } else {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(TEXT_PLAIN);
+            return new ResponseEntity<>(updatedPostRights, headers, OK);
+        }
     }
 
     /**
@@ -839,10 +908,12 @@ public class PostController {
     @ApiResponse(responseCode = "200", description = "Successfully updated post expiration timestamp",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = String.class)))
-    @PutMapping(value = "/posts/{id}/expiration", produces = {TEXT_PLAIN_VALUE}, consumes = {TEXT_PLAIN_VALUE})
+    @PutMapping(value = "/posts/{id}/expiration", produces = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE}, consumes = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<String> updateExpirationTimestamp(
+            @RequestHeader("Accept") String acceptHeader,
+            //
             @PathVariable("id")
             @Parameter(description = "The Id of the post to update", required = true)
             Long id,
@@ -863,10 +934,16 @@ public class PostController {
         }
         stopWatch.stop();
         appLogService.logStagingPostAttributeUpdate(username, stopWatch, id, "expirationTimestamp");
-        return ok(updatedExpirationTimestamp != null ?
+        String responseStr = updatedExpirationTimestamp != null ?
                 ISO_8601_TIMESTAMP_FORMAT.format(updatedExpirationTimestamp) :
-                EMPTY // default response
-        );
+                EMPTY; // default response
+        if (acceptHeader.contains(APPLICATION_JSON_VALUE)) {
+            return ok(GSON.toJson(responseStr));
+        } else {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(TEXT_PLAIN);
+            return new ResponseEntity<>(responseStr, headers, OK);
+        }
     }
 
     //

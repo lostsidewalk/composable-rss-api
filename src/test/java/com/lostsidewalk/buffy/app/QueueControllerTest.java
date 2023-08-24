@@ -152,7 +152,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
     }
 
     @Test
-    void test_getQueueIdent() throws Exception {
+    void test_getQueueIdent_text() throws Exception {
         when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/queues/1/ident")
@@ -170,7 +170,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
     }
 
     @Test
-    void test_getQueueTitle() throws Exception {
+    void test_getQueueTitle_text() throws Exception {
         when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/queues/1/title")
@@ -185,7 +185,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
     }
 
     @Test
-    void test_getQueueDescription() throws Exception {
+    void test_getQueueDescription_text() throws Exception {
         when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/queues/1/desc")
@@ -200,7 +200,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
     }
 
     @Test
-    void test_getQueueGenerator() throws Exception {
+    void test_getQueueGenerator_text() throws Exception {
         when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/queues/1/generator")
@@ -215,7 +215,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
     }
 
     @Test
-    void test_getQueueTransport() throws Exception {
+    void test_getQueueTransport_text() throws Exception {
         when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/queues/1/transport")
@@ -230,12 +230,13 @@ public class QueueControllerTest extends BaseWebControllerTest {
     }
 
     @Test
-    void test_getQueueCopyright() throws Exception {
+    void test_getQueueCopyright_text() throws Exception {
         when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/queues/1/copyright")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                        .accept(TEXT_PLAIN_VALUE)
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
@@ -245,7 +246,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
     }
 
     @Test
-    void test_getQueueLanguage() throws Exception {
+    void test_getQueueLanguage_text() throws Exception {
         when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/queues/1/language")
@@ -262,7 +263,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
     private static final SimpleDateFormat ISO_8601_TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
     @Test
-    void test_getQueueDeployedTimestamp() throws Exception {
+    void test_getQueueDeployedTimestamp_text() throws Exception {
         when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_DEPLOYED_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/queues/1/deployed")
@@ -284,7 +285,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
     }
 
     @Test
-    void test_getQueueAuthRequirement() throws Exception {
+    void test_getQueueAuthRequiremen_textt() throws Exception {
         when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/queues/1/auth")
@@ -302,7 +303,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
     }
 
     @Test
-    void test_getQueueImageSource() throws Exception {
+    void test_getQueueImageSource_text() throws Exception {
         when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/queues/1/imgsrc")
@@ -371,14 +372,16 @@ public class QueueControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/queues/1/ident")
                         .servletPath("/queues/1/ident")
-                        .content("newIdent")
                         .contentType(TEXT_PLAIN_VALUE)
+                        .content("newIdent")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals("newIdent", responseContent);
+                    assertEquals(
+                            GSON.fromJson("{\"message\":\"Successfully updated queue Id 1\"}", JsonObject.class),
+                            GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
     }

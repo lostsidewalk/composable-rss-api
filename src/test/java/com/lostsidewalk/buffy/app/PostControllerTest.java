@@ -240,7 +240,7 @@ public class PostControllerTest extends BaseWebControllerTest {
     }
 
     @Test
-    void test_getPostQueueId() throws Exception {
+    void test_getPostQueueId_text() throws Exception {
         when(this.stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/posts/1/queue")
@@ -250,6 +250,21 @@ public class PostControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals("1", responseContent);
+                })
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void test_getPostQueueId_json() throws Exception {
+        when(this.stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/posts/1/queue")
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                        .accept(APPLICATION_JSON))
+                .andExpect(result -> {
+                    String responseContent = result.getResponse().getContentAsString();
+                    assertEquals("1", GSON.fromJson(responseContent, String.class));
                 })
                 .andExpect(status().isOk());
     }
@@ -302,7 +317,7 @@ public class PostControllerTest extends BaseWebControllerTest {
     }
 
     @Test
-    void test_getPostComment() throws Exception {
+    void test_getPostComment_text() throws Exception {
         when(this.stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/posts/1/comment")
@@ -317,7 +332,7 @@ public class PostControllerTest extends BaseWebControllerTest {
     }
 
     @Test
-    void test_getPostRights() throws Exception {
+    void test_getPostRights_text() throws Exception {
         when(this.stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/posts/1/rights")
@@ -334,7 +349,7 @@ public class PostControllerTest extends BaseWebControllerTest {
     private static final SimpleDateFormat ISO_8601_TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
     @Test
-    void test_getExpirationTimestamp() throws Exception {
+    void test_getExpirationTimestamp_text() throws Exception {
         when(this.stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/posts/1/expiration")
@@ -356,7 +371,7 @@ public class PostControllerTest extends BaseWebControllerTest {
     }
 
     @Test
-    void test_getPublishedTimestamp() throws Exception {
+    void test_getPublishedTimestamp_text() throws Exception {
         when(this.stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/posts/1/published")
@@ -378,7 +393,7 @@ public class PostControllerTest extends BaseWebControllerTest {
     }
 
     @Test
-    void test_getLastUpdatedTimestamp() throws Exception {
+    void test_getLastUpdatedTimestamp_text() throws Exception {
         when(this.stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/posts/1/updated")
@@ -505,43 +520,45 @@ public class PostControllerTest extends BaseWebControllerTest {
     }
 
     @Test
-    void test_updatePostComment() throws Exception {
-        when(this.stagingPostService.updatePostComment("me", 1L, "\"testComment\"")).thenReturn("testComment");
+    void test_updatePostComment_text() throws Exception {
+        when(this.stagingPostService.updatePostComment("me", 1L, "testComment")).thenReturn("testComment");
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/posts/1/comment")
                         .servletPath("/posts/1/comment")
                         .contentType(TEXT_PLAIN_VALUE)
-                        .content(GSON.toJson("testComment"))
+                        .content("testComment")
+                        .accept(TEXT_PLAIN_VALUE)
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals("testComment", GSON.fromJson(responseContent, String.class));
+                    assertEquals("testComment", responseContent);
                 })
                 .andExpect(status().isOk());
     }
 
     @Test
-    void test_updatePostRights() throws Exception {
-        when(this.stagingPostService.updatePostRights("me", 1L, "\"testRights\"")).thenReturn("testRights");
+    void test_updatePostRights_text() throws Exception {
+        when(this.stagingPostService.updatePostRights("me", 1L, "testRights")).thenReturn("testRights");
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/posts/1/rights")
                         .servletPath("/posts/1/rights")
                         .contentType(TEXT_PLAIN_VALUE)
-                        .content(GSON.toJson("testRights"))
+                        .content("testRights")
+                        .accept(TEXT_PLAIN_VALUE)
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals("testRights", GSON.fromJson(responseContent, String.class));
+                    assertEquals("testRights", responseContent);
                 })
                 .andExpect(status().isOk());
     }
 
     @Test
-    void test_updateExpirationTimestamp() throws Exception {
+    void test_updateExpirationTimestamp_text() throws Exception {
         when(this.stagingPostService.updateExpirationTimestamp("me", 1L, THIRTY_DAYS_FROM_NOW)).thenReturn(THIRTY_DAYS_FROM_NOW);
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/posts/1/expiration")

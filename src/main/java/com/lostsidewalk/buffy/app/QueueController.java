@@ -1,5 +1,7 @@
 package com.lostsidewalk.buffy.app;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.lostsidewalk.buffy.DataAccessException;
 import com.lostsidewalk.buffy.DataUpdateException;
 import com.lostsidewalk.buffy.app.audit.AppLogService;
@@ -25,6 +27,7 @@ import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -44,8 +47,8 @@ import static org.apache.commons.lang3.BooleanUtils.isTrue;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.length;
 import static org.apache.commons.lang3.time.StopWatch.createStarted;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
+import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.MediaType.*;
 import static org.springframework.http.ResponseEntity.ok;
 
 /**
@@ -206,6 +209,10 @@ public class QueueController {
         return ok(queueDefinition.getQueueStatus());
     }
 
+    private static final Gson GSON = new GsonBuilder()
+            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX")
+            .create();
+
     /**
      * Get the ident string of a queue given by its Id.
      *
@@ -219,9 +226,11 @@ public class QueueController {
      */
     @Operation(summary = "Get the ident string of a queue given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched queue ident string")
-    @GetMapping(value = "/queues/{queueId}/ident", produces = {TEXT_PLAIN_VALUE})
+    @GetMapping(value = "/queues/{queueId}/ident", produces = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getQueueIdent(
+            @RequestHeader("Accept") String acceptHeader,
+            //
             @PathVariable("queueId")
             @Parameter(description = "The Id of the queue to fetch the ident string from", required = true)
             Long queueId,
@@ -235,7 +244,13 @@ public class QueueController {
         QueueDefinition queueDefinition = queueDefinitionService.findByQueueId(username, queueId);
         stopWatch.stop();
         appLogService.logQueueAttributeFetch(username, stopWatch, queueDefinition.getId(), "ident");
-        return ok(queueDefinition.getIdent());
+        if (acceptHeader.contains(APPLICATION_JSON_VALUE)) {
+            return ok(GSON.toJson(queueDefinition.getIdent()));
+        } else {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(TEXT_PLAIN);
+            return new ResponseEntity<>(queueDefinition.getIdent(), headers, OK);
+        }
     }
 
     /**
@@ -251,9 +266,11 @@ public class QueueController {
      */
     @Operation(summary = "Get the title of a queue given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched queue title")
-    @GetMapping(value = "/queues/{queueId}/title", produces = {TEXT_PLAIN_VALUE})
+    @GetMapping(value = "/queues/{queueId}/title", produces = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getQueueTitle(
+            @RequestHeader("Accept") String acceptHeader,
+            //
             @PathVariable("queueId")
             @Parameter(description = "The Id of the queue to fetch the title from", required = true)
             Long queueId,
@@ -267,7 +284,13 @@ public class QueueController {
         QueueDefinition queueDefinition = queueDefinitionService.findByQueueId(username, queueId);
         stopWatch.stop();
         appLogService.logQueueAttributeFetch(username, stopWatch, queueDefinition.getId(), "title");
-        return ok(queueDefinition.getTitle());
+        if (acceptHeader.contains(APPLICATION_JSON_VALUE)) {
+            return ok(GSON.toJson(queueDefinition.getTitle()));
+        } else {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(TEXT_PLAIN);
+            return new ResponseEntity<>(queueDefinition.getTitle(), headers, OK);
+        }
     }
 
     /**
@@ -283,9 +306,11 @@ public class QueueController {
      */
     @Operation(summary = "Get the description of a queue given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched queue description")
-    @GetMapping(value = "/queues/{queueId}/desc", produces = {TEXT_PLAIN_VALUE})
+    @GetMapping(value = "/queues/{queueId}/desc", produces = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getQueueDescription(
+            @RequestHeader("Accept") String acceptHeader,
+            //
             @PathVariable("queueId")
             @Parameter(description = "The Id of the queue to fetch the description from", required = true)
             Long queueId,
@@ -299,7 +324,13 @@ public class QueueController {
         QueueDefinition queueDefinition = queueDefinitionService.findByQueueId(username, queueId);
         stopWatch.stop();
         appLogService.logQueueAttributeFetch(username, stopWatch, queueDefinition.getId(), "description");
-        return ok(queueDefinition.getDescription());
+        if (acceptHeader.contains(APPLICATION_JSON_VALUE)) {
+            return ok(GSON.toJson(queueDefinition.getDescription()));
+        } else {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(TEXT_PLAIN);
+            return new ResponseEntity<>(queueDefinition.getDescription(), headers, OK);
+        }
     }
 
     /**
@@ -315,9 +346,11 @@ public class QueueController {
      */
     @Operation(summary = "Get the generator of a queue given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched queue generator")
-    @GetMapping(value = "/queues/{queueId}/generator", produces = {TEXT_PLAIN_VALUE})
+    @GetMapping(value = "/queues/{queueId}/generator", produces = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getQueueGenerator(
+            @RequestHeader("Accept") String acceptHeader,
+            //
             @PathVariable("queueId")
             @Parameter(description = "The Id of the queue to fetch the generator from", required = true)
             Long queueId,
@@ -331,7 +364,13 @@ public class QueueController {
         QueueDefinition queueDefinition = queueDefinitionService.findByQueueId(username, queueId);
         stopWatch.stop();
         appLogService.logQueueAttributeFetch(username, stopWatch, queueDefinition.getId(), "generator");
-        return ok(queueDefinition.getGenerator());
+        if (acceptHeader.contains(APPLICATION_JSON_VALUE)) {
+            return ok(GSON.toJson(queueDefinition.getGenerator()));
+        } else {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(TEXT_PLAIN);
+            return new ResponseEntity<>(queueDefinition.getGenerator(), headers, OK);
+        }
     }
 
     /**
@@ -347,9 +386,11 @@ public class QueueController {
      */
     @Operation(summary = "Get the transport identifier of a queue given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched queue transport identifier")
-    @GetMapping(value = "/queues/{queueId}/transport", produces = {TEXT_PLAIN_VALUE})
+    @GetMapping(value = "/queues/{queueId}/transport", produces = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getQueueTransport(
+            @RequestHeader("Accept") String acceptHeader,
+            //
             @PathVariable("queueId")
             @Parameter(description = "The Id of the queue to fetch the transport identifier from", required = true)
             Long queueId,
@@ -363,7 +404,13 @@ public class QueueController {
         QueueDefinition queueDefinition = queueDefinitionService.findByQueueId(username, queueId);
         stopWatch.stop();
         appLogService.logQueueAttributeFetch(username, stopWatch, queueDefinition.getId(), "transportIdent");
-        return ok(queueDefinition.getTransportIdent());
+        if (acceptHeader.contains(APPLICATION_JSON_VALUE)) {
+            return ok(GSON.toJson(queueDefinition.getTransportIdent()));
+        } else {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(TEXT_PLAIN);
+            return new ResponseEntity<>(queueDefinition.getTransportIdent(), headers, OK);
+        }
     }
 
     /**
@@ -379,9 +426,11 @@ public class QueueController {
      */
     @Operation(summary = "Get the copyright of a queue given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched queue copyright")
-    @GetMapping(value = "/queues/{queueId}/copyright", produces = {TEXT_PLAIN_VALUE})
+    @GetMapping(value = "/queues/{queueId}/copyright", produces = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getQueueCopyright(
+            @RequestHeader("Accept") String acceptHeader,
+            //
             @PathVariable("queueId")
             @Parameter(description = "The Id of the queue to fetch the copyright from", required = true)
             Long queueId,
@@ -395,7 +444,13 @@ public class QueueController {
         QueueDefinition queueDefinition = queueDefinitionService.findByQueueId(username, queueId);
         stopWatch.stop();
         appLogService.logQueueAttributeFetch(username, stopWatch, queueDefinition.getId(), "copyright");
-        return ok(queueDefinition.getCopyright());
+        if (acceptHeader.contains(APPLICATION_JSON_VALUE)) {
+            return ok(GSON.toJson(queueDefinition.getCopyright()));
+        } else {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(TEXT_PLAIN);
+            return new ResponseEntity<>(queueDefinition.getCopyright(), headers, OK);
+        }
     }
 
     /**
@@ -411,9 +466,11 @@ public class QueueController {
      */
     @Operation(summary = "Get the language of a queue given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched queue language")
-    @GetMapping(value = "/queues/{queueId}/language", produces = {TEXT_PLAIN_VALUE})
+    @GetMapping(value = "/queues/{queueId}/language", produces = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getQueueLanguage(
+            @RequestHeader("Accept") String acceptHeader,
+            //
             @PathVariable("queueId")
             @Parameter(description = "The Id of the queue to fetch the language from", required = true)
             Long queueId,
@@ -427,7 +484,13 @@ public class QueueController {
         QueueDefinition queueDefinition = queueDefinitionService.findByQueueId(username, queueId);
         stopWatch.stop();
         appLogService.logQueueAttributeFetch(username, stopWatch, queueDefinition.getId(), "language");
-        return ok(queueDefinition.getLanguage());
+        if (acceptHeader.contains(APPLICATION_JSON_VALUE)) {
+            return ok(GSON.toJson(queueDefinition.getLanguage()));
+        } else {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(TEXT_PLAIN);
+            return new ResponseEntity<>(queueDefinition.getLanguage(), headers, OK);
+        }
     }
 
     private static final SimpleDateFormat ISO_8601_TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
@@ -445,9 +508,11 @@ public class QueueController {
      */
     @Operation(summary = "Get the deployed timestamp of a queue given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched queue deployed timestamp")
-    @GetMapping(value = "/queues/{queueId}/deployed", produces = {TEXT_PLAIN_VALUE})
+    @GetMapping(value = "/queues/{queueId}/deployed", produces = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getQueueDeployedTimestamp(
+            @RequestHeader("Accept") String acceptHeader,
+            //
             @PathVariable("queueId")
             @Parameter(description = "The Id of the queue to fetch the deployed timestamp from", required = true)
             Long queueId,
@@ -462,10 +527,16 @@ public class QueueController {
         stopWatch.stop();
         appLogService.logQueueAttributeFetch(username, stopWatch, queueDefinition.getId(), "lastDeployed");
         Date lastDeployedTimestamp = queueDefinition.getLastDeployed();
-        return ok(lastDeployedTimestamp != null ?
+        String responseStr = lastDeployedTimestamp != null ?
                 ISO_8601_TIMESTAMP_FORMAT.format(lastDeployedTimestamp) :
-                EMPTY // default response
-        );
+                EMPTY; // default response
+        if (acceptHeader.contains(APPLICATION_JSON_VALUE)) {
+            return ok(GSON.toJson(responseStr));
+        } else {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(TEXT_PLAIN);
+            return new ResponseEntity<>(responseStr, headers, OK);
+        }
     }
 
     /**
@@ -481,9 +552,11 @@ public class QueueController {
      */
     @Operation(summary = "Get the authentication requirement of a queue given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched queue authentication requirement")
-    @GetMapping(value = "/queues/{queueId}/auth", produces = {TEXT_PLAIN_VALUE})
+    @GetMapping(value = "/queues/{queueId}/auth", produces = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getQueueAuthRequirement(
+            @RequestHeader("Accept") String acceptHeader,
+            //
             @PathVariable("queueId")
             @Parameter(description = "The Id of the queue to fetch the authentication requirement from", required = true)
             Long queueId,
@@ -497,7 +570,14 @@ public class QueueController {
         QueueDefinition queueDefinition = queueDefinitionService.findByQueueId(username, queueId);
         stopWatch.stop();
         appLogService.logQueueAttributeFetch(username, stopWatch, queueDefinition.getId(), "isAuthenticated");
-        return ok(Boolean.toString(isTrue(queueDefinition.getIsAuthenticated())));
+        String responseStr = Boolean.toString(isTrue(queueDefinition.getIsAuthenticated()));
+        if (acceptHeader.contains(APPLICATION_JSON_VALUE)) {
+            return ok(GSON.toJson(responseStr));
+        } else {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(TEXT_PLAIN);
+            return new ResponseEntity<>(responseStr, headers, OK);
+        }
     }
 
     /**
@@ -513,9 +593,11 @@ public class QueueController {
      */
     @Operation(summary = "Get the image source of a queue given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched queue image source")
-    @GetMapping(value = "/queues/{queueId}/imgsrc", produces = {TEXT_PLAIN_VALUE})
+    @GetMapping(value = "/queues/{queueId}/imgsrc", produces = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<String> getQueueImageSource(
+            @RequestHeader("Accept") String acceptHeader,
+            //
             @PathVariable("queueId")
             @Parameter(description = "The Id of the queue to fetch the image source from", required = true)
             Long queueId,
@@ -529,7 +611,13 @@ public class QueueController {
         QueueDefinition queueDefinition = queueDefinitionService.findByQueueId(username, queueId);
         stopWatch.stop();
         appLogService.logQueueAttributeFetch(username, stopWatch, queueDefinition.getId(), "queueImgSrc");
-        return ok(queueDefinition.getQueueImgSrc());
+        if (acceptHeader.contains(APPLICATION_JSON_VALUE)) {
+            return ok(GSON.toJson(queueDefinition.getQueueImgSrc()));
+        } else {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(TEXT_PLAIN);
+            return new ResponseEntity<>(queueDefinition.getQueueImgSrc(), headers, OK);
+        }
     }
 
     //
@@ -648,10 +736,10 @@ public class QueueController {
     @ApiResponse(responseCode = "200", description = "Successfully updated queue ident")
 //    @ApiResponse(responseCode = "400", description = "Validation error in request body")
 //    @ApiResponse(responseCode = "500", description = "Internal server error")
-    @PutMapping(value = "/queues/{id}/ident", produces = {TEXT_PLAIN_VALUE}, consumes = {TEXT_PLAIN_VALUE})
+    @PutMapping(value = "/queues/{id}/ident", produces = {APPLICATION_JSON_VALUE}, consumes = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
-    public ResponseEntity<String> updateQueueIdent(
+    public ResponseEntity<ResponseMessage> updateQueueIdent(
             @PathVariable("id")
             @Parameter(description = "The Id of the queue to update the ident string for", required = true)
             Long id,
@@ -670,7 +758,7 @@ public class QueueController {
         String updatedQueueIdent = queueDefinitionService.updateQueueIdent(username, id, ident);
         stopWatch.stop();
         appLogService.logQueueAttributeUpdate(username, stopWatch, id, "ident");
-        return ok(updatedQueueIdent);
+        return ok().body(buildResponseMessage("Successfully updated queue Id " + id));
     }
 
     /**
