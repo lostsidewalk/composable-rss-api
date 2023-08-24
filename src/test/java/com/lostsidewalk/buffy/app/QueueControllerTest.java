@@ -161,10 +161,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
                         .accept(TEXT_PLAIN_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(
-                            GSON.fromJson("testQueue", String.class),
-                            GSON.fromJson(responseContent, String.class)
-                    );
+                    assertEquals("testQueue", responseContent);
                 })
                 .andExpect(status().isOk());
     }
@@ -312,10 +309,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
                         .accept(TEXT_PLAIN_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(
-                            GSON.fromJson("", String.class),
-                            GSON.fromJson(responseContent, String.class)
-                    );
+                    assertEquals("", responseContent);
                 })
                 .andExpect(status().isOk());
     }
