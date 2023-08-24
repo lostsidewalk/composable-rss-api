@@ -31,6 +31,7 @@ import java.util.List;
 import static com.lostsidewalk.buffy.app.ResponseMessageUtils.buildResponseMessage;
 import static org.apache.commons.collections4.CollectionUtils.size;
 import static org.apache.commons.lang3.time.StopWatch.createStarted;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.ResponseEntity.ok;
 
 /**
@@ -69,7 +70,7 @@ public class PostAuthorController {
      */
     @Operation(summary = "Add new author to the post given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully added author to post")
-    @PostMapping("/posts/{postId}/authors")
+    @PostMapping(value = "/posts/{postId}/authors", produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<ResponseMessage> addPostAuthor(
             @PathVariable("postId")
@@ -110,7 +111,7 @@ public class PostAuthorController {
      */
     @Operation(summary = "Get all authors in the post given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully fetched post authors", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = PostPerson.class))))
-    @GetMapping("/posts/{postId}/authors")
+    @GetMapping(value = "/posts/{postId}/authors", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<List<PostPerson>> getPostAuthors(
             @PathVariable("postId")
@@ -150,7 +151,7 @@ public class PostAuthorController {
      */
     @Operation(summary = "Update the post author given by idx, on a post given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully updated post author")
-    @PutMapping("/posts/{postId}/authors/{authorIdx}")
+    @PutMapping(value = "/posts/{postId}/authors/{authorIdx}", produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> updatePostAuthor(
@@ -195,7 +196,7 @@ public class PostAuthorController {
      */
     @Operation(summary = "Delete the post author given by idx, on a post given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully deleted post author")
-    @DeleteMapping("/posts/{postId}/authors/{authorIdx}")
+    @DeleteMapping(value = "/posts/{postId}/authors/{authorIdx}", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> deletePostAuthor(

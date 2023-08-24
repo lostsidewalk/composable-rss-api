@@ -28,6 +28,8 @@ import java.util.List;
 
 import static com.lostsidewalk.buffy.app.ResponseMessageUtils.buildResponseMessage;
 import static org.apache.commons.lang3.time.StopWatch.createStarted;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.http.ResponseEntity.ok;
 
 /**
@@ -66,7 +68,7 @@ public class PostCategoryController {
      */
     @Operation(summary = "Add new category to the post given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully added category to post")
-    @PostMapping("/posts/{postId}/categories")
+    @PostMapping(value = "/posts/{postId}/categories", produces = {APPLICATION_JSON_VALUE}, consumes = {TEXT_PLAIN_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<ResponseMessage> addPostCategory(
             @PathVariable("postId")
@@ -109,7 +111,7 @@ public class PostCategoryController {
     @ApiResponse(responseCode = "200", description = "Successfully fetched post categories",
             content = @Content(mediaType = "application/json",
                     array = @ArraySchema(schema = @Schema(implementation = String.class))))
-    @GetMapping("/posts/{postId}/categories")
+    @GetMapping(value = "/posts/{postId}/categories", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<List<String>> getPostCategories(
             @PathVariable("postId")
@@ -148,7 +150,7 @@ public class PostCategoryController {
      */
     @Operation(summary = "Delete the post category given by idx, on a post given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully deleted post category")
-    @DeleteMapping("/posts/{postId}/categories/{categoryName}")
+    @DeleteMapping(value = "/posts/{postId}/categories/{categoryName}", produces = {APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> deletePostCategory(

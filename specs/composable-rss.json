@@ -50,6 +50,9 @@
   }, {
     "name" : "post-controller",
     "description" : "Controller class for managing post-related operations.\n\n This controller provides endpoints for managing posts within queues. Authenticated\n users with the \"VERIFIED_ROLE\" have access to these operations."
+  }, {
+    "name" : "post-category-controller",
+    "description" : "Controller class for managing category-related operations.\n\n This controller provides endpoints for managing category objects within posts. Authenticated\n users with the \"VERIFIED_ROLE\" have access to these operations."
   } ],
   "paths" : {
     "/queues/{queueId}/credentials/{basicUsername}" : {
@@ -78,7 +81,7 @@
         } ],
         "requestBody" : {
           "content" : {
-            "application/json" : {
+            "text/plain" : {
               "schema" : {
                 "type" : "string"
               }
@@ -90,7 +93,7 @@
           "200" : {
             "description" : "Successfully updated password",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -129,7 +132,7 @@
           "200" : {
             "description" : "Successfully deleted queue credential",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -204,7 +207,7 @@
           "200" : {
             "description" : "Successfully deleted queue",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -236,7 +239,7 @@
         "requestBody" : {
           "description" : "The updated queue title.",
           "content" : {
-            "application/json" : {
+            "text/plain" : {
               "schema" : {
                 "type" : "string",
                 "description" : "The updated queue title"
@@ -249,7 +252,7 @@
           "200" : {
             "description" : "Successfully updated queue title",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -280,7 +283,7 @@
           "200" : {
             "description" : "Successfully deleted queue title",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -324,7 +327,7 @@
           "200" : {
             "description" : "Successfully updated queue status",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -356,7 +359,7 @@
         "requestBody" : {
           "description" : "The updated queue language.",
           "content" : {
-            "application/json" : {
+            "text/plain" : {
               "schema" : {
                 "type" : "string",
                 "description" : "The updated queue language"
@@ -369,7 +372,7 @@
           "200" : {
             "description" : "Successfully updated queue language",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -401,7 +404,7 @@
         "requestBody" : {
           "description" : "The source for the queue thumbnail image.",
           "content" : {
-            "application/json" : {
+            "text/plain" : {
               "schema" : {
                 "type" : "string",
                 "description" : "The updated image source"
@@ -414,7 +417,7 @@
           "200" : {
             "description" : "Successfully updated queue image source",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -445,7 +448,7 @@
           "200" : {
             "description" : "Successfully deleted queue image source",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -477,7 +480,7 @@
         "requestBody" : {
           "description" : "The updated queue ident string.",
           "content" : {
-            "application/json" : {
+            "text/plain" : {
               "schema" : {
                 "type" : "string",
                 "description" : "The updated queue ident string"
@@ -490,7 +493,7 @@
           "200" : {
             "description" : "Successfully updated queue ident",
             "content" : {
-              "*/*" : {
+              "text/plain" : {
                 "schema" : {
                   "type" : "string"
                 }
@@ -522,7 +525,7 @@
         "requestBody" : {
           "description" : "The updated queue generator.",
           "content" : {
-            "application/json" : {
+            "text/plain" : {
               "schema" : {
                 "type" : "string",
                 "description" : "The updated queue generator"
@@ -535,7 +538,7 @@
           "200" : {
             "description" : "Successfully updated queue generator",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -566,7 +569,7 @@
           "200" : {
             "description" : "Successfully deleted queue generator",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -598,7 +601,7 @@
         "requestBody" : {
           "description" : "The updated queue description.",
           "content" : {
-            "application/json" : {
+            "text/plain" : {
               "schema" : {
                 "type" : "string",
                 "description" : "The updated queue description"
@@ -611,7 +614,7 @@
           "200" : {
             "description" : "Successfully updated queue description",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -642,7 +645,7 @@
           "200" : {
             "description" : "Successfully deleted queue description",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -674,7 +677,7 @@
         "requestBody" : {
           "description" : "The updated queue copyright.",
           "content" : {
-            "application/json" : {
+            "text/plain" : {
               "schema" : {
                 "type" : "string",
                 "description" : "The updated queue copyright"
@@ -687,7 +690,7 @@
           "200" : {
             "description" : "Successfully updated queue copyright",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -718,7 +721,7 @@
           "200" : {
             "description" : "Successfully deleted queue copyright",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -748,12 +751,11 @@
           }
         } ],
         "requestBody" : {
-          "description" : "'true' if this queue requires authentication.",
+          "description" : "The request containing the updated authentication requirement.",
           "content" : {
             "application/json" : {
               "schema" : {
-                "type" : "boolean",
-                "description" : "The updated authentication requirement"
+                "$ref" : "#/components/schemas/QueueAuthUpdateRequest"
               }
             }
           },
@@ -763,7 +765,7 @@
           "200" : {
             "description" : "Successfully updated queue authentication requirement",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -816,7 +818,7 @@
           "200" : {
             "description" : "Successfully updated post URL",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -856,7 +858,7 @@
           "200" : {
             "description" : "Successfully deleted post URL",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -931,7 +933,7 @@
           "200" : {
             "description" : "Successfully updated post media",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -962,7 +964,7 @@
           "200" : {
             "description" : "Successfully deleted post media",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -1015,7 +1017,7 @@
           "200" : {
             "description" : "Successfully updated post enclosure",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -1055,7 +1057,7 @@
           "200" : {
             "description" : "Successfully deleted post enclosure",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -1108,7 +1110,7 @@
           "200" : {
             "description" : "Successfully updated post contributor",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -1148,7 +1150,7 @@
           "200" : {
             "description" : "Successfully deleted post contributor",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -1201,7 +1203,7 @@
           "200" : {
             "description" : "Successfully updated post content",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -1241,7 +1243,7 @@
           "200" : {
             "description" : "Successfully deleted post content",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -1294,7 +1296,7 @@
           "200" : {
             "description" : "Successfully updated post author",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -1334,7 +1336,7 @@
           "200" : {
             "description" : "Successfully deleted post author",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -1409,7 +1411,7 @@
           "200" : {
             "description" : "Successfully deleted post",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -1529,7 +1531,7 @@
         "requestBody" : {
           "description" : "The updated post rights string.",
           "content" : {
-            "application/json" : {
+            "text/plain" : {
               "schema" : {
                 "type" : "string"
               }
@@ -1572,7 +1574,7 @@
           "200" : {
             "description" : "Successfully deleted post rights string",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -1647,7 +1649,7 @@
           "200" : {
             "description" : "Successfully deleted post iTunes descriptor",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -1679,10 +1681,9 @@
         "requestBody" : {
           "description" : "The updated post expiration timestamp.",
           "content" : {
-            "application/json" : {
+            "text/plain" : {
               "schema" : {
-                "type" : "string",
-                "format" : "date-time"
+                "type" : "string"
               }
             }
           },
@@ -1694,8 +1695,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "string",
-                  "format" : "date-time"
+                  "type" : "string"
                 }
               }
             }
@@ -1724,7 +1724,7 @@
           "200" : {
             "description" : "Successfully deleted post expiration timestamp",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -1800,7 +1800,7 @@
         "requestBody" : {
           "description" : "The updated post comment string.",
           "content" : {
-            "application/json" : {
+            "text/plain" : {
               "schema" : {
                 "type" : "string"
               }
@@ -1843,7 +1843,7 @@
           "200" : {
             "description" : "Successfully deleted post comment string",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -1982,7 +1982,7 @@
           "200" : {
             "description" : "Successfully added credential to queue",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -2141,7 +2141,7 @@
           "200" : {
             "description" : "Successfully added URL to post",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -2219,7 +2219,7 @@
           "200" : {
             "description" : "Successfully added enclosure to post",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -2297,7 +2297,7 @@
           "200" : {
             "description" : "Successfully added contributor to post",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -2375,7 +2375,86 @@
           "200" : {
             "description" : "Successfully add content to post",
             "content" : {
-              "*/*" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResponseMessage"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "VERIFIED_ROLE" : [ ]
+        } ]
+      }
+    },
+    "/posts/{postId}/categories" : {
+      "get" : {
+        "tags" : [ "post-category-controller" ],
+        "summary" : "Get all categories in the post given by its Id",
+        "description" : "Get all categories in the post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve all\n categories in a specific post identified by its Id.",
+        "operationId" : "getPostCategories",
+        "parameters" : [ {
+          "name" : "postId",
+          "in" : "path",
+          "description" : "The Id of the post to fetch categories from",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successfully fetched post categories",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "VERIFIED_ROLE" : [ ]
+        } ]
+      },
+      "post" : {
+        "tags" : [ "post-category-controller" ],
+        "summary" : "Add new category to the post given by its Id",
+        "description" : "Add a new category to the post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to add new category\n to a specific post identified by its Id.",
+        "operationId" : "addPostCategory",
+        "parameters" : [ {
+          "name" : "postId",
+          "in" : "path",
+          "description" : "The Id of the post to add category to",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "description" : "A string value representing the name of the new category to add.",
+          "content" : {
+            "text/plain" : {
+              "schema" : {
+                "type" : "string",
+                "description" : "The name of a category"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Successfully added category to post",
+            "content" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -2453,7 +2532,7 @@
           "200" : {
             "description" : "Successfully added author to post",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResponseMessage"
                 }
@@ -2486,7 +2565,7 @@
           "200" : {
             "description" : "Successfully fetched queue transport identifier",
             "content" : {
-              "*/*" : {
+              "text/plain" : {
                 "schema" : {
                   "type" : "string"
                 }
@@ -2519,7 +2598,7 @@
           "200" : {
             "description" : "Successfully fetched queue title",
             "content" : {
-              "*/*" : {
+              "text/plain" : {
                 "schema" : {
                   "type" : "string"
                 }
@@ -2552,7 +2631,7 @@
           "200" : {
             "description" : "Successfully fetched queue status",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "type" : "string",
                   "enum" : [ "ENABLED", "DISABLED" ]
@@ -2586,7 +2665,7 @@
           "200" : {
             "description" : "Successfully fetched queue language",
             "content" : {
-              "*/*" : {
+              "text/plain" : {
                 "schema" : {
                   "type" : "string"
                 }
@@ -2619,7 +2698,7 @@
           "200" : {
             "description" : "Successfully fetched queue image source",
             "content" : {
-              "*/*" : {
+              "text/plain" : {
                 "schema" : {
                   "type" : "string"
                 }
@@ -2652,7 +2731,7 @@
           "200" : {
             "description" : "Successfully fetched queue ident string",
             "content" : {
-              "*/*" : {
+              "text/plain" : {
                 "schema" : {
                   "type" : "string"
                 }
@@ -2685,7 +2764,7 @@
           "200" : {
             "description" : "Successfully fetched queue generator",
             "content" : {
-              "*/*" : {
+              "text/plain" : {
                 "schema" : {
                   "type" : "string"
                 }
@@ -2718,7 +2797,7 @@
           "200" : {
             "description" : "Successfully fetched queue description",
             "content" : {
-              "*/*" : {
+              "text/plain" : {
                 "schema" : {
                   "type" : "string"
                 }
@@ -2751,10 +2830,9 @@
           "200" : {
             "description" : "Successfully fetched queue deployed timestamp",
             "content" : {
-              "*/*" : {
+              "text/plain" : {
                 "schema" : {
-                  "type" : "string",
-                  "format" : "date-time"
+                  "type" : "string"
                 }
               }
             }
@@ -2785,7 +2863,7 @@
           "200" : {
             "description" : "Successfully fetched queue copyright",
             "content" : {
-              "*/*" : {
+              "text/plain" : {
                 "schema" : {
                   "type" : "string"
                 }
@@ -2818,9 +2896,9 @@
           "200" : {
             "description" : "Successfully fetched queue authentication requirement",
             "content" : {
-              "*/*" : {
+              "text/plain" : {
                 "schema" : {
-                  "type" : "boolean"
+                  "type" : "string"
                 }
               }
             }
@@ -2851,10 +2929,9 @@
           "200" : {
             "description" : "Successfully fetched post last updated timestamp",
             "content" : {
-              "*/*" : {
+              "text/plain" : {
                 "schema" : {
-                  "type" : "string",
-                  "format" : "date-time"
+                  "type" : "string"
                 }
               }
             }
@@ -2885,7 +2962,7 @@
           "200" : {
             "description" : "Successfully fetched post title",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ContentObject"
                 }
@@ -2918,7 +2995,7 @@
           "200" : {
             "description" : "Successfully fetched post status",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "type" : "string",
                   "enum" : [ "PUB_PENDING", "DEPUB_PENDING", "ARCHIVED", "PURGE_PENDING" ]
@@ -2952,7 +3029,7 @@
           "200" : {
             "description" : "Successfully fetched post rights string",
             "content" : {
-              "*/*" : {
+              "text/plain" : {
                 "schema" : {
                   "type" : "string"
                 }
@@ -2985,10 +3062,9 @@
           "200" : {
             "description" : "Successfully fetched post queue Id",
             "content" : {
-              "*/*" : {
+              "text/plain" : {
                 "schema" : {
-                  "type" : "integer",
-                  "format" : "int64"
+                  "type" : "string"
                 }
               }
             }
@@ -3019,10 +3095,9 @@
           "200" : {
             "description" : "Successfully fetched post published timestamp",
             "content" : {
-              "*/*" : {
+              "text/plain" : {
                 "schema" : {
-                  "type" : "string",
-                  "format" : "date-time"
+                  "type" : "string"
                 }
               }
             }
@@ -3053,7 +3128,7 @@
           "200" : {
             "description" : "Successfully fetched post iTunes descriptor",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PostITunes"
                 }
@@ -3086,10 +3161,9 @@
           "200" : {
             "description" : "Successfully fetched post expiration timestamp",
             "content" : {
-              "*/*" : {
+              "text/plain" : {
                 "schema" : {
-                  "type" : "string",
-                  "format" : "date-time"
+                  "type" : "string"
                 }
               }
             }
@@ -3120,7 +3194,7 @@
           "200" : {
             "description" : "Successfully fetched post description",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ContentObject"
                 }
@@ -3153,9 +3227,50 @@
           "200" : {
             "description" : "Successfully fetched post comment string",
             "content" : {
-              "*/*" : {
+              "text/plain" : {
                 "schema" : {
                   "type" : "string"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "VERIFIED_ROLE" : [ ]
+        } ]
+      }
+    },
+    "/posts/{postId}/categories/{categoryName}" : {
+      "delete" : {
+        "tags" : [ "post-category-controller" ],
+        "summary" : "Delete the post category given by idx, on a post given by Id",
+        "description" : "Delete a post category given by index.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete a\n a post category identified by its index, on a post identified by its Id.",
+        "operationId" : "deletePostCategory",
+        "parameters" : [ {
+          "name" : "postId",
+          "in" : "path",
+          "description" : "The Id of the post to delete",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "categoryName",
+          "in" : "path",
+          "description" : "The name of the category to delete",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successfully deleted post category",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResponseMessage"
                 }
               }
             }
@@ -3304,6 +3419,16 @@
           }
         },
         "description" : "The request containing the updated queue status information"
+      },
+      "QueueAuthUpdateRequest" : {
+        "type" : "object",
+        "properties" : {
+          "isRequired" : {
+            "type" : "boolean",
+            "description" : "The new authentication requirement to be set for the queue."
+          }
+        },
+        "description" : "The updated authentication requirement"
       },
       "PostUrl" : {
         "type" : "object",
@@ -4068,13 +4193,13 @@
             "type" : "string",
             "description" : "Title of the post"
           },
-          "explicit" : {
+          "closeCaptioned" : {
             "type" : "boolean"
           },
           "block" : {
             "type" : "boolean"
           },
-          "closeCaptioned" : {
+          "explicit" : {
             "type" : "boolean"
           }
         },
@@ -4192,7 +4317,7 @@
             "description" : "The new status to be set for the post."
           }
         },
-        "description" : "A request model for updating the status of a post."
+        "description" : "The updated post status"
       },
       "DeployResponse" : {
         "type" : "object",

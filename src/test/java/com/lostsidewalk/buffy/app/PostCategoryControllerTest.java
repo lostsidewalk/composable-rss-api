@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
@@ -40,8 +41,8 @@ public class PostCategoryControllerTest extends BaseWebControllerTest {
     public void test_addPostCategory() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/posts/1/categories")
-                        .contentType(APPLICATION_JSON)
-                        .content(GSON.toJson("testCategory"))
+                        .contentType(TEXT_PLAIN_VALUE)
+                        .content("testCategory")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
                         .accept(APPLICATION_JSON))
@@ -50,7 +51,7 @@ public class PostCategoryControllerTest extends BaseWebControllerTest {
                     assertEquals(GSON.fromJson("{\"message\":\"Added category to post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
-        verify(this.stagingPostService).addPostCategory("me", 1L, "\"testCategory\"");
+        verify(this.stagingPostService).addPostCategory("me", 1L, "testCategory");
     }
 
     private static final ContentObject TEST_POST_TITLE = ContentObject.from("testTitleType", "testTitleValue");
