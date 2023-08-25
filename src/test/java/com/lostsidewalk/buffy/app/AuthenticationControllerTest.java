@@ -18,7 +18,7 @@ import static com.lostsidewalk.buffy.app.model.TokenType.APP_AUTH;
 import static com.lostsidewalk.buffy.app.model.TokenType.APP_AUTH_REFRESH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
@@ -39,7 +39,7 @@ public class AuthenticationControllerTest extends BaseWebControllerTest {
                         .get("/currentuser")
                         .servletPath("/currentuser")
                         .cookie(new CookieBuilder("composable-rss-app_auth-token","testTokenValue").build())
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(GSON.fromJson("{\"authToken\":\"testToken\",\"username\":\"me\",\"hasSubscription\":true}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
@@ -59,9 +59,9 @@ public class AuthenticationControllerTest extends BaseWebControllerTest {
         LoginRequest testLoginRequest = new LoginRequest("me", "testPassword");
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/authenticate")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(testLoginRequest))
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(GSON.fromJson("{\"authToken\":\"testToken\",\"username\":\"me\",\"hasSubscription\":true}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
@@ -82,7 +82,7 @@ public class AuthenticationControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/deauthenticate")
                         .header("Authorization", "Bearer testToken")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(status().isOk());
         verify(mockJwtUtil).requireNonExpired();
         verify(this.authService).requireAuthClaim("me");

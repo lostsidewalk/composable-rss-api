@@ -21,12 +21,12 @@ import java.util.List;
 
 import static com.lostsidewalk.buffy.app.auth.AuthTokenFilter.API_KEY_HEADER_NAME;
 import static com.lostsidewalk.buffy.app.auth.AuthTokenFilter.API_SECRET_HEADER_NAME;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
+import static org.springframework.http.MediaType.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
@@ -54,7 +54,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
             null,
             "Test Queue Copyright",
             "en-US",
-            null,
+            "testQueueImageSource",
             false);
     static {
         TEST_QUEUE_DEFINITION.setId(1L);
@@ -100,15 +100,15 @@ public class QueueControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/queues")
                         .servletPath("/queues")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(TEST_QUEUE_CONFIG_REQUESTS))
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
-                            GSON.fromJson("[{\"id\":1,\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"exportConfig\":null,\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":null,\"lastDeployed\":null,\"isAuthenticated\":false,\"enabled\":false}]", JsonArray.class),
+                            GSON.fromJson("[{\"id\":1,\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"exportConfig\":null,\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"lastDeployed\":null,\"isAuthenticated\":false,\"enabled\":false}]", JsonArray.class),
                             GSON.fromJson(responseContent, JsonArray.class)
                     );
                 })
@@ -122,7 +122,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
                         .get("/queues")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
@@ -140,7 +140,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
                         .get("/queues/1/status")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
@@ -167,6 +167,21 @@ public class QueueControllerTest extends BaseWebControllerTest {
     }
 
     @Test
+    void test_getQueueIdent_json() throws Exception {
+        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/queues/1/ident")
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(result -> {
+                    String responseContent = result.getResponse().getContentAsString();
+                    assertEquals("testQueue", GSON.fromJson(responseContent, String.class));
+                })
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void test_getQueueTitle_text() throws Exception {
         when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
@@ -177,6 +192,21 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals("Test Queue Title", responseContent);
+                })
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void test_getQueueTitle_json() throws Exception {
+        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/queues/1/title")
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(result -> {
+                    String responseContent = result.getResponse().getContentAsString();
+                    assertEquals("Test Queue Title", GSON.fromJson(responseContent, String.class));
                 })
                 .andExpect(status().isOk());
     }
@@ -197,6 +227,21 @@ public class QueueControllerTest extends BaseWebControllerTest {
     }
 
     @Test
+    void test_getQueueDescription_json() throws Exception {
+        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/queues/1/desc")
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(result -> {
+                    String responseContent = result.getResponse().getContentAsString();
+                    assertEquals("Test Queue Description", GSON.fromJson(responseContent, String.class));
+                })
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void test_getQueueGenerator_text() throws Exception {
         when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
@@ -212,6 +257,21 @@ public class QueueControllerTest extends BaseWebControllerTest {
     }
 
     @Test
+    void test_getQueueGenerator_json() throws Exception {
+        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/queues/1/generator")
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(result -> {
+                    String responseContent = result.getResponse().getContentAsString();
+                    assertEquals("Test Queue Feed Generator", GSON.fromJson(responseContent, String.class));
+                })
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void test_getQueueTransport_text() throws Exception {
         when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
@@ -222,6 +282,21 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals("Test Queue Transport Identifier", responseContent);
+                })
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void test_getQueueTransport_json() throws Exception {
+        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/queues/1/transport")
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(result -> {
+                    String responseContent = result.getResponse().getContentAsString();
+                    assertEquals("Test Queue Transport Identifier", GSON.fromJson(responseContent, String.class));
                 })
                 .andExpect(status().isOk());
     }
@@ -243,6 +318,22 @@ public class QueueControllerTest extends BaseWebControllerTest {
     }
 
     @Test
+    void test_getQueueCopyright_json() throws Exception {
+        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/queues/1/copyright")
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                        .accept(APPLICATION_JSON_VALUE)
+                )
+                .andExpect(result -> {
+                    String responseContent = result.getResponse().getContentAsString();
+                    assertEquals("Test Queue Copyright", GSON.fromJson(responseContent, String.class));
+                })
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void test_getQueueLanguage_text() throws Exception {
         when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
@@ -253,6 +344,21 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals("en-US", responseContent);
+                })
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void test_getQueueLanguage_json() throws Exception {
+        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/queues/1/language")
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(result -> {
+                    String responseContent = result.getResponse().getContentAsString();
+                    assertEquals("en-US", GSON.fromJson(responseContent, String.class));
                 })
                 .andExpect(status().isOk());
     }
@@ -282,13 +388,61 @@ public class QueueControllerTest extends BaseWebControllerTest {
     }
 
     @Test
-    void test_getQueueAuthRequiremen_textt() throws Exception {
+    void test_getQueueDeployedTimestamp_json_deployed() throws Exception {
+        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_DEPLOYED_QUEUE_DEFINITION);
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/queues/1/deployed")
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(result -> {
+                    String responseContent = result.getResponse().getContentAsString();
+                    assertEquals(YESTERDAY, GSON.fromJson(responseContent, Date.class));
+                })
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void test_getQueueDeployedTimestamp_json_nonDeployed() throws Exception {
+        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/queues/1/deployed")
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(result -> {
+                    String responseContent = result.getResponse().getContentAsString();
+                    assertTrue(isEmpty(GSON.fromJson(responseContent, String.class)));
+                })
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void test_getQueueAuthRequirement_text() throws Exception {
         when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/queues/1/auth")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
                         .accept(TEXT_PLAIN_VALUE))
+                .andExpect(result -> {
+                    String responseContent = result.getResponse().getContentAsString();
+                    assertEquals(
+                            GSON.fromJson("false", Boolean.class),
+                            GSON.fromJson(responseContent, Boolean.class)
+                    );
+                })
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void test_getQueueAuthRequirement_json() throws Exception {
+        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/queues/1/auth")
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                        .accept(APPLICATION_JSON))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
@@ -309,7 +463,22 @@ public class QueueControllerTest extends BaseWebControllerTest {
                         .accept(TEXT_PLAIN_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals("", responseContent);
+                    assertEquals("testQueueImageSource", responseContent);
+                })
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void test_getQueueImageSource_json() throws Exception {
+        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/queues/1/imgsrc")
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(result -> {
+                    String responseContent = result.getResponse().getContentAsString();
+                    assertEquals("testQueueImageSource", GSON.fromJson(responseContent, String.class));
                 })
                 .andExpect(status().isOk());
     }
@@ -320,7 +489,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                 .put("/queues/1")
                 .servletPath("/queues/1")
-                .contentType(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON_VALUE)
                 .content(GSON.toJson(TEST_QUEUE_CONFIG_REQUEST))
                 .header(API_KEY_HEADER_NAME, "testApiKey")
                 .header(API_SECRET_HEADER_NAME, "testApiSecret")
@@ -344,7 +513,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/queues/1/status")
                         .servletPath("/queues/1/status")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(TEST_QUEUE_STATUS_UPDATE_REQUEST))
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
@@ -496,7 +665,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/queues/1/auth")
                         .servletPath("/queues/1/auth")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(TEST_QUEUE_AUTH_UPDATE_REQUEST))
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")

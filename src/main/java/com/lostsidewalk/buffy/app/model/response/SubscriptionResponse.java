@@ -26,8 +26,7 @@ public class SubscriptionResponse {
     }
 
     public static SubscriptionResponse from(Boolean cancelAtPeriodEnd, Long created, Long currentPeriodEnd, Long currentPeriodStart, Long endedAt,
-                                            Long startDate, String status, InvoiceResponse lastInvoice)
-    {
+                                            Long startDate, String status, InvoiceResponse lastInvoice) {
         return new SubscriptionResponse(
                 cancelAtPeriodEnd,
                 created,

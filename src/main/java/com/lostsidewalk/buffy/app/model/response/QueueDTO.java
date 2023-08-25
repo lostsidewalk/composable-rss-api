@@ -1,6 +1,8 @@
 package com.lostsidewalk.buffy.app.model.response;
 
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,26 +21,34 @@ public class QueueDTO {
     /**
      * The identifier of the queue.
      */
+    @NotBlank(message = "{queue.error.ident-is-blank}")
+    @Size(max = 256, message = "{queue.error.ident-too-long}")
     String ident;
 
     /**
      * The title of the queue.
      */
+    @NotBlank(message = "{queue.error.title-is-blank}")
+    @Size(max = 512, message = "{queue.error.title-too-long}")
     String title;
 
     /**
      * The description of the queue.
      */
+    @Size(max = 1024, message = "{queue.error.description-too-long}")
     String description;
 
     /**
      * The generator information of the queue.
      */
+    @Size(max = 512, message = "{queue.error.generator-too-long}")
     String generator;
 
     /**
      * The transport identifier of the queue.
      */
+    @NotBlank(message = "{queue.error.transport-is-blank")
+    @Size(max = 256, message = "{queue.error.transport-too-long}")
     String transportIdent;
 
     /**
@@ -54,16 +64,19 @@ public class QueueDTO {
     /**
      * The copyright information of the queue.
      */
+    @Size(max = 1024, message = "{queue.error.copyright-too-long}")
     String copyright;
 
     /**
      * The language of the queue.
      */
+    @Size(max = 16, message = "{queue.error.language-too-long}")
     String language;
 
     /**
      * The image source of the queue.
      */
+    @Size(max = 10240, message = "{queue.error.queue-img-src-too-long}")
     String queueImgSrc;
 
     /**
@@ -78,8 +91,7 @@ public class QueueDTO {
 
     public QueueDTO(Long id, String ident, String title, String description, String generator,
                     String transportIdent, boolean isEnabled, Serializable exportConfig, String copyright,
-                    String language, String queueImgSrc, Date lastDeployed, Boolean isAuthenticated)
-    {
+                    String language, String queueImgSrc, Date lastDeployed, Boolean isAuthenticated) {
         this.id = id;
         this.ident = ident;
         this.title = title;
@@ -97,8 +109,7 @@ public class QueueDTO {
 
     public static QueueDTO from(Long id, String ident, String title, String description, String generator,
                                 String transportIdent, boolean isEnabled, Serializable exportConfig, String copyright,
-                                String language, String queueImgSrc, Date lastDeployed, Boolean isAuthenticated)
-    {
+                                String language, String queueImgSrc, Date lastDeployed, Boolean isAuthenticated) {
         return new QueueDTO(id, ident, title, description, generator,
                 transportIdent, isEnabled, exportConfig, copyright,
                 language, queueImgSrc, lastDeployed, isAuthenticated);

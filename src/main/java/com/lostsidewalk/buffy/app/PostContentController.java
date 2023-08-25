@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +51,9 @@ public class PostContentController {
 
     @Autowired
     StagingPostService stagingPostService;
+
+    @Autowired
+    Validator validator;
 
     //
     // CREATE POST CONTENT
@@ -129,6 +133,7 @@ public class PostContentController {
         StagingPost stagingPost = stagingPostService.findById(username, postId);
         List<ContentObject> postContent = stagingPost.getPostContents();
         stopWatch.stop();
+        validator.validate(postContent);
         appLogService.logStagingPostContentsFetch(username, stopWatch, postId, size(postContent));
         return ok(postContent);
     }

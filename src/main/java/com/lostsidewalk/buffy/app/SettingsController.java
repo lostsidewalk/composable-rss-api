@@ -14,6 +14,7 @@ import com.lostsidewalk.buffy.app.settings.SettingsService;
 import com.stripe.exception.StripeException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +51,9 @@ public class SettingsController {
 
     @Autowired
     StripeOrderService stripeOrderService;
+
+    @Autowired
+    Validator validator;
 
 //    @PreAuthorize("hasAuthority('ROLE_UNVERIFIED')")
 //    @GetMapping("/settings/display")
@@ -90,10 +94,11 @@ public class SettingsController {
         stopWatch = StopWatch.createStarted();
         List<SubscriptionResponse> subscriptions = stripeOrderService.getSubscriptions(username);
         stopWatch.stop();
-        appLogService.logSubscriptionFetch(username, stopWatch, size(subscriptions));
         if (isNotEmpty(subscriptions)) {
             settingsResponse.setSubscription(subscriptions.get(0));
         }
+        validator.validate(settingsResponse);
+        appLogService.logSubscriptionFetch(username, stopWatch, size(subscriptions));
         return ok(settingsResponse);
     }
 
@@ -122,6 +127,7 @@ public class SettingsController {
         StopWatch stopWatch = StopWatch.createStarted();
         StripeResponse stripeResponse = stripeOrderService.createCheckoutSession(userDetails.getUsername());
         stopWatch.stop();
+        validator.validate(stripeResponse);
         appLogService.logCheckoutSessionCreate(username, stopWatch); // Note: don't log the Stripe response
         return new ResponseEntity<>(stripeResponse, OK);
     }

@@ -1,6 +1,7 @@
 package com.lostsidewalk.buffy.app.model.response;
 
 import com.lostsidewalk.buffy.ThemeConfig;
+import jakarta.validation.Valid;
 import lombok.Data;
 
 import java.util.Map;
@@ -10,6 +11,7 @@ public class DisplaySettingsResponse {
 
     final Map<String, String> displayConfig;
 
+    @Valid
     final ThemeConfig themeConfig;
 
     DisplaySettingsResponse(Map<String, String> displayConfig, ThemeConfig themeConfig) {

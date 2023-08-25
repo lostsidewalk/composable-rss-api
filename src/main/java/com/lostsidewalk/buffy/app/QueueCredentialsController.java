@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +51,9 @@ public class QueueCredentialsController {
 
     @Autowired
     QueueCredentialsService queueCredentialsService;
+
+    @Autowired
+    Validator validator;
 
     //
     // CREATE QUEUE CREDENTIAL
@@ -128,6 +132,7 @@ public class QueueCredentialsController {
         StopWatch stopWatch = createStarted();
         List<QueueCredential> queueCredentials = queueCredentialsService.findByQueueId(username, queueId);
         stopWatch.stop();
+        validator.validate(queueCredentials);
         appLogService.logQueueCredentialsFetch(username, stopWatch, queueId);
         return ok(queueCredentials);
     }
@@ -151,7 +156,7 @@ public class QueueCredentialsController {
      */
     @Operation(summary = "Update the password on the queue credential given by username, on a queue given by Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully updated password")
-    @PutMapping(value = "/queues/{queueId}/credentials/{basicUsername}", produces = {APPLICATION_JSON_VALUE}, consumes = {TEXT_PLAIN_VALUE})
+    @PutMapping(value = "/queues/{queueId}/credentials/{basicUsername}", produces = {APPLICATION_JSON_VALUE}, consumes = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<ResponseMessage> updatePassword(
@@ -163,7 +168,7 @@ public class QueueCredentialsController {
             @Parameter(description = "The basic username of the credential to update", required = true)
             String basicUsername,
             //
-            @Valid @RequestBody String basicPassword,
+            @Valid @RequestBody String basicPassword, // TODO: fix this
             //
             Authentication authentication
     ) throws DataAccessException, DataUpdateException {

@@ -22,7 +22,7 @@ import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
@@ -51,11 +51,11 @@ public class PostURLControllerTest extends BaseWebControllerTest {
     public void test_addPostUrl() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/posts/1/urls")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(TEST_POST_URL))
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(GSON.fromJson("{\"message\":\"Added URL to post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
@@ -105,7 +105,7 @@ public class PostURLControllerTest extends BaseWebControllerTest {
                         .get("/posts/1/urls")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(GSON.fromJson("[{\"title\":\"testTitle\",\"type\":\"testURLType\",\"href\":\"testHref\",\"hreflang\":\"testHreflang\",\"rel\":\"testRel\"}]", JsonArray.class), GSON.fromJson(responseContent, JsonArray.class));
@@ -118,7 +118,7 @@ public class PostURLControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/posts/1/urls/2")
                         .servletPath("/posts/1/urls/2")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(TEST_POST_URL))
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
@@ -136,7 +136,7 @@ public class PostURLControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .delete("/posts/1/urls/2")
                         .servletPath("/posts/1/urls/2")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(TEST_POST_URL))
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")

@@ -20,7 +20,7 @@ import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
@@ -47,11 +47,11 @@ public class PostEnclosureControllerTest extends BaseWebControllerTest {
     public void test_addPostEnclosure() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/posts/1/enclosures")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(TEST_POST_ENCLOSURE))
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(GSON.fromJson("{\"message\":\"Added enclosure to post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
@@ -101,7 +101,7 @@ public class PostEnclosureControllerTest extends BaseWebControllerTest {
                         .get("/posts/1/enclosures")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(GSON.fromJson("[{\"url\":\"https://localhost\",\"type\":\"testEnclosureType\",\"length\":64}]", JsonArray.class), GSON.fromJson(responseContent, JsonArray.class));
@@ -114,7 +114,7 @@ public class PostEnclosureControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/posts/1/enclosures/2")
                         .servletPath("/posts/1/enclosures/2")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(TEST_POST_ENCLOSURE))
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
@@ -132,7 +132,7 @@ public class PostEnclosureControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .delete("/posts/1/enclosures/2")
                         .servletPath("/posts/1/enclosures/2")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(TEST_POST_ENCLOSURE))
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")

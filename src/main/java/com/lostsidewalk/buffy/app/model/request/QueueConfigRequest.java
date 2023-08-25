@@ -64,13 +64,12 @@ public class QueueConfigRequest {
     /**
      * The image source of the queue.
      */
-    @Size(max = 16384, message = "{queue.config.error.img-src-too-long}")
+    @Size(max = 10240, message = "{queue.config.error.img-src-too-long}")
     String imgSrc;
 
     private QueueConfigRequest(String ident, String title, String description, String generator,
                                ExportConfigDTO exportConfig,
-                               String copyright, String language, String imgSrc)
-    {
+                               String copyright, String language, String imgSrc) {
         this.ident = ident;
         this.title = title;
         this.description = description;
@@ -86,8 +85,7 @@ public class QueueConfigRequest {
      */
     public static QueueConfigRequest from(String ident, String title, String description, String generator,
                                           ExportConfigDTO exportConfig,
-                                          String copyright, String language, String imgSrc)
-    {
+                                          String copyright, String language, String imgSrc) {
         return new QueueConfigRequest(
                 ident,
                 title,

@@ -1,6 +1,8 @@
 package com.lostsidewalk.buffy.app.model.response;
 
+
 import com.lostsidewalk.buffy.publisher.Publisher.PubResult;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.util.Comparator;
@@ -9,6 +11,8 @@ import java.util.List;
 
 @Data
 public class DeployResponse {
+
+    @NotNull(message = "{deploy.response.error.timestamp-is-null}")
     Date timestamp;
 
     private DeployResponse(Date timestamp) {

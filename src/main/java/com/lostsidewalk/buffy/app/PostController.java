@@ -25,6 +25,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +50,7 @@ import static org.apache.commons.collections4.CollectionUtils.size;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.time.StopWatch.createStarted;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.*;
 import static org.springframework.http.ResponseEntity.ok;
@@ -69,6 +71,9 @@ public class PostController {
 
     @Autowired
     StagingPostService stagingPostService;
+
+    @Autowired
+    Validator validator;
 
     //
     // CREATE POST
@@ -116,6 +121,7 @@ public class PostController {
             createdPosts.add(convertToDTO(stagingPost));
         }
         stopWatch.stop();
+        validator.validate(createdPosts);
         appLogService.logStagingPostCreate(username, stopWatch, postConfigRequests.size(), size(createdPosts));
         return ok(createdPosts);
     }
@@ -154,8 +160,9 @@ public class PostController {
         StopWatch stopWatch = createStarted();
         List<StagingPost> stagingPosts = stagingPostService.getStagingPosts(username, singletonList(queueId));
         stopWatch.stop();
-        appLogService.logStagingPostFetch(username, stopWatch, 1, size(stagingPosts));
         List<PostDTO> posts = stagingPosts.stream().map(PostController::convertToDTO).toList();
+        validator.validate(posts);
+        appLogService.logStagingPostFetch(username, stopWatch, 1, size(stagingPosts));
         return ok(posts);
     }
 
@@ -291,6 +298,8 @@ public class PostController {
         StopWatch stopWatch = createStarted();
         StagingPost stagingPost = stagingPostService.findById(username, postId);
         stopWatch.stop();
+        ContentObject postTitle = stagingPost.getPostTitle();
+        validator.validate(postTitle);
         appLogService.logStagingPostAttributeFetch(username, stopWatch, stagingPost.getId(), "postTitle");
         return ok(stagingPost.getPostTitle());
     }
@@ -324,6 +333,8 @@ public class PostController {
         StopWatch stopWatch = createStarted();
         StagingPost stagingPost = stagingPostService.findById(username, postId);
         stopWatch.stop();
+        ContentObject postDesc = stagingPost.getPostDesc();
+        validator.validate(postDesc);
         appLogService.logStagingPostAttributeFetch(username, stopWatch, stagingPost.getId(), "postDesc");
         return ok(stagingPost.getPostDesc());
     }
@@ -357,8 +368,10 @@ public class PostController {
         StopWatch stopWatch = createStarted();
         StagingPost stagingPost = stagingPostService.findById(username, postId);
         stopWatch.stop();
+        PostITunes postITunes = stagingPost.getPostITunes();
+        validator.validate(postITunes);
         appLogService.logStagingPostAttributeFetch(username, stopWatch, stagingPost.getId(), "postITunes");
-        return ok(stagingPost.getPostITunes());
+        return ok(postITunes);
     }
 
     /**
@@ -619,8 +632,9 @@ public class PostController {
         StopWatch stopWatch = createStarted();
         StagingPost updatedPost = stagingPostService.updatePost(username, id, postUpdateRequest);
         stopWatch.stop();
-        appLogService.logStagingPostUpdate(username, stopWatch, id);
         PostDTO postUpdatedResponse = convertToDTO(updatedPost);
+        validator.validate(postUpdatedResponse);
+        appLogService.logStagingPostUpdate(username, stopWatch, id);
         return ok(postUpdatedResponse);
     }
 
@@ -672,8 +686,9 @@ public class PostController {
         }
         List<PubResult> publicationResults = stagingPostService.updatePostPubStatus(username, id, newStatus);
         stopWatch.stop();
-        appLogService.logStagingPostPubStatusUpdate(username, stopWatch, id, postStatusUpdateRequest, publicationResults);
         DeployResponse deployResponse = DeployResponse.from(publicationResults);
+        validator.validate(deployResponse);
+        appLogService.logStagingPostPubStatusUpdate(username, stopWatch, id, postStatusUpdateRequest, publicationResults);
         return ok(deployResponse);
     }
 
@@ -712,8 +727,8 @@ public class PostController {
         StopWatch stopWatch = createStarted();
         ContentObject updatedPostTitle = stagingPostService.updatePostTitle(username, id, postTitleUpdateRequest);
         stopWatch.stop();
+        validator.validate(updatedPostTitle);
         appLogService.logStagingPostAttributeUpdate(username, stopWatch, id, "postTitle");
-
         return ok(updatedPostTitle);
     }
 
@@ -750,11 +765,11 @@ public class PostController {
         String username = userDetails.getUsername();
         log.debug("updatePostDesc for user={}, postId={}, postDescUpdateRequest={}", username, id, postDescUpdateRequest);
         StopWatch stopWatch = createStarted();
-        ContentObject updatedPostTitle = stagingPostService.updatePostDesc(username, id, postDescUpdateRequest);
+        ContentObject updatedPostDesc = stagingPostService.updatePostDesc(username, id, postDescUpdateRequest);
         stopWatch.stop();
+        validator.validate(updatedPostDesc);
         appLogService.logStagingPostAttributeUpdate(username, stopWatch, id, "postDesc");
-
-        return ok(updatedPostTitle);
+        return ok(updatedPostDesc);
     }
 
     /**
@@ -790,11 +805,11 @@ public class PostController {
         String username = userDetails.getUsername();
         log.debug("updatePostITunes for user={}, postId={}, postITunesUpdateRequest={}", username, id, postITunesUpdateRequest);
         StopWatch stopWatch = createStarted();
-        PostITunes updatePostITunes = stagingPostService.updatePostITunes(username, id, postITunesUpdateRequest);
+        PostITunes updatedPostITunes = stagingPostService.updatePostITunes(username, id, postITunesUpdateRequest);
         stopWatch.stop();
+        validator.validate(updatedPostITunes);
         appLogService.logStagingPostAttributeUpdate(username, stopWatch, id, "postITunes");
-
-        return ok(updatePostITunes);
+        return ok(updatedPostITunes);
     }
 
     /**
@@ -814,17 +829,18 @@ public class PostController {
     @ApiResponse(responseCode = "200", description = "Successfully updated post comment string",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = String.class)))
-    @PutMapping(value = "/posts/{id}/comment", produces = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE}, consumes = {TEXT_PLAIN_VALUE})
+    @PutMapping(value = "/posts/{id}/comment", produces = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE}, consumes = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<String> updatePostComment(
             @RequestHeader("Accept") String acceptHeader,
+            @RequestHeader("Content-Type") String contentTypeHeader,
             //
             @PathVariable("id")
             @Parameter(description = "The Id of the post to update", required = true)
             Long id,
             //
-            @Valid @RequestBody String postComment,
+            @Valid @RequestBody String postComment, // TODO: fix this
             //
             Authentication authentication
     ) throws DataAccessException, DataUpdateException {
@@ -832,7 +848,8 @@ public class PostController {
         String username = userDetails.getUsername();
         log.debug("updatePostComment for user={}, postId={}, postComment={}", username, id, postComment);
         StopWatch stopWatch = createStarted();
-        String updatedPostComment = stagingPostService.updatePostComment(username, id, postComment);
+        String updatedPostComment = stagingPostService.updatePostComment(username, id,
+                contentTypeHeader.contains(APPLICATION_JSON_VALUE) ? GSON.fromJson(postComment, String.class ) : postComment);
         stopWatch.stop();
         appLogService.logStagingPostAttributeUpdate(username, stopWatch, id, "postComment");
         if (acceptHeader.contains(APPLICATION_JSON_VALUE)) {
@@ -861,17 +878,18 @@ public class PostController {
     @ApiResponse(responseCode = "200", description = "Successfully updated post rights string",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = String.class)))
-    @PutMapping(value = "/posts/{id}/rights", produces = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE}, consumes = {TEXT_PLAIN_VALUE})
+    @PutMapping(value = "/posts/{id}/rights", produces = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE}, consumes = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<String> updatePostRights(
             @RequestHeader("Accept") String acceptHeader,
+            @RequestHeader("Content-Type") String contentTypeHeader,
             //
             @PathVariable("id")
             @Parameter(description = "The Id of the post to update", required = true)
             Long id,
             //
-            @Valid @RequestBody String postRights,
+            @Valid @RequestBody String postRights, // TODO: fix this
             //
             Authentication authentication
     ) throws DataAccessException, DataUpdateException {
@@ -879,7 +897,8 @@ public class PostController {
         String username = userDetails.getUsername();
         log.debug("updatePostRights for user={}, postId={}, postRights={}", username, id, postRights);
         StopWatch stopWatch = createStarted();
-        String updatedPostRights = stagingPostService.updatePostRights(username, id, postRights);
+        String updatedPostRights = stagingPostService.updatePostRights(username, id,
+                contentTypeHeader.contains(APPLICATION_JSON_VALUE) ? GSON.fromJson(postRights, String.class ) : postRights);
         stopWatch.stop();
         appLogService.logStagingPostAttributeUpdate(username, stopWatch, id, "postRights");
         if (acceptHeader.contains(APPLICATION_JSON_VALUE)) {
@@ -908,7 +927,7 @@ public class PostController {
     @ApiResponse(responseCode = "200", description = "Successfully updated post expiration timestamp",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = String.class)))
-    @PutMapping(value = "/posts/{id}/expiration", produces = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE}, consumes = {TEXT_PLAIN_VALUE})
+    @PutMapping(value = "/posts/{id}/expiration", produces = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE}, consumes = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     @Transactional
     public ResponseEntity<String> updateExpirationTimestamp(
@@ -918,7 +937,7 @@ public class PostController {
             @Parameter(description = "The Id of the post to update", required = true)
             Long id,
             //
-            @Valid @RequestBody String expirationTimestamp,
+            @Valid @RequestBody String expirationTimestamp, // TODO: fix this
             //
             Authentication authentication
     ) throws DataAccessException, DataUpdateException {
@@ -926,17 +945,15 @@ public class PostController {
         String username = userDetails.getUsername();
         log.debug("updateExpirationTimestamp for user={}, postId={}, expirationTimestamp={}", username, id, expirationTimestamp);
         StopWatch stopWatch = createStarted();
-        Date updatedExpirationTimestamp = null;
+        Date updatedExpirationTimestamp;
         try {
             updatedExpirationTimestamp = stagingPostService.updateExpirationTimestamp(username, id, ISO_8601_TIMESTAMP_FORMAT.parse(expirationTimestamp));
         } catch (ParseException e) {
-            //
+            return new ResponseEntity<>(BAD_REQUEST);
         }
         stopWatch.stop();
         appLogService.logStagingPostAttributeUpdate(username, stopWatch, id, "expirationTimestamp");
-        String responseStr = updatedExpirationTimestamp != null ?
-                ISO_8601_TIMESTAMP_FORMAT.format(updatedExpirationTimestamp) :
-                EMPTY; // default response
+        String responseStr = ISO_8601_TIMESTAMP_FORMAT.format(updatedExpirationTimestamp);
         if (acceptHeader.contains(APPLICATION_JSON_VALUE)) {
             return ok(GSON.toJson(responseStr));
         } else {

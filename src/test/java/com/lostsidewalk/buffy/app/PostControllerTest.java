@@ -29,11 +29,12 @@ import static com.lostsidewalk.buffy.app.auth.AuthTokenFilter.API_SECRET_HEADER_
 import static com.lostsidewalk.buffy.post.StagingPost.PostPubStatus.DEPUB_PENDING;
 import static com.lostsidewalk.buffy.post.StagingPost.PostPubStatus.PUB_PENDING;
 import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -42,7 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class PostControllerTest extends BaseWebControllerTest {
 
     private static final Gson GSON = new GsonBuilder()
-            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX")
+            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
             .create();
 
     @BeforeEach
@@ -144,6 +145,36 @@ public class PostControllerTest extends BaseWebControllerTest {
             TEST_STAGING_POST
     );
 
+    private static final StagingPost TEST_NON_DEPLOYED_STAGING_POST = StagingPost.from(
+            "testImporterId",
+            1L,
+            "testImporterDesc",
+            2L,
+            TEST_POST_TITLE,
+            TEST_POST_DESCRIPTION,
+            List.of(TEST_POST_CONTENT),
+            TEST_POST_MEDIA,
+            TEST_POST_ITUNES,
+            "testPostUrl",
+            List.of(TEST_POST_URL),
+            "testPostImgUrl",
+            null, // import timestamp
+            "testPostHash",
+            "me",
+            "testPostComment",
+            "testPostRights",
+            List.of(TEST_POST_CONTRIBUTOR),
+            List.of(TEST_POST_AUTHOR),
+            List.of("testPostCategory"),
+            null, // publish timestamp
+            null, // expiration timestamp
+            List.of(TEST_POST_ENCLOSURE),
+            null // last updated timestamp
+    );
+    static {
+        TEST_NON_DEPLOYED_STAGING_POST.setId(1L);
+    }
+
     private static final PostConfigRequest TEST_POST_CONFIG_REQUEST = new PostConfigRequest();
     static {
         TEST_POST_CONFIG_REQUEST.setPostTitle(TEST_STAGING_POST.getPostTitle());
@@ -191,11 +222,11 @@ public class PostControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/posts/1")
                         .servletPath("/posts/1")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(TEST_POST_CONFIG_REQUESTS))
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
@@ -213,7 +244,7 @@ public class PostControllerTest extends BaseWebControllerTest {
                         .get("/posts/1")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
@@ -231,7 +262,7 @@ public class PostControllerTest extends BaseWebControllerTest {
                         .get("/posts/1/status")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals("PUB_PENDING", GSON.fromJson(responseContent, String.class));
@@ -261,7 +292,7 @@ public class PostControllerTest extends BaseWebControllerTest {
                         .get("/posts/1/queue")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals("1", GSON.fromJson(responseContent, String.class));
@@ -276,7 +307,7 @@ public class PostControllerTest extends BaseWebControllerTest {
                         .get("/posts/1/title")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     ContentObject postTitle = GSON.fromJson(responseContent, ContentObject.class);
@@ -292,7 +323,7 @@ public class PostControllerTest extends BaseWebControllerTest {
                         .get("/posts/1/desc")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     ContentObject postDesc = GSON.fromJson(responseContent, ContentObject.class);
@@ -308,7 +339,7 @@ public class PostControllerTest extends BaseWebControllerTest {
                         .get("/posts/1/itunes")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(TEST_POST_ITUNES, GSON.fromJson(responseContent, PostITunes.class));
@@ -332,6 +363,21 @@ public class PostControllerTest extends BaseWebControllerTest {
     }
 
     @Test
+    void test_getPostComment_json() throws Exception {
+        when(this.stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/posts/1/comment")
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(result -> {
+                    String responseContent = result.getResponse().getContentAsString();
+                    assertEquals("testPostComment", GSON.fromJson(responseContent, String.class));
+                })
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void test_getPostRights_text() throws Exception {
         when(this.stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
@@ -342,6 +388,21 @@ public class PostControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals("testPostRights", responseContent);
+                })
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void test_getPostRights_json() throws Exception {
+        when(this.stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/posts/1/rights")
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(result -> {
+                    String responseContent = result.getResponse().getContentAsString();
+                    assertEquals("testPostRights", GSON.fromJson(responseContent, String.class));
                 })
                 .andExpect(status().isOk());
     }
@@ -371,6 +432,36 @@ public class PostControllerTest extends BaseWebControllerTest {
     }
 
     @Test
+    void test_getExpirationTimestamp_json() throws Exception {
+        when(this.stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/posts/1/expiration")
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(result -> {
+                    String responseContent = result.getResponse().getContentAsString();
+                    assertEquals(THIRTY_DAYS_FROM_NOW, GSON.fromJson(responseContent, Date.class));
+                })
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void test_getExpirationTimestamp_json_nonDeployed() throws Exception {
+        when(this.stagingPostService.findById("me", 1L)).thenReturn(TEST_NON_DEPLOYED_STAGING_POST);
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/posts/1/expiration")
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(result -> {
+                    String responseContent = result.getResponse().getContentAsString();
+                    assertTrue(isEmpty(GSON.fromJson(responseContent, String.class)));
+                })
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void test_getPublishedTimestamp_text() throws Exception {
         when(this.stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
@@ -388,6 +479,36 @@ public class PostControllerTest extends BaseWebControllerTest {
                         fail(e.getMessage());
                     }
                     assertEquals(published, YESTERDAY);
+                })
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void test_getPublishedTimestamp_json() throws Exception {
+        when(this.stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/posts/1/published")
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(result -> {
+                    String responseContent = result.getResponse().getContentAsString();
+                    assertEquals(YESTERDAY, GSON.fromJson(responseContent, Date.class));
+                })
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void test_getPublishedTimestamp_json_nonDeployed() throws Exception {
+        when(this.stagingPostService.findById("me", 1L)).thenReturn(TEST_NON_DEPLOYED_STAGING_POST);
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/posts/1/published")
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(result -> {
+                    String responseContent = result.getResponse().getContentAsString();
+                    assertTrue(isEmpty(GSON.fromJson(responseContent, String.class)));
                 })
                 .andExpect(status().isOk());
     }
@@ -415,12 +536,42 @@ public class PostControllerTest extends BaseWebControllerTest {
     }
 
     @Test
+    void test_getLastUpdatedTimestamp_json() throws Exception {
+        when(this.stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/posts/1/updated")
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(result -> {
+                    String responseContent = result.getResponse().getContentAsString();
+                    assertEquals(NOW, GSON.fromJson(responseContent, Date.class));
+                })
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void test_getLastUpdatedTimestamp_json_nonDeployed() throws Exception {
+        when(this.stagingPostService.findById("me", 1L)).thenReturn(TEST_NON_DEPLOYED_STAGING_POST);
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/posts/1/updated")
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(result -> {
+                    String responseContent = result.getResponse().getContentAsString();
+                    assertTrue(isEmpty(GSON.fromJson(responseContent, String.class)));
+                })
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void test_updatePost() throws Exception {
         when(this.stagingPostService.updatePost("me", 1L, TEST_POST_CONFIG_REQUEST)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/posts/1")
                         .servletPath("/posts/1")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(TEST_POST_CONFIG_REQUEST))
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
@@ -453,7 +604,7 @@ public class PostControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/posts/1/status")
                         .servletPath("/posts/1/status")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(TEST_POST_STATUS_UPDATE_REQUEST))
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
@@ -471,7 +622,7 @@ public class PostControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/posts/1/title")
                         .servletPath("/posts/1/title")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(TEST_POST_TITLE))
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
@@ -489,7 +640,7 @@ public class PostControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/posts/1/desc")
                         .servletPath("/posts/1/desc")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(TEST_POST_DESCRIPTION))
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
@@ -507,7 +658,7 @@ public class PostControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/posts/1/itunes")
                         .servletPath("/posts/1/itunes")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(TEST_POST_ITUNES))
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
@@ -539,6 +690,25 @@ public class PostControllerTest extends BaseWebControllerTest {
     }
 
     @Test
+    void test_updatePostComment_json() throws Exception {
+        when(this.stagingPostService.updatePostComment("me", 1L, "testComment")).thenReturn("testComment");
+        mockMvc.perform(MockMvcRequestBuilders
+                        .put("/posts/1/comment")
+                        .servletPath("/posts/1/comment")
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .content(GSON.toJson("testComment"))
+                        .accept(APPLICATION_JSON_VALUE)
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                )
+                .andExpect(result -> {
+                    String responseContent = result.getResponse().getContentAsString();
+                    assertEquals("testComment", GSON.fromJson(responseContent, String.class));
+                })
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void test_updatePostRights_text() throws Exception {
         when(this.stagingPostService.updatePostRights("me", 1L, "testRights")).thenReturn("testRights");
         mockMvc.perform(MockMvcRequestBuilders
@@ -553,6 +723,25 @@ public class PostControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals("testRights", responseContent);
+                })
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void test_updatePostRights_json() throws Exception {
+        when(this.stagingPostService.updatePostRights("me", 1L, "testRights")).thenReturn("testRights");
+        mockMvc.perform(MockMvcRequestBuilders
+                        .put("/posts/1/rights")
+                        .servletPath("/posts/1/rights")
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .content(GSON.toJson("testRights"))
+                        .accept(APPLICATION_JSON_VALUE)
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                )
+                .andExpect(result -> {
+                    String responseContent = result.getResponse().getContentAsString();
+                    assertEquals("testRights", GSON.fromJson(responseContent, String.class));
                 })
                 .andExpect(status().isOk());
     }
@@ -574,6 +763,39 @@ public class PostControllerTest extends BaseWebControllerTest {
                     assertEquals(THIRTY_DAYS_FROM_NOW, ISO_8601_TIMESTAMP_FORMAT.parse(responseContent));
                 })
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void test_updateExpirationTimestamp_json() throws Exception {
+        when(this.stagingPostService.updateExpirationTimestamp("me", 1L, THIRTY_DAYS_FROM_NOW)).thenReturn(THIRTY_DAYS_FROM_NOW);
+        mockMvc.perform(MockMvcRequestBuilders
+                        .put("/posts/1/expiration")
+                        .servletPath("/posts/1/expiration")
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .content(ISO_8601_TIMESTAMP_FORMAT.format(THIRTY_DAYS_FROM_NOW))
+                        .accept(APPLICATION_JSON_VALUE)
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                )
+                .andExpect(result -> {
+                    String responseContent = result.getResponse().getContentAsString();
+                    assertEquals(THIRTY_DAYS_FROM_NOW, GSON.fromJson(responseContent, Date.class));
+                })
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void test_updateExpirationTimestamp_json_invalidTimestamp() throws Exception {
+        when(this.stagingPostService.updateExpirationTimestamp("me", 1L, THIRTY_DAYS_FROM_NOW)).thenReturn(THIRTY_DAYS_FROM_NOW);
+        mockMvc.perform(MockMvcRequestBuilders
+                        .put("/posts/1/expiration")
+                        .servletPath("/posts/1/expiration")
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .content("aaaaa")
+                        .accept(APPLICATION_JSON_VALUE)
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                ).andExpect(status().isBadRequest());
     }
 
     @Test

@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +51,9 @@ public class PostURLController {
 
     @Autowired
     StagingPostService stagingPostService;
+
+    @Autowired
+    Validator validator;
 
     //
     // CREATE POST URL
@@ -127,8 +131,9 @@ public class PostURLController {
         log.debug("getPostUrls for user={}, postId={}", username, postId);
         StopWatch stopWatch = createStarted();
         StagingPost stagingPost = stagingPostService.findById(username, postId);
-        List<PostUrl> postUrls = stagingPost.getPostUrls();
         stopWatch.stop();
+        List<PostUrl> postUrls = stagingPost.getPostUrls();
+        validator.validate(postUrls);
         appLogService.logStagingPostUrlsFetch(username, stopWatch, postId, size(postUrls));
         return ok(postUrls);
     }

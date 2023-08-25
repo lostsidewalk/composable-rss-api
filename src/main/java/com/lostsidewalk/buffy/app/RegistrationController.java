@@ -7,7 +7,7 @@ import com.lostsidewalk.buffy.app.auth.AuthService;
 import com.lostsidewalk.buffy.app.mail.MailService;
 import com.lostsidewalk.buffy.app.model.AppToken;
 import com.lostsidewalk.buffy.app.model.request.RegistrationRequest;
-import com.lostsidewalk.buffy.app.model.response.RegistartionResponse;
+import com.lostsidewalk.buffy.app.model.response.RegistrationResponse;
 import com.lostsidewalk.buffy.app.model.response.ResponseMessage;
 import com.lostsidewalk.buffy.app.token.TokenService;
 import com.lostsidewalk.buffy.app.token.TokenService.JwtUtil;
@@ -15,6 +15,7 @@ import com.lostsidewalk.buffy.app.user.LocalUserService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +57,9 @@ public class RegistrationController {
     @Autowired
     TokenService tokenService;
 
+    @Autowired
+    Validator validator;
+
     @Value("${verification.error.redirect.url}")
     String verificationErrorRedirectUrl;
 
@@ -68,7 +72,7 @@ public class RegistrationController {
     //
     @RequestMapping(path = "/register", method = POST, produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     @Transactional
-    public ResponseEntity<RegistartionResponse> register(@Valid @RequestBody RegistrationRequest registrationRequest) throws RegistrationException, AuthClaimException, DataAccessException, DataUpdateException {
+    public ResponseEntity<RegistrationResponse> register(@Valid @RequestBody RegistrationRequest registrationRequest) throws RegistrationException, AuthClaimException, DataAccessException, DataUpdateException {
         //
         // (1) validate the incoming params and create the new user entity
         //
@@ -99,11 +103,13 @@ public class RegistrationController {
             // ignored
         }
         stopWatch.stop();
-        appLogService.logUserRegistration(username, stopWatch);
         //
         // (4) user registration is complete, respond w/username and password, and http status 200 to trigger authentication
         //
-        return ok(new RegistartionResponse(username, password));
+        RegistrationResponse registrationResponse = new RegistrationResponse(username, password);
+        validator.validate(registrationResponse);
+        appLogService.logUserRegistration(username, stopWatch);
+        return ok(registrationResponse);
     }
     //
     // the verification step is completed when the user clicks the get-back link from their email

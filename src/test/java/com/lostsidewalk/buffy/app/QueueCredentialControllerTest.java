@@ -19,7 +19,7 @@ import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -42,11 +42,11 @@ public class QueueCredentialControllerTest extends BaseWebControllerTest {
     public void test_addQueueCredential() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/queues/1/credentials")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(TEST_QUEUE_CREDENTIAL))
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(GSON.fromJson("{\"message\":\"Added credential to queue Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
@@ -64,7 +64,7 @@ public class QueueCredentialControllerTest extends BaseWebControllerTest {
                         .get("/queues/1/credentials")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(GSON.fromJson("[{\"queueId\":1,\"username\":\"me\",\"basicUsername\":\"testUsername\",\"basicPassword\":\"testPassword\"}]", JsonArray.class), GSON.fromJson(responseContent, JsonArray.class));
@@ -73,7 +73,7 @@ public class QueueCredentialControllerTest extends BaseWebControllerTest {
     }
 
     @Test
-    public void test_updatePassword() throws Exception {
+    public void test_updatePassword_text() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/queues/1/credentials/customer")
                         .servletPath("/queues/1/credentials/customer")
@@ -91,11 +91,29 @@ public class QueueCredentialControllerTest extends BaseWebControllerTest {
     }
 
     @Test
+    public void test_updatePassword_json() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders
+                        .put("/queues/1/credentials/customer")
+                        .servletPath("/queues/1/credentials/customer")
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .content(GSON.toJson("testPassword"))
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                )
+                .andExpect(result -> {
+                    String responseContent = result.getResponse().getContentAsString();
+                    assertEquals(GSON.fromJson("{\"message\":\"Updated credential on queue Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                })
+                .andExpect(status().isOk());
+        verify(this.queueCredentialsService).updatePassword("me", 1L, "customer", GSON.toJson("testPassword"));
+    }
+
+    @Test
     public void test_deleteQueueCredential() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders
                         .delete("/queues/1/credentials/customer")
                         .servletPath("/queues/1/credentials/customer")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(TEST_QUEUE_CREDENTIAL))
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")

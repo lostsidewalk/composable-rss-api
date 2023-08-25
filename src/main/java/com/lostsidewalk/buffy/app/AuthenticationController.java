@@ -11,6 +11,7 @@ import com.lostsidewalk.buffy.app.user.LocalUserService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +30,6 @@ import org.springframework.web.bind.annotation.RestController;
 import static com.lostsidewalk.buffy.app.model.TokenType.APP_AUTH_REFRESH;
 import static com.lostsidewalk.buffy.app.user.UserRoles.SUBSCRIBER_AUTHORITY;
 import static com.lostsidewalk.buffy.auth.AuthProvider.LOCAL;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
@@ -62,6 +62,9 @@ class AuthenticationController {
 
     @Autowired
     LocalUserService localUserService;
+
+    @Autowired
+    Validator validator;
     //
     // auth check
     //
@@ -75,7 +78,7 @@ class AuthenticationController {
                 username,
                 userDetails.getAuthorities().contains(SUBSCRIBER_AUTHORITY)
         );
-
+        validator.validate(authenticationResponse);
         return ok(authenticationResponse);
     }
     //
@@ -101,9 +104,8 @@ class AuthenticationController {
                 username,
                 localUserService.loadUserByUsername(username).getAuthorities().contains(SUBSCRIBER_AUTHORITY)
         );
-
+        validator.validate(authenticationResponse);
         log.info("Login succeeded for username={}", username);
-
         return ok(authenticationResponse);
     }
 
@@ -126,7 +128,6 @@ class AuthenticationController {
             authService.finalizeAuthClaim(username);
             log.info("Finalized auth claim for username={}", username);
         }
-
-        return ok(EMPTY);
+        return ok().build();
     }
 }

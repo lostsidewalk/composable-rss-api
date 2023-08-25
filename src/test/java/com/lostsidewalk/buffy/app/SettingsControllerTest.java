@@ -22,7 +22,7 @@ import static java.util.Collections.emptyMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
@@ -53,7 +53,7 @@ public class SettingsControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/settings")
                         .header("Authorization", "Bearer testToken")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(GSON.fromJson("{\"username\":\"me\",\"emailAddress\":\"testEmailAddress\",\"authProvider\":\"LOCAL\",\"authProviderProfileImgUrl\":\"testAuthProviderProfileImgUrl\",\"authProviderUsername\":\"testAuthProviderUsername\",\"frameworkConfig\":{\"userId\":null,\"notifications\":{},\"display\":{}},\"subscription\":null}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
@@ -80,7 +80,7 @@ public class SettingsControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/settings")
                         .header("Authorization", "Bearer testToken")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(TEST_SETTINGS_UPDATE_REQUEST)))
                 .andExpect(status().isOk());
         verify(this.settingsService).updateFrameworkConfig("me", TEST_SETTINGS_UPDATE_REQUEST);
@@ -94,7 +94,7 @@ public class SettingsControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/order")
                         .header("Authorization", "Bearer testToken")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(GSON.fromJson("{\"sessionId\":\"testSessionId\",\"sessionUrl\":\"testSessionUrl\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
@@ -113,7 +113,7 @@ public class SettingsControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/subscriptions")
                         .header("Authorization", "Bearer testToken")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(TEST_CANCEL_SUBSCRIPTION_REQUEST)))
                 .andExpect(status().isOk());
         verify(this.stripeOrderService).cancelSubscription("me");
@@ -129,7 +129,7 @@ public class SettingsControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/subscriptions")
                         .header("Authorization", "Bearer testToken")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(TEST_RESUME_SUBSCRIPTION_REQUEST)))
                 .andExpect(status().isOk());
         verify(this.stripeOrderService).resumeSubscription("me");

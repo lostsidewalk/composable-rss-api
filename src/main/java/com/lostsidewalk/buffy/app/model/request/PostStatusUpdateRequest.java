@@ -1,8 +1,7 @@
 package com.lostsidewalk.buffy.app.model.request;
 
-import lombok.Data;
-
 import jakarta.validation.constraints.Size;
+import lombok.Data;
 
 /**
  * A request model for updating the status of a post.

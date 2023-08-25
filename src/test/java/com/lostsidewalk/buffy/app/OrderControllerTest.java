@@ -13,7 +13,7 @@ import static com.lostsidewalk.buffy.app.OrderController.STRIPE_SIGNATURE_HEADER
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
@@ -31,10 +31,10 @@ public class OrderControllerTest extends BaseWebControllerTest {
         JsonObject testStripePayload = new JsonObject();
         mockMvc.perform(MockMvcRequestBuilders
                 .post("/stripe")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(testStripePayload))
                         .header(STRIPE_SIGNATURE_HEADER, testSigHeader)
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(status().isOk());
         verify(this.stripeOrderService).constructEvent(eq(testSigHeader), eq(testEventPayload));
     }

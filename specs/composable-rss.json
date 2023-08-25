@@ -85,6 +85,11 @@
               "schema" : {
                 "type" : "string"
               }
+            },
+            "application/json" : {
+              "schema" : {
+                "type" : "string"
+              }
             }
           },
           "required" : true
@@ -1526,6 +1531,13 @@
             "type" : "string"
           }
         }, {
+          "name" : "Content-Type",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "id",
           "in" : "path",
           "description" : "The Id of the post to update",
@@ -1539,6 +1551,11 @@
           "description" : "The updated post rights string.",
           "content" : {
             "text/plain" : {
+              "schema" : {
+                "type" : "string"
+              }
+            },
+            "application/json" : {
               "schema" : {
                 "type" : "string"
               }
@@ -1699,6 +1716,11 @@
               "schema" : {
                 "type" : "string"
               }
+            },
+            "application/json" : {
+              "schema" : {
+                "type" : "string"
+              }
             }
           },
           "required" : true
@@ -1809,6 +1831,13 @@
             "type" : "string"
           }
         }, {
+          "name" : "Content-Type",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "id",
           "in" : "path",
           "description" : "The Id of the post to update",
@@ -1822,6 +1851,11 @@
           "description" : "The updated post comment string.",
           "content" : {
             "text/plain" : {
+              "schema" : {
+                "type" : "string"
+              }
+            },
+            "application/json" : {
               "schema" : {
                 "type" : "string"
               }
@@ -2463,6 +2497,12 @@
           "description" : "A string value representing the name of the new category to add.",
           "content" : {
             "text/plain" : {
+              "schema" : {
+                "type" : "string",
+                "description" : "The name of a category"
+              }
+            },
+            "application/json" : {
               "schema" : {
                 "type" : "string",
                 "description" : "The name of a category"
@@ -3498,6 +3538,7 @@
   "components" : {
     "schemas" : {
       "ResponseMessage" : {
+        "required" : [ "message" ],
         "type" : "object",
         "properties" : {
           "message" : {
@@ -3553,7 +3594,7 @@
             "description" : "The language of the queue."
           },
           "imgSrc" : {
-            "maxLength" : 16384,
+            "maxLength" : 10240,
             "minLength" : 0,
             "type" : "string",
             "description" : "The image source of the queue."
@@ -3562,6 +3603,7 @@
         "description" : "List of queue configuration requests"
       },
       "QueueDTO" : {
+        "required" : [ "ident", "title", "transportIdent" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -3570,22 +3612,32 @@
             "format" : "int64"
           },
           "ident" : {
+            "maxLength" : 256,
+            "minLength" : 0,
             "type" : "string",
             "description" : "The identifier of the queue."
           },
           "title" : {
+            "maxLength" : 512,
+            "minLength" : 0,
             "type" : "string",
             "description" : "The title of the queue."
           },
           "description" : {
+            "maxLength" : 1024,
+            "minLength" : 0,
             "type" : "string",
             "description" : "The description of the queue."
           },
           "generator" : {
+            "maxLength" : 512,
+            "minLength" : 0,
             "type" : "string",
             "description" : "The generator information of the queue."
           },
           "transportIdent" : {
+            "maxLength" : 256,
+            "minLength" : 0,
             "type" : "string",
             "description" : "The transport identifier of the queue."
           },
@@ -3594,14 +3646,20 @@
             "description" : "The configuration for exporting the queue."
           },
           "copyright" : {
+            "maxLength" : 1024,
+            "minLength" : 0,
             "type" : "string",
             "description" : "The copyright information of the queue."
           },
           "language" : {
+            "maxLength" : 16,
+            "minLength" : 0,
             "type" : "string",
             "description" : "The language of the queue."
           },
           "queueImgSrc" : {
+            "maxLength" : 10240,
+            "minLength" : 0,
             "type" : "string",
             "description" : "The image source of the queue."
           },
@@ -3634,6 +3692,7 @@
         "description" : "The request containing the updated queue status information"
       },
       "QueueAuthUpdateRequest" : {
+        "required" : [ "isRequired" ],
         "type" : "object",
         "properties" : {
           "isRequired" : {
@@ -4282,6 +4341,7 @@
         }
       },
       "PostConfigRequest" : {
+        "required" : [ "postDesc", "postTitle", "postUrl" ],
         "type" : "object",
         "properties" : {
           "postTitle" : {
@@ -4300,6 +4360,8 @@
             "$ref" : "#/components/schemas/PostITunes"
           },
           "postUrl" : {
+            "maxLength" : 1024,
+            "minLength" : 0,
             "type" : "string"
           },
           "postUrls" : {
@@ -4309,9 +4371,13 @@
             }
           },
           "postComment" : {
+            "maxLength" : 2048,
+            "minLength" : 0,
             "type" : "string"
           },
           "postRights" : {
+            "maxLength" : 1024,
+            "minLength" : 0,
             "type" : "string"
           },
           "contributors" : {
@@ -4419,6 +4485,7 @@
         "description" : "Represents iTunes-specific metadata associated with a post."
       },
       "PostDTO" : {
+        "required" : [ "importTimestamp", "postDesc", "postTitle", "postUrl", "queueId" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -4448,6 +4515,8 @@
             "$ref" : "#/components/schemas/PostITunes"
           },
           "postUrl" : {
+            "maxLength" : 1024,
+            "minLength" : 0,
             "type" : "string",
             "description" : "The (primary) post URL"
           },
@@ -4464,10 +4533,14 @@
             "format" : "date-time"
           },
           "postComment" : {
+            "maxLength" : 2048,
+            "minLength" : 0,
             "type" : "string",
             "description" : "The comment associated with the post."
           },
           "postRights" : {
+            "maxLength" : 1024,
+            "minLength" : 0,
             "type" : "string",
             "description" : "The rights associated with the post."
           },
@@ -4533,6 +4606,7 @@
         "description" : "The updated post status"
       },
       "DeployResponse" : {
+        "required" : [ "timestamp" ],
         "type" : "object",
         "properties" : {
           "timestamp" : {

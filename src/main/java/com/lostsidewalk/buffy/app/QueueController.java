@@ -120,8 +120,8 @@ public class QueueController {
             queueConfigResponse.add(convertToDTO(queueDefinition));
         }
         stopWatch.stop();
+        validator.validate(queueConfigResponse);
         appLogService.logQueueCreate(username, stopWatch, queueConfigRequests.size(), size(createdQueues));
-
         return ok(queueConfigResponse);
     }
 
@@ -150,8 +150,9 @@ public class QueueController {
         // queue definitions
         List<QueueDefinition> queueDefinitions = queueDefinitionService.findByUser(username);
         stopWatch.stop();
-        appLogService.logQueueFetch(username, stopWatch, size(queueDefinitions));
         List<QueueDTO> queues = queueDefinitions.stream().map(QueueController::convertToDTO).toList();
+        validator.validate(queues);
+        appLogService.logQueueFetch(username, stopWatch, size(queueDefinitions));
         return ok(queues);
     }
 
@@ -665,9 +666,9 @@ public class QueueController {
         StopWatch stopWatch = StopWatch.createStarted();
         QueueDefinition queueDefinition = queueDefinitionService.updateQueue(username, id, queueConfigRequest);
         stopWatch.stop();
-        appLogService.logQueueUpdate(username, stopWatch, id);
-
         QueueDTO response = convertToDTO(queueDefinition);
+        validator.validate(response);
+        appLogService.logQueueUpdate(username, stopWatch, id);
         return ok(response);
     }
 
@@ -747,7 +748,7 @@ public class QueueController {
             @Valid
             @RequestBody
             @Parameter(description = "The updated queue ident string", required = true)
-            String ident,
+            String ident, // TODO: fix this
             //
             Authentication authentication
     ) throws DataAccessException, DataUpdateException {
@@ -789,7 +790,7 @@ public class QueueController {
             @Valid
             @RequestBody
             @Parameter(description = "The updated queue title", required = true)
-            String title,
+            String title, // TODO: fix this
             //
             Authentication authentication
     ) throws DataAccessException, DataUpdateException {
@@ -831,7 +832,7 @@ public class QueueController {
             @Valid
             @RequestBody
             @Parameter(description = "The updated queue description", required = true)
-            String description,
+            String description, // TODO: fix this
             //
             Authentication authentication
     ) throws DataAccessException, DataUpdateException {
@@ -873,7 +874,7 @@ public class QueueController {
             @Valid
             @RequestBody
             @Parameter(description = "The updated queue generator", required = true)
-            String generator,
+            String generator, // TODO: fix this
             //
             Authentication authentication
     ) throws DataAccessException, DataUpdateException {
@@ -915,7 +916,7 @@ public class QueueController {
             @Valid
             @RequestBody
             @Parameter(description = "The updated queue copyright", required = true)
-            String copyright,
+            String copyright, // TODO: fix this
             //
             Authentication authentication
     ) throws DataAccessException, DataUpdateException {
@@ -957,7 +958,7 @@ public class QueueController {
             @Valid
             @RequestBody
             @Parameter(description = "The updated queue language", required = true)
-            String language,
+            String language, // TODO: fix this
             //
             Authentication authentication
     ) throws DataAccessException, DataUpdateException {
@@ -1035,7 +1036,7 @@ public class QueueController {
             @Valid
             @RequestBody
             @Parameter(description = "The updated image source", required = true)
-            String imgSource,
+            String imgSource, // TODO: fix this
             //
             Authentication authentication
     ) throws DataAccessException, DataUpdateException {

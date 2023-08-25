@@ -18,7 +18,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
@@ -39,9 +39,9 @@ public class PasswordResetControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/pw_reset")
                         .servletPath("/pw_reset")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(testPwResetRequest))
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(status().isOk());
         verify(this.authService).requireAuthProvider("me", LOCAL);
         verify(this.mailService).sendPasswordResetEmail("me", TEST_PW_RESET_TOKEN);
@@ -56,7 +56,7 @@ public class PasswordResetControllerTest extends BaseWebControllerTest {
                         .get("/pw_reset/testToken")
                         .servletPath("/pw_reset/testToken")
                         .header("Authorization", "Bearer testToken")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(status().is3xxRedirection());
         verify(this.authService).continuePasswordReset(eq("me"), any(HttpServletResponse.class));
     }
@@ -76,7 +76,7 @@ public class PasswordResetControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                 .put("/pw_update")
                 .servletPath("/pw_update")
-                .contentType(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON_VALUE)
                 .content(GSON.toJson(TEST_NEW_PASSWORD_REQUEST))
                 .header("Authorization", "Bearer testToken"))
                 .andExpect(status().isOk());

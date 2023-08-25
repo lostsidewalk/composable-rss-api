@@ -34,8 +34,7 @@ public class InvoiceResponse {
             Long total,
             Long periodEnd,
             Long periodStart,
-            String productDescription)
-    {
+            String productDescription) {
         this.amountDue = amountDue;
         this.amountPaid = amountPaid;
         this.amountRemaining = amountRemaining;

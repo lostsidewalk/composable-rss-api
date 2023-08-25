@@ -68,7 +68,7 @@ public class PostCategoryController {
      */
     @Operation(summary = "Add new category to the post given by its Id", security = @SecurityRequirement(name = "VERIFIED_ROLE"))
     @ApiResponse(responseCode = "200", description = "Successfully added category to post")
-    @PostMapping(value = "/posts/{postId}/categories", produces = {APPLICATION_JSON_VALUE}, consumes = {TEXT_PLAIN_VALUE})
+    @PostMapping(value = "/posts/{postId}/categories", produces = {APPLICATION_JSON_VALUE}, consumes = {TEXT_PLAIN_VALUE, APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority('API_ROLE_VERIFIED')")
     public ResponseEntity<ResponseMessage> addPostCategory(
             @PathVariable("postId")

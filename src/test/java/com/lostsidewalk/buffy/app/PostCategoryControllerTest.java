@@ -20,7 +20,7 @@ import static com.lostsidewalk.buffy.app.auth.AuthTokenFilter.API_SECRET_HEADER_
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -38,20 +38,37 @@ public class PostCategoryControllerTest extends BaseWebControllerTest {
     private static final Gson GSON = new Gson();
 
     @Test
-    public void test_addPostCategory() throws Exception {
+    public void test_addPostCategory_text() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/posts/1/categories")
                         .contentType(TEXT_PLAIN_VALUE)
                         .content("testCategory")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(GSON.fromJson("{\"message\":\"Added category to post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
         verify(this.stagingPostService).addPostCategory("me", 1L, "testCategory");
+    }
+
+    @Test
+    public void test_addPostCategory_json() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders
+                        .post("/posts/1/categories")
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .content(GSON.toJson("testCategory"))
+                        .header(API_KEY_HEADER_NAME, "testApiKey")
+                        .header(API_SECRET_HEADER_NAME, "testApiSecret")
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(result -> {
+                    String responseContent = result.getResponse().getContentAsString();
+                    assertEquals(GSON.fromJson("{\"message\":\"Added category to post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                })
+                .andExpect(status().isOk());
+        verify(this.stagingPostService).addPostCategory("me", 1L, GSON.toJson("testCategory"));
     }
 
     private static final ContentObject TEST_POST_TITLE = ContentObject.from("testTitleType", "testTitleValue");
@@ -95,7 +112,7 @@ public class PostCategoryControllerTest extends BaseWebControllerTest {
                         .get("/posts/1/categories")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(GSON.fromJson("[\"category\"]", JsonArray.class), GSON.fromJson(responseContent, JsonArray.class));
@@ -108,7 +125,7 @@ public class PostCategoryControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .delete("/posts/1/categories/testCategory")
                         .servletPath("/posts/1/categories/testCategory")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson("testCategory"))
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")

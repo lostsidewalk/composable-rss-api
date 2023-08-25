@@ -1,9 +1,8 @@
 package com.lostsidewalk.buffy.app.model.request;
 
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-
 import jakarta.validation.constraints.Size;
+import lombok.Data;
 
 /**
  * A request model for updating the status of a queue.
@@ -14,7 +13,7 @@ public class QueueStatusUpdateRequest {
     /**
      * The new status to be set for the queue.
      */
-    @NotNull(message = "{queue.status.update.error.new-status-is-blank}")
+    @NotNull(message = "{queue.status.update.error.new-status-is-null}")
     @Size(max = 64, message = "{queue.status.update.error.new-status-too-long}")
     String newStatus;
 }

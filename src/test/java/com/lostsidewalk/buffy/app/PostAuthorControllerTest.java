@@ -21,7 +21,7 @@ import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
@@ -48,10 +48,10 @@ public class PostAuthorControllerTest extends BaseWebControllerTest {
     public void test_addPostAuthor() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/posts/1/authors")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(TEST_POST_AUTHOR))
                         .header("Authorization", "Bearer testToken")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(GSON.fromJson("{\"message\":\"Added author to post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
@@ -100,7 +100,7 @@ public class PostAuthorControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/posts/1/authors")
                         .header("Authorization", "Bearer testToken")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(GSON.fromJson("[{\"name\":\"me\",\"email\":\"me@localhost\",\"uri\":\"https://localhost\"}]", JsonArray.class), GSON.fromJson(responseContent, JsonArray.class));
@@ -113,7 +113,7 @@ public class PostAuthorControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/posts/1/authors/2")
                         .servletPath("/posts/1/authors/2")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(TEST_POST_AUTHOR))
                         .header("Authorization", "Bearer testToken"))
                 .andExpect(result -> {
@@ -129,7 +129,7 @@ public class PostAuthorControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .delete("/posts/1/authors/2")
                         .servletPath("/posts/1/authors/2")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(TEST_POST_AUTHOR))
                         .header("Authorization", "Bearer testToken"))
                 .andExpect(result -> {

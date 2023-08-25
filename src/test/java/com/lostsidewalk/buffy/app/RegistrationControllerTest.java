@@ -16,7 +16,7 @@ import static com.lostsidewalk.buffy.app.model.TokenType.VERIFICATION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
@@ -40,9 +40,9 @@ public class RegistrationControllerTest extends BaseWebControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/register")
                         .servletPath("/register")
-                        .contentType(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(testRegistrationRequest))
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(GSON.fromJson("{\"username\":\"testUsername\",\"password\":\"testPassword\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
@@ -58,7 +58,7 @@ public class RegistrationControllerTest extends BaseWebControllerTest {
                         .get("/verify/testToken")
                         .servletPath("/verify/testToken")
                         .header("Authorization", "Bearer testToken")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(status().is3xxRedirection());
         verify(this.userService).markAsVerified("me");
         verify(this.authService).finalizeVerificationClaim("me");
@@ -70,7 +70,7 @@ public class RegistrationControllerTest extends BaseWebControllerTest {
                         .delete("/deregister")
                         .servletPath("/deregister")
                         .header("Authorization", "Bearer testToken")
-                        .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(status().isOk());
     }
 }

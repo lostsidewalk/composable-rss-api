@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +47,9 @@ public class PostMediaController {
 
     @Autowired
     StagingPostService stagingPostService;
+
+    @Autowired
+    Validator validator;
 
     //
     // RETRIEVE POST MEDIA
@@ -79,8 +83,9 @@ public class PostMediaController {
         log.debug("getPostMedias for user={}, postId={}", username, postId);
         StopWatch stopWatch = createStarted();
         StagingPost stagingPost = stagingPostService.findById(username, postId);
-        PostMedia postMedia = stagingPost.getPostMedia();
         stopWatch.stop();
+        PostMedia postMedia = stagingPost.getPostMedia();
+        validator.validate(postMedia);
         appLogService.logStagingPostAttributeFetch(username, stopWatch, postId, "postMedia");
         return ok(postMedia);
     }
