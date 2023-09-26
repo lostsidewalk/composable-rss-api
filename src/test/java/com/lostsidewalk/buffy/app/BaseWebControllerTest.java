@@ -1,11 +1,13 @@
 package com.lostsidewalk.buffy.app;
 
 
-import com.lostsidewalk.buffy.*;
+import com.lostsidewalk.buffy.FrameworkConfigDao;
+import com.lostsidewalk.buffy.PostPublisher;
+import com.lostsidewalk.buffy.ThemeConfigDao;
 import com.lostsidewalk.buffy.app.auth.AuthService;
 import com.lostsidewalk.buffy.app.credentials.QueueCredentialsService;
 import com.lostsidewalk.buffy.app.mail.MailService;
-import com.lostsidewalk.buffy.app.order.*;
+import com.lostsidewalk.buffy.app.order.StripeOrderService;
 import com.lostsidewalk.buffy.app.post.StagingPostService;
 import com.lostsidewalk.buffy.app.queue.QueueDefinitionService;
 import com.lostsidewalk.buffy.app.settings.SettingsService;
@@ -39,7 +41,7 @@ import java.util.Date;
 
 import static java.time.temporal.ChronoUnit.DAYS;
 
-class BaseWebControllerTest {
+public class BaseWebControllerTest {
 
     @Autowired
     protected MockMvc mockMvc;
@@ -61,42 +63,39 @@ class BaseWebControllerTest {
     SettingsService settingsService;
 
     @MockBean
+    protected
     AuthService authService;
 
     @MockBean
+    protected
     TokenService tokenService;
 
     @MockBean
+    protected
     LocalUserService userService;
 
     @MockBean
+    protected
     ApiUserService apiUserService;
 
     @MockBean
     MailService mailService;
 
     @MockBean
+    protected
     StagingPostService stagingPostService;
 
     @MockBean
+    protected
     QueueDefinitionService queueDefinitionService;
 
     @MockBean
+    protected
     QueueCredentialsService queueCredentialsService;
-    //
-    // stripe callback queue processors
-    //
-    @MockBean
-    StripeCallbackQueueProcessor stripeCallbackQueueProcessor;
 
     @MockBean
-    CustomerEventQueueProcessor customerEventQueueProcessor;
-
-    @MockBean
-    StripeCustomerHandler stripeCustomerHandler;
-
-    @MockBean
-    StripeInvoiceHandler stripeInvoiceHandler;
+    protected
+    PostPublisher postPublisher;
     //
     // persistence layer
     //

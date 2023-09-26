@@ -1,8 +1,12 @@
 package com.lostsidewalk.buffy.app.model.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT;
+
 @Data
+@JsonInclude(NON_ABSENT)
 public class InvoiceResponse {
 
     Long amountDue;

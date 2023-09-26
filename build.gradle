@@ -24,11 +24,11 @@ repositories {
 
 dependencies {
     // NewsGears publisher
-    implementation 'com.lostsidewalk.newsgears:newsgears-publisher:0.5.5'
+    implementation 'com.lostsidewalk.newsgears:newsgears-publisher:0.5.8'
     // adds RSS/ATOM to the publishing path
-    implementation 'com.lostsidewalk.newsgears:newsgears-rss-publisher:0.5.4'
+    implementation 'com.lostsidewalk.newsgears:newsgears-rss-publisher:0.5.7'
     // add JSON to the publishing path
-    implementation 'com.lostsidewalk.newsgears:newsgears-json-publisher:0.5.4'
+    implementation 'com.lostsidewalk.newsgears:newsgears-json-publisher:0.5.7'
 
     // spring-boot-starter-actuator
     implementation 'org.springframework.boot:spring-boot-starter-actuator:3.1.1'
@@ -125,7 +125,7 @@ openApiValidate {
 openApiGenerate {
     verbose.set(false)
     validateSpec.set(true)
-    generatorName.set("html")
+    generatorName.set("markdown")
     outputDir.set("$buildDir/generated")
     inputSpec.set("$rootDir/specs/composable-rss.json")
     cleanupOutput.set(true)

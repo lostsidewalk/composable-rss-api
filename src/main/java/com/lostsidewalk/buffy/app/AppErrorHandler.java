@@ -1,6 +1,8 @@
 package com.lostsidewalk.buffy.app;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.lostsidewalk.buffy.DataAccessException;
+import com.lostsidewalk.buffy.DataConflictException;
 import com.lostsidewalk.buffy.DataUpdateException;
 import com.lostsidewalk.buffy.app.audit.*;
 import com.lostsidewalk.buffy.app.model.error.ErrorDetails;
@@ -51,35 +53,56 @@ public class AppErrorHandler {
     // database access exception
     // data not found exception
     // OPML (export) exception
-    // IO exception/client abort exception
+    // IO exception/client abort exception/JSON parse exception
     // illegal argument exception (runtime)
     // stripe exception
     // mail exception
     //
-    @ExceptionHandler(DataAccessException.class)
+    @ExceptionHandler(DataAccessException.class) // 404
     public ResponseEntity<ErrorDetails> handleDataAccessException(DataAccessException e, Authentication authentication) {
         errorLogService.logDataAccessException(ofNullable(authentication).map(Authentication::getName).orElse(null), new Date(), e);
         updateErrorCount(e);
-        return internalServerErrorResponse();
+        return notFoundResponse();
     }
 
-    @ExceptionHandler(DataUpdateException.class)
+    @ExceptionHandler(DataUpdateException.class) // 500
     public ResponseEntity<ErrorDetails> handleDataUpdateException(DataUpdateException e, Authentication authentication) {
         errorLogService.logDataUpdateException(ofNullable(authentication).map(Authentication::getName).orElse(null), new Date(), e);
         updateErrorCount(e);
         return internalServerErrorResponse();
     }
 
-    @ExceptionHandler(IOException.class)
-    public void handleIOException(IOException e, Authentication authentication) {
+    @ExceptionHandler(DataConflictException.class) // 409
+    public ResponseEntity<ErrorDetails> handleDataConflictException(DataConflictException e, Authentication authentication) {
+        errorLogService.logDataConflictException(ofNullable(authentication).map(Authentication::getName).orElse(null), new Date(), e);
+        updateErrorCount(e);
+        return conflictResponse();
+    }
+
+    @ExceptionHandler(ClientAbortException.class)
+    public void handleClientAbortException(ClientAbortException e, Authentication authentication) {
         String username = ofNullable(authentication).map(Authentication::getName).orElse(null);
         Date timestamp = new Date();
-        if (e instanceof ClientAbortException) {
-            errorLogService.logClientAbortException(username, timestamp, (ClientAbortException) e);
-        } else {
-            errorLogService.logIOException(username, timestamp, e);
-        }
+        errorLogService.logClientAbortException(username, timestamp, e);
         updateErrorCount(e);
+    }
+
+    @ExceptionHandler(JsonParseException.class)
+    public ResponseEntity<ErrorDetails> handleJsonParseException(JsonParseException e, Authentication authentication) {
+//        String username = ofNullable(authentication).map(Authentication::getName).orElse(null);
+//        Date timestamp = new Date();
+//        errorLogService.logJsonParseException(username, timestamp, e);
+        updateErrorCount(e);
+        return badRequestResponse("Invalid JSON", e.getMessage());
+    }
+
+    @ExceptionHandler(IOException.class)
+    public ResponseEntity<ErrorDetails> handleIOException(IOException e, Authentication authentication) {
+        String username = ofNullable(authentication).map(Authentication::getName).orElse(null);
+        Date timestamp = new Date();
+        errorLogService.logIOException(username, timestamp, e);
+        updateErrorCount(e);
+        return internalServerErrorResponse();
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -190,6 +213,10 @@ public class AppErrorHandler {
     //
     // utility methods
     //
+    private static ResponseEntity<ErrorDetails> notFoundResponse() {
+        return new ResponseEntity<>(getErrorDetails( "Entity not found.", EMPTY), NOT_FOUND);
+    }
+
     private static ResponseEntity<ErrorDetails> internalServerErrorResponse() {
         return new ResponseEntity<>(getErrorDetails( "Something horrible happened, please try again later.", EMPTY), INTERNAL_SERVER_ERROR);
     }
@@ -199,6 +226,10 @@ public class AppErrorHandler {
 
     private static ResponseEntity<ErrorDetails> badRequestResponse(String message, String messageDetails) {
         return new ResponseEntity<>(getErrorDetails(message, messageDetails), BAD_REQUEST);
+    }
+
+    private static ResponseEntity<ErrorDetails> conflictResponse() {
+        return new ResponseEntity<>(getErrorDetails("Conflict", EMPTY), CONFLICT);
     }
 
     private static ErrorDetails getErrorDetails(String message, String detailMessage) {

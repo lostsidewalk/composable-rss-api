@@ -61,7 +61,7 @@ public class MailService {
     // verification
     //
 
-    public void sendVerificationEmail(String username, AppToken verificationToken) throws MailException, DataAccessException {
+    public void sendVerificationEmail(String username, AppToken verificationToken, ApiKey apiKey) throws MailException, DataAccessException {
         User user = userDao.findByName(username);
         if (user == null) {
             throw new UsernameNotFoundException(username);
@@ -71,14 +71,14 @@ public class MailService {
         if (isBlank(emailAddress)) {
             throw new MailException("Unable to send verification email because user has no known email address");
         }
-        generateVerificationEmail(n, emailAddress, verificationToken);
+        generateVerificationEmail(n, emailAddress, verificationToken, apiKey);
     }
 
-    private void generateVerificationEmail(String username, String emailAddress, AppToken verificationToken) {
+    private void generateVerificationEmail(String username, String emailAddress, AppToken verificationToken, ApiKey apiKey) {
         String from = configProps.getVerificationEmailSender();
         String subject = configProps.getVerificationEmailSubject();
         String verificationUrl = String.format(configProps.getVerificationEmailUrlTemplate(), verificationToken.authToken);
-        String body = String.format(configProps.getVerificationEmailBodyTemplate(), username, verificationUrl);
+        String body = String.format(configProps.getVerificationEmailBodyTemplate(), username, verificationUrl, apiKey.getApiKey(), apiKey.getApiSecret());
         sendSimpleMessage(from, emailAddress, subject, body);
     }
 
@@ -106,7 +106,7 @@ public class MailService {
     private void generateApiKeyRecoveryEmail(String username, String emailAddress, ApiKey apiKey) {
         String from = configProps.getApiKeyRecoveryEmailSender();
         String subject = configProps.getApiKeyRecoveryEmailSubject();
-        String body = String.format(configProps.getApiKeyRecoveryEmailBodyTemplate(), username, apiKey.getApiSecret());
+        String body = String.format(configProps.getApiKeyRecoveryEmailBodyTemplate(), username, apiKey.getApiKey(), apiKey.getApiSecret());
         sendSimpleMessage(from, emailAddress, subject, body);
     }
 

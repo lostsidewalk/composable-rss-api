@@ -1,10 +1,13 @@
 package com.lostsidewalk.buffy.app.user;
 
 import com.lostsidewalk.buffy.DataAccessException;
+import com.lostsidewalk.buffy.DataConflictException;
 import com.lostsidewalk.buffy.DataUpdateException;
 import com.lostsidewalk.buffy.app.audit.AppLogService;
 import com.lostsidewalk.buffy.app.audit.ErrorLogService;
+import com.lostsidewalk.buffy.app.audit.MailException;
 import com.lostsidewalk.buffy.app.audit.RegistrationException;
+import com.lostsidewalk.buffy.app.mail.MailService;
 import com.lostsidewalk.buffy.auth.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -49,6 +52,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     ErrorLogService errorLogService;
 
     @Autowired
+    MailService mailService;
+
+    @Autowired
     private UserDao userDao;
 
     @Autowired
@@ -71,10 +77,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         } catch (DataUpdateException ex) {
             errorLogService.logDataUpdateException(oAuth2User.getName(), new Date(), ex);
             throw new RuntimeException(ex);
+        } catch (DataConflictException ex) {
+            errorLogService.logDataConflictException(oAuth2User.getName(), new Date(), ex);
+            throw new RuntimeException(ex);
         }
     }
 
-    private OAuth2User processOAuth2User(OAuth2UserRequest oAuth2UserRequest, OAuth2User oAuth2User) throws RegistrationException, DataAccessException, DataUpdateException {
+    private OAuth2User processOAuth2User(OAuth2UserRequest oAuth2UserRequest, OAuth2User oAuth2User) throws RegistrationException, DataAccessException, DataUpdateException, DataConflictException {
         OAuth2UserInfo oAuth2UserInfo = getOAuth2UserInfo(oAuth2UserRequest.getClientRegistration().getRegistrationId(), oAuth2User.getAttributes());
         if (isEmpty(oAuth2UserInfo.getEmail())) {
             throw new OAuth2AuthenticationProcessingException("Email not found from OAuth2 provider");
@@ -92,7 +101,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return create(user, oAuth2User.getAttributes());
     }
 
-    private User registerNewUser(AuthProvider authProvider, String authProviderId, String authProviderProfileImgUrl, String authProviderUsername, String email) throws RegistrationException, DataAccessException, DataUpdateException {
+    private User registerNewUser(AuthProvider authProvider, String authProviderId, String authProviderProfileImgUrl, String authProviderUsername, String email) throws RegistrationException, DataAccessException, DataUpdateException, DataConflictException {
         String username = authProvider + "_" + email;
 
         List<CustomOAuth2ErrorCodes> errorCodes = new ArrayList<>();
@@ -124,7 +133,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             // (2) generate auth claims for the user
             //
             newUser.setAuthClaim(randomClaimValue());
-            newUser.setVerified(true);
+            newUser.setVerified(false);
             //
             // (3) persist the user entity
             //
@@ -132,11 +141,20 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             //
             // (4) generate API keys
             //
-            generateApiKey(u.getUsername());
+            ApiKey apiKey = generateApiKey(u.getUsername());
             //
+            // (5) generate and send verification token
             //
-            //
+            log.info("Sending API key recovery email to username={}", username);
+            try {
+                mailService.sendApiKeyRecoveryEmail(username, apiKey);
+            } catch (UsernameNotFoundException | MailException ignored) {
+                // ignored
+            }
             stopWatch.stop();
+            //
+            // (6) user registration is complete
+            //
             appLogService.logUserRegistration(u.getUsername(), stopWatch);
             return u;
         } else {
@@ -144,7 +162,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }
     }
 
-    public void generateApiKey(String username) throws DataAccessException, DataUpdateException {
+    public ApiKey generateApiKey(String username) throws DataAccessException, DataUpdateException, DataConflictException {
         User user = userDao.findByName(username);
         if (user == null) {
             throw new UsernameNotFoundException(username);
@@ -153,10 +171,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String rawApiSecret = generateRandomString(32);
         String secret = passwordEncoder.encode(rawApiSecret);
         ApiKey apiKey = ApiKey.from(user.getId(), uuid, secret);
-        apiKeyDao.add(apiKey);
+        return apiKeyDao.add(apiKey);
     }
 
-    private void updateUser(User user, String authProviderProfileImgUrl, String authProviderUsername, String emailAddress) throws DataAccessException {
+    private void updateUser(User user, String authProviderProfileImgUrl, String authProviderUsername, String emailAddress) throws DataAccessException, DataConflictException {
         boolean doUpdate = false;
         if (!StringUtils.equals(user.getAuthProviderProfileImgUrl(), authProviderProfileImgUrl)) {
             user.setAuthProviderProfileImgUrl(authProviderProfileImgUrl);

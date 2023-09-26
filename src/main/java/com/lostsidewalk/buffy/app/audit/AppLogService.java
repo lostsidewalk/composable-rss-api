@@ -1,15 +1,14 @@
 package com.lostsidewalk.buffy.app.audit;
 
-import com.lostsidewalk.buffy.app.model.request.PostStatusUpdateRequest;
-import com.lostsidewalk.buffy.app.model.request.QueueStatusUpdateRequest;
 import com.lostsidewalk.buffy.app.model.request.SettingsUpdateRequest;
+import com.lostsidewalk.buffy.app.model.v1.request.PostStatusUpdateRequest;
 import com.lostsidewalk.buffy.auth.User;
 import com.lostsidewalk.buffy.publisher.Publisher.PubResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.Map;
 
 import static java.lang.System.arraycopy;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
@@ -22,16 +21,12 @@ public class AppLogService {
         auditLog("queue-fetch", "queueCt={}", username, stopWatch, queueCt);
     }
 
-    public void logQueueStatusUpdate(String username, StopWatch stopWatch, Long id, QueueStatusUpdateRequest queueStatusUpdateRequest, int rowsUpdated) {
-        auditLog("queue-status-update", "id={}, feedStatusUpdateRequest={}, rowsUpdated={}", username, stopWatch, id, queueStatusUpdateRequest, rowsUpdated);
+    public void logQueueUpdate(String username, StopWatch stopWatch, Long id, Map<String, PubResult> pubResults) {
+        auditLog("queue-update", "id={}, pubResults={}", username, stopWatch, id, pubResults);
     }
 
-    public void logQueueUpdate(String username, StopWatch stopWatch, Long id) {
-        auditLog("queue-update", "id={}", username, stopWatch, id);
-    }
-
-    public void logQueueCreate(String username, StopWatch stopWatch, int length, int size) {
-        auditLog("queue-create", "length={}, size={}", username, stopWatch, length, size);
+    public void logQueueCreate(String username, StopWatch stopWatch, Map<String, PubResult> pubResults) {
+        auditLog("queue-create", "pubResults={}", username, stopWatch, pubResults);
     }
 
     public void logQueueDelete(String username, StopWatch stopWatch, int deleteCt) {
@@ -42,12 +37,12 @@ public class AppLogService {
         auditLog("queue-attribute-fetch", "id={}, attrName={}", username, stopWatch, id, attrName);
     }
 
-    public void logQueueAttributeUpdate(String username, StopWatch stopWatch, Long id, String attrName) {
-        auditLog("queue-attribute-update", "id={}, attrName={}", username, stopWatch, id, attrName);
+    public void logQueueAttributeUpdate(String username, StopWatch stopWatch, Long id, String attrName, Map<String, PubResult> pubResults) {
+        auditLog("queue-attribute-update", "id={}, attrName={}, pubResults={}", username, stopWatch, id, attrName, pubResults);
     }
 
-    public void logQueueAttributeDelete(String username, StopWatch stopWatch, Long id, String attrName) {
-        auditLog("queue-attribute-delete", "id={}, attrName={}", username, stopWatch, id, attrName);
+    public void logQueueAttributeDelete(String username, StopWatch stopWatch, Long id, String attrName, Map<String, PubResult> pubResults) {
+        auditLog("queue-attribute-delete", "id={}, attrName={}, pubResults={}", username, stopWatch, id, attrName, pubResults);
     }
 
     public void logQueueCredentialCreate(String username, StopWatch stopWatch, Long id) {
@@ -58,8 +53,16 @@ public class AppLogService {
         auditLog("queue-credentials-fetch", "id={}", username, stopWatch, id);
     }
 
+    public void logQueueCredentialFetch(String username, StopWatch stopWatch, Long queueId, Long credentialId) {
+        auditLog("queue-credential-fetch", "queueId={}, credentialId={}", username, stopWatch, queueId, credentialId);
+    }
+
     public void logQueueCredentialUpdate(String username, StopWatch stopWatch, Long id) {
         auditLog("queue-credential-update", "id={}", username, stopWatch, id);
+    }
+
+    public void logQueueCredentialsDelete(String username, StopWatch stopWatch, Long queueId) {
+        auditLog("queue-credentials-delete", "queueId={}", username, stopWatch, queueId);
     }
 
     public void logQueueCredentialDelete(String username, StopWatch stopWatch, Long id) {
@@ -94,13 +97,13 @@ public class AppLogService {
         auditLog("settings-update", "settingsUpdateRequest={}", username, stopWatch, settingsUpdateRequest);
     }
 
-    public void logDisplaySettingsFetch(String username, StopWatch stopWatch) {
-        auditLog("display-settings-fetch", null, username, stopWatch);
-    }
-
-    public void logDisplaySettingsUpdate(String username, StopWatch stopWatch) {
-        auditLog("display-settings-update", "displaySettingsUpdateRequest={}", username, stopWatch);
-    }
+//    public void logDisplaySettingsFetch(String username, StopWatch stopWatch) {
+//        auditLog("display-settings-fetch", null, username, stopWatch);
+//    }
+//
+//    public void logDisplaySettingsUpdate(String username, StopWatch stopWatch) {
+//        auditLog("display-settings-update", "displaySettingsUpdateRequest={}", username, stopWatch);
+//    }
 
     public void logStagingPostFetch(String username, StopWatch stopWatch, int queueIdCt, int stagingPostCt) {
         auditLog("staging-post-fetch", "queueIdCt={}, stagingPostCt={}, queryMetricsCt={}", username, stopWatch, queueIdCt, stagingPostCt);
@@ -114,12 +117,16 @@ public class AppLogService {
         auditLog("staging-post-update", "id={}", username, stopWatch, id);
     }
 
-    public void logStagingPostDelete(String username, StopWatch stopWatch, int deleteCt) {
-        auditLog("staging-post-delete", "deleteCt={}", username, stopWatch, deleteCt);
+    public void logStagingPostsDelete(String username, StopWatch stopWatch, Long queueId) {
+        auditLog("staging-posts-delete", "queueId={}", username, stopWatch, queueId);
     }
 
-    public void logStagingPostPubStatusUpdate(String username, StopWatch stopWatch, Long id, PostStatusUpdateRequest postStatusUpdateRequest, List<PubResult> publicationResults) {
-        auditLog("staging-post-pub-status-update", "id={}, postStatusUpdateRequest={}, publicationResults={}", username, stopWatch, id, postStatusUpdateRequest, publicationResults);
+    public void logStagingPostDelete(String username, StopWatch stopWatch, Long id) {
+        auditLog("staging-post-delete", "id={}", username, stopWatch, id);
+    }
+
+    public void logStagingPostPubStatusUpdate(String username, StopWatch stopWatch, Long id, PostStatusUpdateRequest postStatusUpdateRequest, Map<String, PubResult> pubResults) {
+        auditLog("staging-post-pub-status-update", "id={}, postStatusUpdateRequest={}, pubResults={}", username, stopWatch, id, postStatusUpdateRequest, pubResults);
     }
 
     public void logStagingPostAttributeFetch(String username, StopWatch stopWatch, Long id, String attrName) {
@@ -139,15 +146,27 @@ public class AppLogService {
     }
 
     public void logStagingPostContentsFetch(String username, StopWatch stopWatch, Long id, int contentCt) {
-        auditLog("staging-post-content-fetch", "id={}, contentCt={}", username, stopWatch, id, contentCt);
+        auditLog("staging-post-contents-fetch", "id={}, contentCt={}", username, stopWatch, id, contentCt);
     }
 
-    public void logStagingPostContentUpdate(String username, StopWatch stopWatch, Long id, int contentIdx) {
-        auditLog("staging-post-content-update", "id={}, contentIdx={}", username, stopWatch, id, contentIdx);
+    public void logStagingPostContentFetch(String username, StopWatch stopWatch, Long id, String contentIdent) {
+        auditLog("staging-post-content-fetch", "id={}, contentIdent={}", username, stopWatch, id, contentIdent);
     }
 
-    public void logStagingPostContentDelete(String username, StopWatch stopWatch, Long id, int contentIdx) {
-        auditLog("staging-post-content-delete", "id={}, contentIdx={}", username, stopWatch, id, contentIdx);
+    public void logStagingPostContentsUpdate(String username, StopWatch stopWatch, Long id, int contentCt) {
+        auditLog("staging-post-contents-update", "id={}, contentCt={}", username, stopWatch, id, contentCt);
+    }
+
+    public void logStagingPostContentUpdate(String username, StopWatch stopWatch, Long id, String contentIdent) {
+        auditLog("staging-post-content-update", "id={}, contentIdent={}", username, stopWatch, id, contentIdent);
+    }
+
+    public void logStagingPostContentsDelete(String username, StopWatch stopWatch, Long postId) {
+        auditLog("staging-post-contents-delete", "id={}", username, stopWatch, postId);
+    }
+
+    public void logStagingPostContentDelete(String username, StopWatch stopWatch, Long id, String contentIdent) {
+        auditLog("staging-post-content-delete", "id={}, contentIdent={}", username, stopWatch, id, contentIdent);
     }
 
     public void logStagingPostAddUrl(String username, StopWatch stopWatch, Long id) {
@@ -155,15 +174,27 @@ public class AppLogService {
     }
 
     public void logStagingPostUrlsFetch(String username, StopWatch stopWatch, Long id, int urlCt) {
-        auditLog("staging-post-url-fetch", "id={}, urlCt={}", username, stopWatch, id, urlCt);
+        auditLog("staging-post-urls-fetch", "id={}, urlCt={}", username, stopWatch, id, urlCt);
     }
 
-    public void logStagingPostUrlUpdate(String username, StopWatch stopWatch, Long id, int urlIdx) {
-        auditLog("staging-post-url-update", "id={}, urlIdx={}", username, stopWatch, id, urlIdx);
+    public void logStagingPostUrlFetch(String username, StopWatch stopWatch, Long id, String urlIdent) {
+        auditLog("staging-post-url-fetch", "id={}, urlIdent={}", username, stopWatch, id, urlIdent);
     }
 
-    public void logStagingPostUrlDelete(String username, StopWatch stopWatch, Long id, int urlIdx) {
-        auditLog("staging-post-url-delete", "id={}, urlIdx={}", username, stopWatch, id, urlIdx);
+    public void logStagingPostUrlsUpdate(String username, StopWatch stopWatch, Long id, int urlCt) {
+        auditLog("staging-post-urls-update", "id={}, urlCt={}", username, stopWatch, id, urlCt);
+    }
+
+    public void logStagingPostUrlUpdate(String username, StopWatch stopWatch, Long id, String urlIdent) {
+        auditLog("staging-post-url-update", "id={}, urlIdent={}", username, stopWatch, id, urlIdent);
+    }
+
+    public void logStagingPostUrlsDelete(String username, StopWatch stopWatch, Long id) {
+        auditLog("staging-post-urls-delete", "id={}, urlIdent={}", username, stopWatch, id);
+    }
+
+    public void logStagingPostUrlDelete(String username, StopWatch stopWatch, Long id, String urlIdent) {
+        auditLog("staging-post-url-delete", "id={}, urlIdent={}", username, stopWatch, id, urlIdent);
     }
 
     public void logStagingPostAddContributor(String username, StopWatch stopWatch, Long id) {
@@ -171,15 +202,27 @@ public class AppLogService {
     }
 
     public void logStagingPostContributorsFetch(String username, StopWatch stopWatch, Long id, int contributorCt) {
-        auditLog("staging-post-contributor-fetch", "id={}, contributorCt={}", username, stopWatch, id, contributorCt);
+        auditLog("staging-post-contributors-fetch", "id={}, contributorCt={}", username, stopWatch, id, contributorCt);
     }
 
-    public void logStagingPostContributorUpdate(String username, StopWatch stopWatch, Long id, int contributorIdx) {
-        auditLog("staging-post-contributor-update", "id={}, contributorIdx={}", username, stopWatch, id, contributorIdx);
+    public void logStagingPostContributorFetch(String username, StopWatch stopWatch, Long id, String contributorIdent) {
+        auditLog("staging-post-contributor-fetch", "id={}, contributorIdent={}", username, stopWatch, id, contributorIdent);
     }
 
-    public void logStagingPostContributorDelete(String username, StopWatch stopWatch, Long id, int contributorIdx) {
-        auditLog("staging-post-contributor-delete", "id={}, contributorIdx={}", username, stopWatch, id, contributorIdx);
+    public void logStagingPostContributorsUpdate(String username, StopWatch stopWatch, Long id, int contributorCt) {
+        auditLog("staging-post-contributors-update", "id={}, contributorCt={}", username, stopWatch, id, contributorCt);
+    }
+
+    public void logStagingPostContributorUpdate(String username, StopWatch stopWatch, Long id, String contributorIdent) {
+        auditLog("staging-post-contributor-update", "id={}, contributorIdent={}", username, stopWatch, id, contributorIdent);
+    }
+
+    public void logStagingPostContributorsDelete(String username, StopWatch stopWatch, Long postId) {
+        auditLog("staging-post-contributors-delete", "id={}", username, stopWatch, postId);
+    }
+
+    public void logStagingPostContributorDelete(String username, StopWatch stopWatch, Long id, String contributorIdent) {
+        auditLog("staging-post-contributor-delete", "id={}, contributorIdent={}", username, stopWatch, id, contributorIdent);
     }
 
     public void logStagingPostAddAuthor(String username, StopWatch stopWatch, Long id) {
@@ -187,15 +230,27 @@ public class AppLogService {
     }
 
     public void logStagingPostAuthorsFetch(String username, StopWatch stopWatch, Long id, int authorCt) {
-        auditLog("staging-post-author-fetch", "id={}, authorCt={}", username, stopWatch, id, authorCt);
+        auditLog("staging-post-authors-fetch", "id={}, authorCt={}", username, stopWatch, id, authorCt);
     }
 
-    public void logStagingPostAuthorUpdate(String username, StopWatch stopWatch, Long id, int authorIdx) {
-        auditLog("staging-post-author-update", "id={}, authorIdx={}", username, stopWatch, id, authorIdx);
+    public void logStagingPostAuthorFetch(String username, StopWatch stopWatch, Long id, String authorIdent) {
+        auditLog("staging-post-author-fetch", "id={}, authorIdent={}", username, stopWatch, id, authorIdent);
     }
 
-    public void logStagingPostAuthorDelete(String username, StopWatch stopWatch, Long id, int authorIdx) {
-        auditLog("staging-post-author-delete", "id={}, authorIdx={}", username, stopWatch, id, authorIdx);
+    public void logStagingPostAuthorsUpdate(String username, StopWatch stopWatch, Long id, int authorCt) {
+        auditLog("staging-post-authors-update", "id={}, authorCt={}", username, stopWatch, id, authorCt);
+    }
+
+    public void logStagingPostAuthorUpdate(String username, StopWatch stopWatch, Long id, String authorIdent) {
+        auditLog("staging-post-author-update", "id={}, authorIdent={}", username, stopWatch, id, authorIdent);
+    }
+
+    public void logStagingPostAuthorsDelete(String username, StopWatch stopWatch, Long postId) {
+        auditLog("staging-post-authors-delete", "id={}", username, stopWatch, postId);
+    }
+
+    public void logStagingPostAuthorDelete(String username, StopWatch stopWatch, Long id, String authorIdent) {
+        auditLog("staging-post-author-delete", "id={}, authorIdent={}", username, stopWatch, id, authorIdent);
     }
 
     public void logStagingPostAddEnclosure(String username, StopWatch stopWatch, Long id) {
@@ -203,15 +258,27 @@ public class AppLogService {
     }
 
     public void logStagingPostEnclosuresFetch(String username, StopWatch stopWatch, Long id, int enclosureCt) {
-        auditLog("staging-post-enclosure-fetch", "id={}, enclosureCt={}", username, stopWatch, id, enclosureCt);
+        auditLog("staging-post-enclosures-fetch", "id={}, enclosureCt={}", username, stopWatch, id, enclosureCt);
     }
 
-    public void logStagingPostEnclosureUpdate(String username, StopWatch stopWatch, Long id, int enclosureIdx) {
-        auditLog("staging-post-enclosure-update", "id={}, enclosureIdx={}", username, stopWatch, id, enclosureIdx);
+    public void logStagingPostEnclosureFetch(String username, StopWatch stopWatch, Long id, String enclosureIdent) {
+        auditLog("staging-post-enclosure-fetch", "id={}, enclosureIdent={}", username, stopWatch, id, enclosureIdent);
     }
 
-    public void logStagingPostEnclosureDelete(String username, StopWatch stopWatch, Long id, int enclosureIdx) {
-        auditLog("staging-post-enclosure-delete", "id={}, enclosureIdx={}", username, stopWatch, id, enclosureIdx);
+    public void logStagingPostEnclosuresUpdate(String username, StopWatch stopWatch, Long id, int enclosureCt) {
+        auditLog("staging-post-enclosures-update", "id={}, enclosureCt={}", username, stopWatch, id, enclosureCt);
+    }
+
+    public void logStagingPostEnclosureUpdate(String username, StopWatch stopWatch, Long id, String enclosureIdent) {
+        auditLog("staging-post-enclosure-update", "id={}, enclosureIdent={}", username, stopWatch, id, enclosureIdent);
+    }
+
+    public void logStagingPostEnclosuresDelete(String username, StopWatch stopWatch, Long postId) {
+        auditLog("staging-post-enclosures-delete", "id={}", username, stopWatch, postId);
+    }
+
+    public void logStagingPostEnclosureDelete(String username, StopWatch stopWatch, Long id, String enclosureIdent) {
+        auditLog("staging-post-enclosure-delete", "id={}, enclosureIdent={}", username, stopWatch, id, enclosureIdent);
     }
 
     public void logPasswordResetInit(String username, StopWatch stopWatch) {
@@ -261,24 +328,5 @@ public class AppLogService {
         allArgs[4] = stopWatch.getTime();
         arraycopy(args, 0, allArgs, 5, args.length);
         log.info(fullFormatStr, allArgs);
-    }
-
-    public void logCustomerCreated(User user, String emailAddress, String customerId) {
-        log.info("Processed customer-created event: Setting customer for userId={}, emailAddress={}, customerId={}",
-                user.getId(), emailAddress, customerId);
-    }
-
-    public void logCustomerSubscriptionDeleted(User user, String customerId) {
-        log.info("Customer subscription deleted userId={}, customerId={}", user.getId(), customerId);
-    }
-
-    public void logCustomerSubscriptionUpdated(User user, String customerId, String subStatus) {
-        log.info("Processed customer-subscription-updated event: Updating subscription status to subStatus={} for customerId={}, userId={}, emailAddress={}",
-                subStatus, customerId, user.getId(), user.getEmailAddress());
-    }
-
-    public void logInvoicePaid(User user, String emailAddress) {
-        log.info("Processed invoice-paid event: Updating subscription expiration to expDate={} for userId={}, emailAddress={}, status={}",
-                user.getSubscriptionExpDate(), user.getId(), emailAddress, user.getSubscriptionStatus());
     }
 }

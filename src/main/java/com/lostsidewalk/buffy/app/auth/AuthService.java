@@ -1,6 +1,7 @@
 package com.lostsidewalk.buffy.app.auth;
 
 import com.lostsidewalk.buffy.DataAccessException;
+import com.lostsidewalk.buffy.DataConflictException;
 import com.lostsidewalk.buffy.DataUpdateException;
 import com.lostsidewalk.buffy.app.audit.ApiKeyException;
 import com.lostsidewalk.buffy.app.audit.AuthClaimException;
@@ -249,7 +250,7 @@ public class AuthService {
         return generateAppToken(VERIFICATION, n, verificationClaimSecret);
     }
 
-    public void generateApiKey(String username) throws DataAccessException, DataUpdateException {
+    public ApiKey generateApiKey(String username) throws DataAccessException, DataUpdateException, DataConflictException {
         User user = userDao.findByName(username);
         if (user == null) {
             throw new UsernameNotFoundException(username);
@@ -258,7 +259,7 @@ public class AuthService {
         String rawApiSecret = generateRandomString(32);
         String secret = passwordEncoder.encode(rawApiSecret);
         ApiKey apiKey = ApiKey.from(user.getId(), uuid, secret);
-        apiKeyDao.add(apiKey);
+        return apiKeyDao.add(apiKey);
     }
 
     public void updatePassword(String username, String newPassword) throws DataAccessException, DataUpdateException {

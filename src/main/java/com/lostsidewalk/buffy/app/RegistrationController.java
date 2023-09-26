@@ -1,6 +1,7 @@
 package com.lostsidewalk.buffy.app;
 
 import com.lostsidewalk.buffy.DataAccessException;
+import com.lostsidewalk.buffy.DataConflictException;
 import com.lostsidewalk.buffy.DataUpdateException;
 import com.lostsidewalk.buffy.app.audit.*;
 import com.lostsidewalk.buffy.app.auth.AuthService;
@@ -8,10 +9,11 @@ import com.lostsidewalk.buffy.app.mail.MailService;
 import com.lostsidewalk.buffy.app.model.AppToken;
 import com.lostsidewalk.buffy.app.model.request.RegistrationRequest;
 import com.lostsidewalk.buffy.app.model.response.RegistrationResponse;
-import com.lostsidewalk.buffy.app.model.response.ResponseMessage;
 import com.lostsidewalk.buffy.app.token.TokenService;
 import com.lostsidewalk.buffy.app.token.TokenService.JwtUtil;
 import com.lostsidewalk.buffy.app.user.LocalUserService;
+import com.lostsidewalk.buffy.app.utils.ResponseMessageUtils.ResponseMessage;
+import com.lostsidewalk.buffy.auth.ApiKey;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -29,8 +31,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
-import static com.lostsidewalk.buffy.app.ResponseMessageUtils.buildResponseMessage;
 import static com.lostsidewalk.buffy.app.model.TokenType.VERIFICATION;
+import static com.lostsidewalk.buffy.app.utils.ResponseMessageUtils.buildResponseMessage;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.ResponseEntity.ok;
@@ -72,7 +74,7 @@ public class RegistrationController {
     //
     @RequestMapping(path = "/register", method = POST, produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
     @Transactional
-    public ResponseEntity<RegistrationResponse> register(@Valid @RequestBody RegistrationRequest registrationRequest) throws RegistrationException, AuthClaimException, DataAccessException, DataUpdateException {
+    public ResponseEntity<RegistrationResponse> register(@Valid @RequestBody RegistrationRequest registrationRequest) throws RegistrationException, AuthClaimException, DataAccessException, DataUpdateException, DataConflictException {
         //
         // (1) validate the incoming params and create the new user entity
         //
@@ -91,23 +93,23 @@ public class RegistrationController {
         //
         // (3) generate API key
         //
-        authService.generateApiKey(username);
+        ApiKey apiKey = authService.generateApiKey(username);
         //
         // (4) generate and send the verification token
         //
         AppToken verificationToken = authService.generateVerificationToken(username);
         log.info("Sending verification email to username={}", username);
         try {
-            mailService.sendVerificationEmail(username, verificationToken);
+            mailService.sendVerificationEmail(username, verificationToken, apiKey);
         } catch (UsernameNotFoundException | MailException ignored) {
             // ignored
         }
-        stopWatch.stop();
         //
-        // (4) user registration is complete, respond w/username and password, and http status 200 to trigger authentication
+        // (5) user registration is complete, respond w/username and password, and http status 200 to trigger authentication
         //
         RegistrationResponse registrationResponse = new RegistrationResponse(username, password);
         validator.validate(registrationResponse);
+        stopWatch.stop();
         appLogService.logUserRegistration(username, stopWatch);
         return ok(registrationResponse);
     }

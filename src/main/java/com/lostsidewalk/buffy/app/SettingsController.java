@@ -1,16 +1,17 @@
 package com.lostsidewalk.buffy.app;
 
 import com.lostsidewalk.buffy.DataAccessException;
+import com.lostsidewalk.buffy.DataConflictException;
 import com.lostsidewalk.buffy.DataUpdateException;
 import com.lostsidewalk.buffy.app.audit.AppLogService;
 import com.lostsidewalk.buffy.app.model.request.SettingsUpdateRequest;
 import com.lostsidewalk.buffy.app.model.request.UpdateSubscriptionRequest;
-import com.lostsidewalk.buffy.app.model.response.ResponseMessage;
 import com.lostsidewalk.buffy.app.model.response.SettingsResponse;
 import com.lostsidewalk.buffy.app.model.response.StripeResponse;
 import com.lostsidewalk.buffy.app.model.response.SubscriptionResponse;
 import com.lostsidewalk.buffy.app.order.StripeOrderService;
 import com.lostsidewalk.buffy.app.settings.SettingsService;
+import com.lostsidewalk.buffy.app.utils.ResponseMessageUtils.ResponseMessage;
 import com.stripe.exception.StripeException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -27,9 +28,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static com.lostsidewalk.buffy.app.ResponseMessageUtils.buildResponseMessage;
 import static com.lostsidewalk.buffy.app.model.request.SubscriptionStatus.ACTIVE;
 import static com.lostsidewalk.buffy.app.model.request.SubscriptionStatus.CANCELED;
+import static com.lostsidewalk.buffy.app.utils.ResponseMessageUtils.buildResponseMessage;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.collections4.CollectionUtils.size;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -91,21 +92,23 @@ public class SettingsController {
         stopWatch.stop();
         appLogService.logSettingsFetch(username, stopWatch);
         //
-        stopWatch = StopWatch.createStarted();
-        List<SubscriptionResponse> subscriptions = stripeOrderService.getSubscriptions(username);
-        stopWatch.stop();
-        if (isNotEmpty(subscriptions)) {
-            settingsResponse.setSubscription(subscriptions.get(0));
+        if (settingsResponse != null) {
+            stopWatch = StopWatch.createStarted();
+            List<SubscriptionResponse> subscriptions = stripeOrderService.getSubscriptions(username);
+            if (isNotEmpty(subscriptions)) {
+                settingsResponse.setSubscription(subscriptions.get(0));
+            }
+            validator.validate(settingsResponse);
+            stopWatch.stop();
+            appLogService.logSubscriptionFetch(username, stopWatch, size(subscriptions));
         }
-        validator.validate(settingsResponse);
-        appLogService.logSubscriptionFetch(username, stopWatch, size(subscriptions));
         return ok(settingsResponse);
     }
 
     @PreAuthorize("hasAuthority('ROLE_UNVERIFIED')")
     @Transactional
     @PutMapping(value = "/settings", produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
-    public ResponseEntity<ResponseMessage> updateSettings(@Valid @RequestBody SettingsUpdateRequest settingsUpdateRequest, Authentication authentication) throws DataAccessException, DataUpdateException {
+    public ResponseEntity<ResponseMessage> updateSettings(@Valid @RequestBody SettingsUpdateRequest settingsUpdateRequest, Authentication authentication) throws DataAccessException, DataUpdateException, DataConflictException {
         UserDetails userDetails = (UserDetails) authentication.getDetails();
         String username = userDetails.getUsername();
         StopWatch stopWatch = StopWatch.createStarted();
@@ -126,8 +129,10 @@ public class SettingsController {
         log.debug("initCheckout for user={}", username);
         StopWatch stopWatch = StopWatch.createStarted();
         StripeResponse stripeResponse = stripeOrderService.createCheckoutSession(userDetails.getUsername());
+        if (stripeResponse != null) {
+            validator.validate(stripeResponse);
+        }
         stopWatch.stop();
-        validator.validate(stripeResponse);
         appLogService.logCheckoutSessionCreate(username, stopWatch); // Note: don't log the Stripe response
         return new ResponseEntity<>(stripeResponse, OK);
     }

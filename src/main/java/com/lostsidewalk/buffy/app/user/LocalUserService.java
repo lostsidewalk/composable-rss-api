@@ -1,6 +1,7 @@
 package com.lostsidewalk.buffy.app.user;
 
 import com.lostsidewalk.buffy.DataAccessException;
+import com.lostsidewalk.buffy.DataConflictException;
 import com.lostsidewalk.buffy.DataUpdateException;
 import com.lostsidewalk.buffy.app.audit.ErrorLogService;
 import com.lostsidewalk.buffy.app.audit.RegistrationException;
@@ -115,7 +116,7 @@ public class LocalUserService implements UserDetailsService {
     //
     // registration
     //
-    public void registerUser(String username, String email, String password) throws RegistrationException, DataAccessException, DataUpdateException {
+    public void registerUser(String username, String email, String password) throws RegistrationException, DataAccessException, DataUpdateException, DataConflictException {
 
         List<String> errors = new ArrayList<>();
         errors.addAll(validateUsername(username));

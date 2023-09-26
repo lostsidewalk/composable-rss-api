@@ -15,7 +15,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Optional;
+
+import static jakarta.servlet.http.HttpServletResponse.SC_CONFLICT;
 
 @Slf4j
 @Component
@@ -33,11 +34,14 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             // TODO: clean this up to apply to only the API paths (no need to rate limit the app server)
             if (!userDetails.getAuthorities().contains(UserRoles.API_SUBSCRIBER_AUTHORITY)) {
                 String username = userDetails.getUsername();
-                Optional<Bucket> optBucket = rateLimiter.resolveBucket(username);
-                if (optBucket.isPresent()) {
-                    if (!optBucket.get().tryConsume(1)) {
-                        response.sendError(409, "Rate limit exceeded");
-                    }
+                Bucket bucket = rateLimiter.resolveBucket(username);
+                log.trace("Checking rate limit...");
+                if (bucket != null && !bucket.tryConsume(1)) {
+                    log.debug("Rate limit exceeded");
+                    response.setStatus(SC_CONFLICT); // 409
+                    response.getWriter().write("Rate limit exceeded");
+                    response.getWriter().flush();
+                    return;
                 }
             }
         }

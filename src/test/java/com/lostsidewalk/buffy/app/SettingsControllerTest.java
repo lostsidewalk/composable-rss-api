@@ -42,7 +42,8 @@ public class SettingsControllerTest extends BaseWebControllerTest {
             LOCAL,
             "testAuthProviderProfileImgUrl",
             "testAuthProviderUsername",
-            new FrameworkConfig()
+            new FrameworkConfig(),
+            "testApiKey"
     );
 
     private static final Gson GSON = new Gson();
@@ -56,7 +57,7 @@ public class SettingsControllerTest extends BaseWebControllerTest {
                         .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"username\":\"me\",\"emailAddress\":\"testEmailAddress\",\"authProvider\":\"LOCAL\",\"authProviderProfileImgUrl\":\"testAuthProviderProfileImgUrl\",\"authProviderUsername\":\"testAuthProviderUsername\",\"frameworkConfig\":{\"userId\":null,\"notifications\":{},\"display\":{}},\"subscription\":null}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals(GSON.fromJson("{\"username\":\"me\",\"emailAddress\":\"testEmailAddress\",\"authProvider\":\"LOCAL\",\"authProviderProfileImgUrl\":\"testAuthProviderProfileImgUrl\",\"authProviderUsername\":\"testAuthProviderUsername\",\"frameworkConfig\":{\"userId\":null,\"notifications\":{},\"display\":{}},\"apiKey\":\"testApiKey\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
     }
@@ -71,7 +72,6 @@ public class SettingsControllerTest extends BaseWebControllerTest {
 
     private static final SettingsUpdateRequest TEST_SETTINGS_UPDATE_REQUEST = new SettingsUpdateRequest();
     static {
-        TEST_SETTINGS_UPDATE_REQUEST.setEmailAddress("me@localhost");
         TEST_SETTINGS_UPDATE_REQUEST.setFrameworkConfig(TEST_FRAMEWORK_CONFIG);
     }
 

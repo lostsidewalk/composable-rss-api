@@ -1,5 +1,6 @@
 package com.lostsidewalk.buffy.app.model.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.lostsidewalk.buffy.FrameworkConfig;
 import com.lostsidewalk.buffy.auth.AuthProvider;
 import jakarta.validation.Valid;
@@ -9,7 +10,10 @@ import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT;
+
 @Data
+@JsonInclude(NON_ABSENT)
 public class SettingsResponse {
 
     @NotBlank(message = "{settings.error.username-is-blank}")
@@ -33,19 +37,23 @@ public class SettingsResponse {
     @Valid
     FrameworkConfig frameworkConfig;
 
+    @Size(max = 36, message = "{settings.error.api-key-too-long}")
+    String apiKey;
+
     @Valid
     SubscriptionResponse subscription;
 
-    private SettingsResponse(String username, String emailAddress, AuthProvider authProvider, String authProviderProfileImgUrl, String authProviderUsername, FrameworkConfig frameworkConfig) {
+    private SettingsResponse(String username, String emailAddress, AuthProvider authProvider, String authProviderProfileImgUrl, String authProviderUsername, FrameworkConfig frameworkConfig, String apiKey) {
         this.username = username;
         this.emailAddress = emailAddress;
         this.frameworkConfig = frameworkConfig;
         this.authProvider = authProvider;
         this.authProviderUsername = authProviderUsername;
         this.authProviderProfileImgUrl = authProviderProfileImgUrl;
+        this.apiKey = apiKey;
     }
 
-    public static SettingsResponse from(String username, String emailAddress, AuthProvider authProvider, String authProviderProfileImgUrl, String authProviderUsername, FrameworkConfig frameworkConfig) {
-        return new SettingsResponse(username, emailAddress, authProvider, authProviderProfileImgUrl, authProviderUsername, frameworkConfig);
+    public static SettingsResponse from(String username, String emailAddress, AuthProvider authProvider, String authProviderProfileImgUrl, String authProviderUsername, FrameworkConfig frameworkConfig, String apiKey) {
+        return new SettingsResponse(username, emailAddress, authProvider, authProviderProfileImgUrl, authProviderUsername, frameworkConfig, apiKey);
     }
 }

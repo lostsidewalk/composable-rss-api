@@ -1,6 +1,7 @@
 package com.lostsidewalk.buffy.app.credentials;
 
 import com.lostsidewalk.buffy.DataAccessException;
+import com.lostsidewalk.buffy.DataConflictException;
 import com.lostsidewalk.buffy.DataUpdateException;
 import com.lostsidewalk.buffy.queue.QueueCredential;
 import com.lostsidewalk.buffy.queue.QueueCredentialDao;
@@ -24,23 +25,38 @@ public class QueueCredentialsService {
     /**
      * Adds a new queue credential with the specified parameters.
      *
-     * @param username       The username associated with the credential.
+     * @param username       The username associated with the queue.
      * @param queueId        The Id of the queue to which the credential belongs.
      * @param basicUsername  The basic authentication username.
      * @param basicPassword  The basic authentication password.
+     * @return The id of the new queue credential object.
      * @throws DataAccessException  If there is an issue accessing the data.
      * @throws DataUpdateException  If there is an issue updating the data.
+     * @throws DataConflictException If there is a duplicate key.
      */
-    public void addCredential(String username, Long queueId, String basicUsername, String basicPassword)
-            throws DataAccessException, DataUpdateException {
+    public Long addCredential(String username, Long queueId, String basicUsername, String basicPassword)
+            throws DataAccessException, DataUpdateException, DataConflictException {
         QueueCredential queueCredential = QueueCredential.from(username, queueId, basicUsername, basicPassword);
-        queueCredentialDao.add(queueCredential);
+        return queueCredentialDao.add(queueCredential);
+    }
+
+    /**
+     * Finds a single queue credential by Id.
+     *
+     * @param username         The username associated with the queue.
+     * @param queueId          The Id of the queue for which credentials are to be retrieved.
+     * @param credentialId     The Id of the credential to fetch.
+     * @return a queue credential object.
+     * @throws DataAccessException if there is an issue accessing the data.
+     */
+    public QueueCredential findById(String username, Long queueId, Long credentialId) throws DataAccessException {
+        return queueCredentialDao.findById(username, queueId, credentialId);
     }
 
     /**
      * Finds and returns a list of queue credentials associated with the given username and queue Id.
      *
-     * @param username  The username associated with the credentials.
+     * @param username  The username associated with the queue.
      * @param queueId   The Id of the queue for which credentials are to be retrieved.
      * @return A list of queue credentials.
      * @throws DataAccessException If there is an issue accessing the data.
@@ -52,29 +68,42 @@ public class QueueCredentialsService {
     /**
      * Updates the password for a queue credential with the specified parameters.
      *
-     * @param username       The username associated with the credential.
+     * @param username       The username associated with the queue.
      * @param queueId        The Id of the queue to which the credential belongs.
-     * @param basicUsername  The basic authentication username.
+     * @param credentialId   The Id of the credential object to update.
      * @param basicPassword  The new basic authentication password.
      * @throws DataAccessException  If there is an issue accessing the data.
      * @throws DataUpdateException  If there is an issue updating the data.
      */
-    public void updatePassword(String username, Long queueId, String basicUsername, String basicPassword)
+    public void updatePassword(String username, Long queueId, Long credentialId, String basicPassword)
             throws DataAccessException, DataUpdateException {
-        queueCredentialDao.updatePassword(username, queueId, basicUsername, basicPassword);
+        queueCredentialDao.updatePassword(username, queueId, credentialId, basicPassword);
+    }
+
+    /**
+     * Deletes all queue credentials from the queue given by queueId.
+     *
+     * @param username       The username associated with the queue.
+     * @param queueId        The Id of the queue to which the credential belongs.
+     * @throws DataAccessException  If there is an issue accessing the data.
+     * @throws DataUpdateException  If there is an issue updating the data.
+     */
+    public void deleteQueueCredentials(String username, Long queueId)
+            throws DataAccessException, DataUpdateException {
+        queueCredentialDao.deleteByQueueId(username, queueId);
     }
 
     /**
      * Deletes a queue credential with the specified parameters.
      *
-     * @param username       The username associated with the credential.
+     * @param username       The username associated with the queue.
      * @param queueId        The Id of the queue to which the credential belongs.
-     * @param basicUsername  The basic authentication username.
+     * @param credentialId   The Id of the credential object to delete.
      * @throws DataAccessException  If there is an issue accessing the data.
      * @throws DataUpdateException  If there is an issue updating the data.
      */
-    public void deleteQueueCredential(String username, Long queueId, String basicUsername)
+    public void deleteQueueCredential(String username, Long queueId, Long credentialId)
             throws DataAccessException, DataUpdateException {
-        queueCredentialDao.deleteByBasicUsername(username, queueId, basicUsername);
+        queueCredentialDao.deleteById(username, queueId, credentialId);
     }
 }
