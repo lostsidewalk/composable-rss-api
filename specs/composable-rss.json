@@ -2455,8 +2455,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "string",
-                  "enum" : [ "UNPUBLISHED", "PUB_PENDING", "DEPUB_PENDING", "ARCHIVED", "PURGE_PENDING" ]
+                  "type" : "string"
                 }
               }
             }
@@ -6109,10 +6108,10 @@
           "explicit" : {
             "type" : "boolean"
           },
-          "block" : {
+          "closeCaptioned" : {
             "type" : "boolean"
           },
-          "closeCaptioned" : {
+          "block" : {
             "type" : "boolean"
           }
         },
@@ -6167,18 +6166,18 @@
         "properties" : {
           "ident" : {
             "type" : "string",
-            "description" : "A unique identifier for this entity."
+            "description" : "A unique identifier for this content object."
           },
           "type" : {
             "type" : "string",
-            "description" : "The type of the content object."
+            "description" : "The type of the content object, describing its format (e.g., text, image, link)."
           },
           "value" : {
             "type" : "string",
-            "description" : "The value of the content object."
+            "description" : "The actual value or content of the content object."
           }
         },
-        "description" : "Represents a content object within a post."
+        "description" : "Represents a content object within a post.\n\n <p>A content object is an entity that can be included within a post to represent various types of content,\n such as text, images, links, or multimedia. It typically includes a unique identifier, a type that describes\n the content format, and the actual content value."
       },
       "PostDTO" : {
         "required" : [ "importTimestamp", "postDesc", "postTitle", "queueIdent" ],
@@ -6293,7 +6292,7 @@
         "properties" : {
           "ident" : {
             "type" : "string",
-            "description" : "A unique identifier for this entity."
+            "description" : "A unique identifier for this enclosure entity."
           },
           "url" : {
             "type" : "string",
@@ -6301,7 +6300,7 @@
           },
           "type" : {
             "type" : "string",
-            "description" : "The type of the enclosure."
+            "description" : "The type of the enclosure, describing its format or media type (e.g., audio/mpeg, video/mp4)."
           },
           "length" : {
             "type" : "integer",
@@ -6309,7 +6308,7 @@
             "format" : "int64"
           }
         },
-        "description" : "Represents an enclosure associated with a post."
+        "description" : "Represents an enclosure associated with a post.\n\n <p>An enclosure typically includes information about a file or media attachment associated with a post.\n It includes a unique identifier, the URL of the enclosure, the type of the enclosure (e.g., audio, video),\n and the length of the enclosure in bytes."
       },
       "PostPerson" : {
         "type" : "object",
@@ -6956,16 +6955,20 @@
           },
           "queueId" : {
             "type" : "integer",
+            "description" : "The identifier of the queue associated with the credential.",
             "format" : "int64"
           },
           "username" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username associated with the credential."
           },
           "basicUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The basic authentication username."
           },
           "basicPassword" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The basic authentication password."
           },
           "created" : {
             "type" : "string",
