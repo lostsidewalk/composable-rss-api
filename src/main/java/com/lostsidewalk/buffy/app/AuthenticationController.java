@@ -7,7 +7,6 @@ import com.lostsidewalk.buffy.app.audit.AuthProviderException;
 import com.lostsidewalk.buffy.app.auth.AuthService;
 import com.lostsidewalk.buffy.app.model.request.LoginRequest;
 import com.lostsidewalk.buffy.app.model.response.LoginResponse;
-import com.lostsidewalk.buffy.app.user.LocalUserService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -28,7 +27,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import static com.lostsidewalk.buffy.app.model.TokenType.APP_AUTH_REFRESH;
-import static com.lostsidewalk.buffy.app.user.UserRoles.SUBSCRIBER_AUTHORITY;
 import static com.lostsidewalk.buffy.auth.AuthProvider.LOCAL;
 import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
@@ -61,9 +59,6 @@ class AuthenticationController {
     AuthenticationManager authenticationManager;
 
     @Autowired
-    LocalUserService localUserService;
-
-    @Autowired
     Validator validator;
     //
     // auth check
@@ -75,8 +70,7 @@ class AuthenticationController {
         String username = userDetails.getUsername();
         LoginResponse authenticationResponse = buildAuthenticationResponse(
                 authService.generateAuthToken(username).authToken,
-                username,
-                userDetails.getAuthorities().contains(SUBSCRIBER_AUTHORITY)
+                username
         );
         validator.validate(authenticationResponse);
         return ok(authenticationResponse);
@@ -101,17 +95,16 @@ class AuthenticationController {
         authService.addTokenCookieToResponse(APP_AUTH_REFRESH, username, authClaim, response);
         LoginResponse authenticationResponse = buildAuthenticationResponse(
                 authService.generateAuthToken(username).authToken,
-                username,
-                localUserService.loadUserByUsername(username).getAuthorities().contains(SUBSCRIBER_AUTHORITY)
+                username
         );
         validator.validate(authenticationResponse);
         log.info("Login succeeded for username={}", username);
         return ok(authenticationResponse);
     }
 
-    private LoginResponse buildAuthenticationResponse(String authToken, String username, boolean hasSubscription) {
+    private LoginResponse buildAuthenticationResponse(String authToken, String username) {
         LoginResponse loginResponse;
-        loginResponse = LoginResponse.from(authToken, username, hasSubscription);
+        loginResponse = LoginResponse.from(authToken, username);
 
         return loginResponse;
     }

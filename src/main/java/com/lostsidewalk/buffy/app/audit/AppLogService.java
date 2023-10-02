@@ -69,22 +69,6 @@ public class AppLogService {
         auditLog("queue-credential-delete", "id={}", username, stopWatch, id);
     }
 
-    public void logCheckoutSessionCreate(String username, StopWatch stopWatch) {
-        auditLog("checkout-session-create", null, username, stopWatch);
-    }
-
-    public void logSubscriptionFetch(String username, StopWatch stopWatch, int subscriptionCt) {
-        auditLog("subscription-fetch", "subscriptionCt={}", username, stopWatch, subscriptionCt);
-    }
-
-    public void logSubscriptionCancel(String username, StopWatch stopWatch) {
-        auditLog("subscription-cancel", null, username, stopWatch);
-    }
-
-    public void logSubscriptionResume(String username, StopWatch stopWatch) {
-        auditLog("subscription-resume", null, username, stopWatch);
-    }
-
 //    public void logOpmlExport(String username, StopWatch stopWatch) {
 //        auditLog("opml-export", null, username, stopWatch);
 //    }

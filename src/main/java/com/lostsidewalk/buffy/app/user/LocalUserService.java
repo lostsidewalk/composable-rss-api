@@ -28,7 +28,6 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Service
 @Slf4j
@@ -104,11 +103,6 @@ public class LocalUserService implements UserDetailsService {
         // all users get the 'development' role when that property is enabled
         if (isDevelopment) {
             implicitFeatures.add(DEV_AUTHORITY);
-        }
-
-        // subscribed users get the 'subscriber' role (regardless of subscription status)
-        if (isNotBlank(user.getSubscriptionStatus())) {
-            implicitFeatures.add(SUBSCRIBER_AUTHORITY);
         }
 
         return implicitFeatures;

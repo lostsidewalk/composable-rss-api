@@ -40,9 +40,6 @@ public class SettingsResponse {
     @Size(max = 36, message = "{settings.error.api-key-too-long}")
     String apiKey;
 
-    @Valid
-    SubscriptionResponse subscription;
-
     private SettingsResponse(String username, String emailAddress, AuthProvider authProvider, String authProviderProfileImgUrl, String authProviderUsername, FrameworkConfig frameworkConfig, String apiKey) {
         this.username = username;
         this.emailAddress = emailAddress;

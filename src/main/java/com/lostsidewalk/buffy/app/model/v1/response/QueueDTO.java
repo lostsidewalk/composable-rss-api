@@ -80,7 +80,7 @@ public class QueueDTO {
     /**
      * true if the queue is currently enabled for import.
      * <p>
-     * Note: composable-rss queues do not have upstream subscriptions, thus are never imported.
+     * Note: composable-rss queues do not have upstream feed subscriptions, thus are never imported.
      */
     @JsonIgnore
     boolean isEnabled;

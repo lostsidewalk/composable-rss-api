@@ -12,15 +12,11 @@ public class UserRoles {
 
     public static final String DEV_ROLE = "ROLE_DEV";
 
-    public static final String SUBSCRIBER_ROLE = "ROLE_SUBSCRIBER";
-
     public static final SimpleGrantedAuthority UNVERIFIED_AUTHORITY = new SimpleGrantedAuthority(UNVERIFIED_ROLE);
 
     public static final SimpleGrantedAuthority VERIFIED_AUTHORITY = new SimpleGrantedAuthority(VERIFIED_ROLE);
 
     public static final SimpleGrantedAuthority DEV_AUTHORITY = new SimpleGrantedAuthority(DEV_ROLE);
-
-    public static final SimpleGrantedAuthority SUBSCRIBER_AUTHORITY = new SimpleGrantedAuthority(SUBSCRIBER_ROLE);
     //
     // roles for API access
     //
@@ -30,13 +26,9 @@ public class UserRoles {
 
     public static final String API_DEV_ROLE = "API_ROLE_DEV";
 
-    public static final String API_SUBSCRIBER_ROLE = "API_ROLE_SUBSCRIBER";
-
     public static final SimpleGrantedAuthority API_UNVERIFIED_AUTHORITY = new SimpleGrantedAuthority(API_UNVERIFIED_ROLE);
 
     public static final SimpleGrantedAuthority API_VERIFIED_AUTHORITY = new SimpleGrantedAuthority(API_VERIFIED_ROLE);
 
     public static final SimpleGrantedAuthority API_DEV_AUTHORITY = new SimpleGrantedAuthority(API_DEV_ROLE);
-
-    public static final SimpleGrantedAuthority API_SUBSCRIBER_AUTHORITY = new SimpleGrantedAuthority(API_SUBSCRIBER_ROLE);
 }

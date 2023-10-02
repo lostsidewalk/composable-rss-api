@@ -7,7 +7,6 @@ import com.lostsidewalk.buffy.ThemeConfigDao;
 import com.lostsidewalk.buffy.app.auth.AuthService;
 import com.lostsidewalk.buffy.app.credentials.QueueCredentialsService;
 import com.lostsidewalk.buffy.app.mail.MailService;
-import com.lostsidewalk.buffy.app.order.StripeOrderService;
 import com.lostsidewalk.buffy.app.post.StagingPostService;
 import com.lostsidewalk.buffy.app.queue.QueueDefinitionService;
 import com.lostsidewalk.buffy.app.settings.SettingsService;
@@ -55,9 +54,6 @@ public class BaseWebControllerTest {
     //
 //    @MockBean
 //    AuditService auditService;
-
-    @MockBean
-    StripeOrderService stripeOrderService;
 
     @MockBean
     SettingsService settingsService;
@@ -184,7 +180,6 @@ public class BaseWebControllerTest {
     static {
         TEST_AUTHORITIES.add(UserRoles.UNVERIFIED_AUTHORITY);
         TEST_AUTHORITIES.add(UserRoles.VERIFIED_AUTHORITY);
-        TEST_AUTHORITIES.add(UserRoles.SUBSCRIBER_AUTHORITY);
         TEST_AUTHORITIES.add(UserRoles.DEV_AUTHORITY);
     }
 
@@ -233,7 +228,6 @@ public class BaseWebControllerTest {
     static {
         TEST_API_AUTHORITIES.add(UserRoles.API_UNVERIFIED_AUTHORITY);
         TEST_API_AUTHORITIES.add(UserRoles.API_VERIFIED_AUTHORITY);
-        TEST_API_AUTHORITIES.add(UserRoles.API_SUBSCRIBER_AUTHORITY);
         TEST_API_AUTHORITIES.add(UserRoles.API_DEV_AUTHORITY);
     }
 

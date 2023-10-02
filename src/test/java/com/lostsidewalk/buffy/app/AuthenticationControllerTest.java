@@ -42,7 +42,7 @@ public class AuthenticationControllerTest extends BaseWebControllerTest {
                         .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"authToken\":\"testToken\",\"username\":\"me\",\"hasSubscription\":true}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals(GSON.fromJson("{\"authToken\":\"testToken\",\"username\":\"me\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
         verify(mockJwtUtil).requireNonExpired();
@@ -64,7 +64,7 @@ public class AuthenticationControllerTest extends BaseWebControllerTest {
                         .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"authToken\":\"testToken\",\"username\":\"me\",\"hasSubscription\":true}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals(GSON.fromJson("{\"authToken\":\"testToken\",\"username\":\"me\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
         verify(this.authService).requireAuthProvider("me", LOCAL);

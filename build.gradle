@@ -52,9 +52,6 @@ dependencies {
     implementation 'org.springframework.security:spring-security-oauth2-client:6.1.2'
     // springdoc-openapi-starter-webmvc-ui
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-api:2.2.0'
-    // stripe
-    //noinspection GradlePackageUpdate
-    implementation 'com.stripe:stripe-java:21.0.0' // DO NOT UPGRADE, CHECK VERSION COMPAT WITH REMOTE FIRST
     // commons-lang
     implementation 'org.apache.commons:commons-lang3:3.12.0'
     // commons-collections4

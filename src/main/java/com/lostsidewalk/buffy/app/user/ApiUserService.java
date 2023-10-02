@@ -22,7 +22,6 @@ import java.util.Set;
 
 import static com.lostsidewalk.buffy.app.user.UserRoles.*;
 import static java.util.Set.copyOf;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Service
 @Slf4j
@@ -77,11 +76,6 @@ public class ApiUserService implements UserDetailsService {
         // all API users get the 'api_development' role when that property is enabled
         if (isDevelopment) {
             implicitFeatures.add(API_DEV_AUTHORITY);
-        }
-
-        // all subscribed API users get the 'api_subscriber' role (the non-blank value of subscriptionStatus is irrelevant here)
-        if (isNotBlank(user.getSubscriptionStatus())) {
-            implicitFeatures.add(API_SUBSCRIBER_AUTHORITY);
         }
 
         return implicitFeatures;

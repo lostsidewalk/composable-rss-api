@@ -5,14 +5,9 @@ import com.lostsidewalk.buffy.DataConflictException;
 import com.lostsidewalk.buffy.DataUpdateException;
 import com.lostsidewalk.buffy.app.audit.AppLogService;
 import com.lostsidewalk.buffy.app.model.request.SettingsUpdateRequest;
-import com.lostsidewalk.buffy.app.model.request.UpdateSubscriptionRequest;
 import com.lostsidewalk.buffy.app.model.response.SettingsResponse;
-import com.lostsidewalk.buffy.app.model.response.StripeResponse;
-import com.lostsidewalk.buffy.app.model.response.SubscriptionResponse;
-import com.lostsidewalk.buffy.app.order.StripeOrderService;
 import com.lostsidewalk.buffy.app.settings.SettingsService;
 import com.lostsidewalk.buffy.app.utils.ResponseMessageUtils.ResponseMessage;
-import com.stripe.exception.StripeException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.Validator;
@@ -24,19 +19,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
-import static com.lostsidewalk.buffy.app.model.request.SubscriptionStatus.ACTIVE;
-import static com.lostsidewalk.buffy.app.model.request.SubscriptionStatus.CANCELED;
 import static com.lostsidewalk.buffy.app.utils.ResponseMessageUtils.buildResponseMessage;
-import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
-import static org.apache.commons.collections4.CollectionUtils.size;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.http.ResponseEntity.badRequest;
 import static org.springframework.http.ResponseEntity.ok;
 
 @Slf4j
@@ -49,9 +39,6 @@ public class SettingsController {
 
     @Autowired
     SettingsService settingsService;
-
-    @Autowired
-    StripeOrderService stripeOrderService;
 
     @Autowired
     Validator validator;
@@ -84,7 +71,7 @@ public class SettingsController {
 
     @PreAuthorize("hasAuthority('ROLE_UNVERIFIED')")
     @GetMapping(value = "/settings", produces = {APPLICATION_JSON_VALUE})
-    public ResponseEntity<SettingsResponse> getSettings(Authentication authentication) throws DataAccessException, StripeException {
+    public ResponseEntity<SettingsResponse> getSettings(Authentication authentication) throws DataAccessException {
         UserDetails userDetails = (UserDetails) authentication.getDetails();
         String username = userDetails.getUsername();
         StopWatch stopWatch = StopWatch.createStarted();
@@ -93,14 +80,7 @@ public class SettingsController {
         appLogService.logSettingsFetch(username, stopWatch);
         //
         if (settingsResponse != null) {
-            stopWatch = StopWatch.createStarted();
-            List<SubscriptionResponse> subscriptions = stripeOrderService.getSubscriptions(username);
-            if (isNotEmpty(subscriptions)) {
-                settingsResponse.setSubscription(subscriptions.get(0));
-            }
             validator.validate(settingsResponse);
-            stopWatch.stop();
-            appLogService.logSubscriptionFetch(username, stopWatch, size(subscriptions));
         }
         return ok(settingsResponse);
     }
@@ -115,48 +95,6 @@ public class SettingsController {
         settingsService.updateFrameworkConfig(username, settingsUpdateRequest);
         stopWatch.stop();
         appLogService.logSettingsUpdate(username, stopWatch, settingsUpdateRequest);
-        return ok().body(buildResponseMessage(EMPTY));
-    }
-    //
-    // order initialization (checkout)
-    //
-    @PostMapping(value = "/order", produces = {APPLICATION_JSON_VALUE})
-    @PreAuthorize("hasAuthority('ROLE_UNVERIFIED')")
-    @Transactional
-    public ResponseEntity<StripeResponse> initCheckout(Authentication authentication) throws StripeException, DataAccessException {
-        UserDetails userDetails = (UserDetails) authentication.getDetails();
-        String username = userDetails.getUsername();
-        log.debug("initCheckout for user={}", username);
-        StopWatch stopWatch = StopWatch.createStarted();
-        StripeResponse stripeResponse = stripeOrderService.createCheckoutSession(userDetails.getUsername());
-        if (stripeResponse != null) {
-            validator.validate(stripeResponse);
-        }
-        stopWatch.stop();
-        appLogService.logCheckoutSessionCreate(username, stopWatch); // Note: don't log the Stripe response
-        return new ResponseEntity<>(stripeResponse, OK);
-    }
-
-    @PutMapping(value = "/subscriptions", produces = {APPLICATION_JSON_VALUE})
-    @PreAuthorize("hasAuthority('ROLE_UNVERIFIED')")
-    @Transactional
-    public ResponseEntity<ResponseMessage> updateSubscription(@Valid @RequestBody UpdateSubscriptionRequest updateSubscriptionRequest, Authentication authentication) throws StripeException, DataAccessException {
-        UserDetails userDetails = (UserDetails) authentication.getDetails();
-        String username = userDetails.getUsername();
-        log.debug("updateSubscription for user={}", username);
-        StopWatch stopWatch = StopWatch.createStarted();
-        if (updateSubscriptionRequest.getSubscriptionStatus() == CANCELED) {
-            stripeOrderService.cancelSubscription(username);
-            stopWatch.stop();
-            appLogService.logSubscriptionCancel(username, stopWatch);
-        } else if (updateSubscriptionRequest.getSubscriptionStatus() == ACTIVE) {
-            stripeOrderService.resumeSubscription(username);
-            stopWatch.stop();
-            appLogService.logSubscriptionResume(username, stopWatch);
-        } else {
-            return badRequest().build();
-        }
-
         return ok().body(buildResponseMessage(EMPTY));
     }
 }
