@@ -2,7 +2,8 @@ package com.lostsidewalk.buffy.app.security;
 
 import com.lostsidewalk.buffy.app.auth.*;
 import com.lostsidewalk.buffy.app.user.CustomOAuth2UserService;
-import com.lostsidewalk.buffy.app.user.LocalUserService;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -26,6 +27,8 @@ import static java.util.Collections.singletonList;
 import static org.springframework.http.HttpMethod.OPTIONS;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
+
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -43,6 +46,7 @@ class WebSecurityConfig {
     @Autowired
     PasswordEncoder passwordEncoder;
 
+    @SuppressWarnings("DesignForExtension")
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -53,11 +57,14 @@ class WebSecurityConfig {
         return authProvider;
     }
 
+    @SuppressWarnings({"MethodMayBeStatic", "DesignForExtension"})
+    @SneakyThrows
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfiguration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfiguration) {
         return authConfiguration.getAuthenticationManager();
     }
 
+    @SuppressWarnings({"MethodMayBeStatic", "DesignForExtension"})
     @Bean
     public HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository() {
         return new HttpCookieOAuth2AuthorizationRequestRepository();
@@ -72,22 +79,26 @@ class WebSecurityConfig {
     @Autowired
     private OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
 
-    private AuthenticationEntryPoint currentUserEntryPoint() {
+    private static AuthenticationEntryPoint currentUserEntryPoint() {
         return (request, response, authException) -> response.setStatus(SC_UNAUTHORIZED);
     }
 
-//	private static final String CONTENT_SECURITY_POLICY_DIRECTIVES =
-//			"default-src 'self';" +
-//			"connect-src 'self' http://localhost:8080 ws://192.168.86.180:3000/ws;img-src 'self' data: https://* http://*;" +
-//			"style-src 'unsafe-inline' https://fonts.googleapis.com;base-uri 'self';" +
-//			"form-action 'self';" +
-//			"font-src https://fonts.gstatic.com http://localhost:3000";
-
+    /**
+     * private static final String CONTENT_SECURITY_POLICY_DIRECTIVES =
+     *         "default-src 'self';" +
+     *         "connect-src 'self' http://localhost:8080 ws://192.168.86.180:3000/ws;img-src 'self' data: https://* http://*;" +
+     *         "style-src 'unsafe-inline' https://fonts.googleapis.com;base-uri 'self';" +
+     *         "form-action 'self';" +
+     *         "font-src https://fonts.gstatic.com http://localhost:3000";
+     */
+    @SuppressWarnings("JavadocLinkAsPlainText")
     @Value("${comprss.originUrl}")
     String compRssOriginUrl;
 
+    @SneakyThrows
+    @SuppressWarnings({"DesignForExtension", "NestedMethodCall", "ChainedMethodCall"})
     @Bean
-    protected SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    protected SecurityFilterChain filterChain(HttpSecurity http) {
 
         http
                 .logout(AbstractHttpConfigurer::disable)
@@ -95,9 +106,9 @@ class WebSecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
 //				.headers(httpSecurityHeadersConfigurer -> httpSecurityHeadersConfigurer.contentSecurityPolicy(CONTENT_SECURITY_POLICY_DIRECTIVES))
-                .cors(c -> c.configurationSource(request -> {
+                .cors(corsCustomizer -> corsCustomizer.configurationSource(request -> {
                     CorsConfiguration configuration = new CorsConfiguration();
-                    configuration.setAllowedOriginPatterns(singletonList(this.compRssOriginUrl));
+                    configuration.setAllowedOriginPatterns(singletonList(compRssOriginUrl));
                     configuration.setAllowedMethods(singletonList("*"));
                     configuration.setAllowedHeaders(singletonList("*"));
                     configuration.setAllowCredentials(true);
@@ -125,7 +136,7 @@ class WebSecurityConfig {
                                 .requestMatchers("/v3/api-docs/**").permitAll()
                                 // (all others require authentication)
                                 .anyRequest().authenticated()
-                ).sessionManagement(s -> s.sessionCreationPolicy(STATELESS))
+                ).sessionManagement(sessionManagementCustomizer -> sessionManagementCustomizer.sessionCreationPolicy(STATELESS))
                 .exceptionHandling(e -> e.defaultAuthenticationEntryPointFor(currentUserEntryPoint(), new AntPathRequestMatcher("/**")))
                 .oauth2Login(o ->
                         o.authorizationEndpoint(e -> e.baseUri("/oauth2/authorize")
@@ -134,9 +145,23 @@ class WebSecurityConfig {
                                 .userInfoEndpoint(e -> e.userService(customOAuth2UserService))
                                 .successHandler(oAuth2AuthenticationSuccessHandler)
                                 .failureHandler(oAuth2AuthenticationFailureHandler));
-        http.addFilterBefore(this.authTokenFilter, UsernamePasswordAuthenticationFilter.class);
-        http.addFilterAfter(this.rateLimitingFilter, AuthTokenFilter.class);
+        http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterAfter(rateLimitingFilter, AuthTokenFilter.class);
 
         return http.build();
+    }
+
+    @Override
+    public final String toString() {
+        return "WebSecurityConfig{" +
+                "userDetailsService=" + userDetailsService +
+                ", authTokenFilter=" + authTokenFilter +
+                ", rateLimitingFilter=" + rateLimitingFilter +
+                ", passwordEncoder=" + passwordEncoder +
+                ", customOAuth2UserService=" + customOAuth2UserService +
+                ", oAuth2AuthenticationSuccessHandler=" + oAuth2AuthenticationSuccessHandler +
+                ", oAuth2AuthenticationFailureHandler=" + oAuth2AuthenticationFailureHandler +
+                ", compRssOriginUrl='" + compRssOriginUrl + '\'' +
+                '}';
     }
 }

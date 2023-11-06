@@ -27,37 +27,8 @@ public class SettingsService {
     @Autowired
     private ApiKeyDao apiKeyDao;
 
-//    @Autowired
-//    private ThemeConfigDao themeConfigDao;
-
-//    public DisplaySettingsResponse getDisplaySettings(String username) throws DataAccessException {
-//        User user = userDao.findByName(username);
-//        if (user == null) {
-//            throw new UsernameNotFoundException(username);
-//        }
-//        FrameworkConfig frameworkConfig = frameworkConfigDao.findByUserId(user.getId());
-//        Map<String, String> displayConfig = frameworkConfig.getDisplay();
-//        ThemeConfig themeConfig = themeConfigDao.findByUserId(user.getId());
-//        return DisplaySettingsResponse.from(displayConfig, themeConfig);
-//    }
-//
-//    public void updateDisplaySettings(String username, DisplaySettingsUpdateRequest updateRequest) throws DataAccessException, DataUpdateException {
-//        User user = userDao.findByName(username);
-//        if (user == null) {
-//            throw new UsernameNotFoundException(username);
-//        }
-//        ThemeConfig themeConfig = updateRequest.getThemeConfig();
-//        if (themeConfig != null) {
-//            themeConfigDao.upsertThemeConfig(user.getId(),
-//                    serializeTheme(themeConfig.getLightTheme()),
-//                    serializeTheme(themeConfig.getDarkTheme())
-//            );
-//        }
-//
-//        log.debug("Theme configuration updated for userId={}", user.getId());
-//    }
-
-    public SettingsResponse getFrameworkConfig(String username) throws DataAccessException {
+    @SuppressWarnings("NestedMethodCall")
+    public final SettingsResponse getFrameworkConfig(String username) throws DataAccessException {
         User user = userDao.findByName(username);
         if (user == null) {
             throw new UsernameNotFoundException(username);
@@ -75,25 +46,29 @@ public class SettingsService {
         );
     }
 
-    public void updateFrameworkConfig(String username, SettingsUpdateRequest updateRequest) throws DataAccessException, DataUpdateException, DataConflictException {
+    public final void updateFrameworkConfig(String username, SettingsUpdateRequest updateRequest) throws DataAccessException, DataUpdateException, DataConflictException {
         User user = userDao.findByName(username);
         if (user == null) {
             throw new UsernameNotFoundException(username);
         }
 
+        Long id = user.getId();
         FrameworkConfig frameworkConfig = updateRequest.getFrameworkConfig();
         if (frameworkConfig != null) {
-            frameworkConfig.setUserId(user.getId());
-            log.debug("Updating framework configuration for userId={}", user.getId());
+            frameworkConfig.setUserId(id);
+            log.debug("Updating framework configuration for userId={}", id);
             frameworkConfigDao.save(frameworkConfig);
         }
 
-        log.debug("Framework configuration updated for userId={}", user.getId());
+        log.debug("Framework configuration updated for userId={}", id);
     }
 
-//    private static final Gson GSON = new Gson();
-
-//    private Serializable serializeTheme(Map<String, String> theme) {
-//        return theme == null ? null : GSON.toJson(theme);
-//    }
+    @Override
+    public final String toString() {
+        return "SettingsService{" +
+                "userDao=" + userDao +
+                ", frameworkConfigDao=" + frameworkConfigDao +
+                ", apiKeyDao=" + apiKeyDao +
+                '}';
+    }
 }

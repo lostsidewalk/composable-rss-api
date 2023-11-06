@@ -1,10 +1,13 @@
 package com.lostsidewalk.buffy.app;
 
 
+import com.google.common.collect.ImmutableList;
 import com.lostsidewalk.buffy.FrameworkConfigDao;
 import com.lostsidewalk.buffy.PostPublisher;
 import com.lostsidewalk.buffy.ThemeConfigDao;
+import com.lostsidewalk.buffy.app.auth.ApiUserService;
 import com.lostsidewalk.buffy.app.auth.AuthService;
+import com.lostsidewalk.buffy.app.auth.LocalUserService;
 import com.lostsidewalk.buffy.app.credentials.QueueCredentialsService;
 import com.lostsidewalk.buffy.app.mail.MailService;
 import com.lostsidewalk.buffy.app.post.StagingPostService;
@@ -12,9 +15,6 @@ import com.lostsidewalk.buffy.app.queue.QueueDefinitionService;
 import com.lostsidewalk.buffy.app.settings.SettingsService;
 import com.lostsidewalk.buffy.app.token.TokenService;
 import com.lostsidewalk.buffy.app.token.TokenService.JwtUtil;
-import com.lostsidewalk.buffy.app.user.ApiUserService;
-import com.lostsidewalk.buffy.app.user.LocalUserService;
-import com.lostsidewalk.buffy.app.user.UserRoles;
 import com.lostsidewalk.buffy.auth.*;
 import com.lostsidewalk.buffy.discovery.FeedDiscoveryInfoDao;
 import com.lostsidewalk.buffy.post.StagingPostDao;
@@ -24,6 +24,7 @@ import com.lostsidewalk.buffy.subscription.SubscriptionDefinitionDao;
 import com.lostsidewalk.buffy.subscription.SubscriptionMetricsDao;
 import com.lostsidewalk.buffy.thumbnail.ThumbnailDao;
 import io.github.bucket4j.redis.jedis.cas.JedisBasedProxyManager;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.core.GrantedAuthority;
@@ -33,14 +34,18 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.PlatformTransactionManager;
 import redis.clients.jedis.JedisPool;
 
+import java.io.Serial;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 
+import static com.lostsidewalk.buffy.app.auth.UserRoles.*;
 import static java.time.temporal.ChronoUnit.DAYS;
 
-public class BaseWebControllerTest {
+
+@Slf4j
+@SuppressWarnings({"ProtectedField", "AbstractClassWithoutAbstractMethods"}) // not instantiable
+public abstract class BaseWebControllerTest {
 
     @Autowired
     protected MockMvc mockMvc;
@@ -52,9 +57,6 @@ public class BaseWebControllerTest {
     //
     // service layer
     //
-//    @MockBean
-//    AuditService auditService;
-
     @MockBean
     SettingsService settingsService;
 
@@ -176,14 +178,16 @@ public class BaseWebControllerTest {
         }
     };
 
-    protected static final Collection<GrantedAuthority> TEST_AUTHORITIES = new ArrayList<>();
-    static {
-        TEST_AUTHORITIES.add(UserRoles.UNVERIFIED_AUTHORITY);
-        TEST_AUTHORITIES.add(UserRoles.VERIFIED_AUTHORITY);
-        TEST_AUTHORITIES.add(UserRoles.DEV_AUTHORITY);
-    }
+    private static final Collection<GrantedAuthority> TEST_AUTHORITIES = ImmutableList.of(
+        UNVERIFIED_AUTHORITY,
+        VERIFIED_AUTHORITY,
+        DEV_AUTHORITY
+    );
 
-    protected static final UserDetails TEST_USER_DETAILS = new UserDetails() {
+    static final UserDetails TEST_USER_DETAILS = new UserDetails() {
+        @Serial
+        private static final long serialVersionUID = 23462457282723L;
+
         @Override
         public Collection<? extends GrantedAuthority> getAuthorities() {
             return TEST_AUTHORITIES;
@@ -224,14 +228,16 @@ public class BaseWebControllerTest {
 
     protected static final ApiKey TEST_API_KEY_OBJ = ApiKey.from(1L, "testApiKey", "testApiSecret");
 
-    protected static final Collection<GrantedAuthority> TEST_API_AUTHORITIES = new ArrayList<>();
-    static {
-        TEST_API_AUTHORITIES.add(UserRoles.API_UNVERIFIED_AUTHORITY);
-        TEST_API_AUTHORITIES.add(UserRoles.API_VERIFIED_AUTHORITY);
-        TEST_API_AUTHORITIES.add(UserRoles.API_DEV_AUTHORITY);
-    }
+    private static final Collection<GrantedAuthority> TEST_API_AUTHORITIES = ImmutableList.of(
+            API_UNVERIFIED_AUTHORITY,
+            API_VERIFIED_AUTHORITY,
+            API_DEV_AUTHORITY
+    );
 
     protected static final UserDetails TEST_API_USER_DETAILS = new UserDetails() {
+
+        @Serial
+        private static final long serialVersionUID = 234624234146723L;
 
         @Override
         public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -268,4 +274,37 @@ public class BaseWebControllerTest {
             return true;
         }
     };
+
+    @Override
+    public String toString() {
+        return "BaseWebControllerTest{" +
+                "mockMvc=" + mockMvc +
+                ", platformTransactionManager=" + platformTransactionManager +
+                ", settingsService=" + settingsService +
+                ", authService=" + authService +
+                ", tokenService=" + tokenService +
+                ", userService=" + userService +
+                ", apiUserService=" + apiUserService +
+                ", mailService=" + mailService +
+                ", stagingPostService=" + stagingPostService +
+                ", queueDefinitionService=" + queueDefinitionService +
+                ", queueCredentialsService=" + queueCredentialsService +
+                ", postPublisher=" + postPublisher +
+                ", featureDao=" + featureDao +
+                ", queueDefinitionDao=" + queueDefinitionDao +
+                ", queueCredentialDao=" + queueCredentialDao +
+                ", feedDiscoveryInfoDao=" + feedDiscoveryInfoDao +
+                ", frameworkConfigDao=" + frameworkConfigDao +
+                ", themeConfigDao=" + themeConfigDao +
+                ", stagingPostDao=" + stagingPostDao +
+                ", subscriptionDefinitionDao=" + subscriptionDefinitionDao +
+                ", subscriptionMetricsDao=" + subscriptionMetricsDao +
+                ", thumbnailDao=" + thumbnailDao +
+                ", roleDao=" + roleDao +
+                ", userDao=" + userDao +
+                ", apiKeyDao=" + apiKeyDao +
+                ", jedisPool=" + jedisPool +
+                ", proxyManager=" + proxyManager +
+                '}';
+    }
 }

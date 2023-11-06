@@ -7,6 +7,7 @@ import com.lostsidewalk.buffy.app.model.AppToken;
 import com.lostsidewalk.buffy.app.model.request.LoginRequest;
 import com.lostsidewalk.buffy.app.token.TokenService.JwtUtil;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -21,20 +22,22 @@ import static org.mockito.Mockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+
+@Slf4j
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(controllers = AuthenticationController.class)
-public class AuthenticationControllerTest extends BaseWebControllerTest {
+class AuthenticationControllerTest extends BaseWebControllerTest {
 
     @Test
-    public void testCurrentUser() throws Exception {
-        when(this.authService.getTokenCookieFromRequest(eq(APP_AUTH_REFRESH), any())).thenReturn("testCookieValue");
+    void testCurrentUser() throws Exception {
+        when(authService.getTokenCookieFromRequest(eq(APP_AUTH_REFRESH), any())).thenReturn("testCookieValue");
         JwtUtil mockJwtUtil = mock(JwtUtil.class);
-        when(this.tokenService.instanceFor(APP_AUTH_REFRESH, "testCookieValue")).thenReturn(mockJwtUtil);
+        when(tokenService.instanceFor(APP_AUTH_REFRESH, "testCookieValue")).thenReturn(mockJwtUtil);
         when(mockJwtUtil.extractUsername()).thenReturn("me");
-        when(this.authService.requireAuthClaim("me")).thenReturn("testAuthClaim");
+        when(authService.requireAuthClaim("me")).thenReturn("testAuthClaim");
         when(mockJwtUtil.extractValidationClaim()).thenReturn("b4223bd3427db93956acaadf9e425dd259bfb11dac44234604c819dbbf75e180");
-        when(this.userService.loadUserByUsername("me")).thenReturn(TEST_USER_DETAILS);
-        when(this.authService.generateAuthToken("me")).thenReturn(new AppToken("testToken", 60));
+        when(userService.loadUserByUsername("me")).thenReturn(TEST_USER_DETAILS);
+        when(authService.generateAuthToken("me")).thenReturn(new AppToken("testToken", 60));
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/currentuser")
                         .servletPath("/currentuser")
@@ -46,16 +49,16 @@ public class AuthenticationControllerTest extends BaseWebControllerTest {
                 })
                 .andExpect(status().isOk());
         verify(mockJwtUtil).requireNonExpired();
-        verify(this.authService).addTokenCookieToResponse(eq(APP_AUTH_REFRESH), eq("me"), eq("testAuthClaim"), any(HttpServletResponse.class));
+        verify(authService).addTokenCookieToResponse(eq(APP_AUTH_REFRESH), eq("me"), eq("testAuthClaim"), any(HttpServletResponse.class));
     }
 
     private static final Gson GSON = new Gson();
 
     @Test
-    public void testAuthenticate() throws Exception {
-        when(this.authService.requireAuthClaim("me")).thenReturn("testAuthClaim");
-        when(this.authService.generateAuthToken("me")).thenReturn(new AppToken("testToken", 60));
-        when(this.userService.loadUserByUsername("me")).thenReturn(TEST_USER_DETAILS);
+    void testAuthenticate() throws Exception {
+        when(authService.requireAuthClaim("me")).thenReturn("testAuthClaim");
+        when(authService.generateAuthToken("me")).thenReturn(new AppToken("testToken", 60));
+        when(userService.loadUserByUsername("me")).thenReturn(TEST_USER_DETAILS);
         LoginRequest testLoginRequest = new LoginRequest("me", "testPassword");
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/authenticate")
@@ -67,24 +70,24 @@ public class AuthenticationControllerTest extends BaseWebControllerTest {
                     assertEquals(GSON.fromJson("{\"authToken\":\"testToken\",\"username\":\"me\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
-        verify(this.authService).requireAuthProvider("me", LOCAL);
-        verify(this.authService).addTokenCookieToResponse(eq(APP_AUTH_REFRESH), eq("me"), eq("testAuthClaim"), any());
+        verify(authService).requireAuthProvider("me", LOCAL);
+        verify(authService).addTokenCookieToResponse(eq(APP_AUTH_REFRESH), eq("me"), eq("testAuthClaim"), any());
     }
 
     @Test
-    public void testDeauthenticate() throws Exception {
+    void testDeauthenticate() throws Exception {
         JwtUtil mockJwtUtil = mock(JwtUtil.class);
-        when(this.tokenService.instanceFor(APP_AUTH, "testToken")).thenReturn(mockJwtUtil);
+        when(tokenService.instanceFor(APP_AUTH, "testToken")).thenReturn(mockJwtUtil);
         when(mockJwtUtil.extractUsername()).thenReturn("me");
-        when(this.authService.requireAuthClaim("me")).thenReturn("testAuthClaim");
+        when(authService.requireAuthClaim("me")).thenReturn("testAuthClaim");
         when(mockJwtUtil.extractValidationClaim()).thenReturn("b4223bd3427db93956acaadf9e425dd259bfb11dac44234604c819dbbf75e180");
-        when(this.userService.loadUserByUsername("me")).thenReturn(TEST_USER_DETAILS);
+        when(userService.loadUserByUsername("me")).thenReturn(TEST_USER_DETAILS);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/deauthenticate")
                         .header("Authorization", "Bearer testToken")
                         .accept(APPLICATION_JSON_VALUE))
                 .andExpect(status().isOk());
         verify(mockJwtUtil).requireNonExpired();
-        verify(this.authService).requireAuthClaim("me");
+        verify(authService).requireAuthClaim("me");
     }
 }

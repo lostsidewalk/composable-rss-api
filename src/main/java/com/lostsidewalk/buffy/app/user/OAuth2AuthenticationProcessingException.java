@@ -2,9 +2,14 @@ package com.lostsidewalk.buffy.app.user;
 
 import org.springframework.security.core.AuthenticationException;
 
-public class OAuth2AuthenticationProcessingException extends AuthenticationException {
+import java.io.Serial;
 
-    public OAuth2AuthenticationProcessingException(String msg) {
+class OAuth2AuthenticationProcessingException extends AuthenticationException {
+
+    @Serial
+    private static final long serialVersionUID = 23423426747523L;
+
+    OAuth2AuthenticationProcessingException(String msg) {
         super(msg);
     }
 }

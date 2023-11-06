@@ -3,23 +3,21 @@ package com.lostsidewalk.buffy.app.model.response;
 import com.lostsidewalk.buffy.ThemeConfig;
 import jakarta.validation.Valid;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 
+@Slf4j
 @Data
-public class DisplaySettingsResponse {
+class DisplaySettingsResponse {
 
     final Map<String, String> displayConfig;
 
     @Valid
     final ThemeConfig themeConfig;
 
-    DisplaySettingsResponse(Map<String, String> displayConfig, ThemeConfig themeConfig) {
+    private DisplaySettingsResponse(Map<String, String> displayConfig, ThemeConfig themeConfig) {
         this.displayConfig = displayConfig;
         this.themeConfig = themeConfig;
-    }
-
-    public static DisplaySettingsResponse from(Map<String, String> displayConfig, ThemeConfig themeConfig) {
-        return new DisplaySettingsResponse(displayConfig, themeConfig);
     }
 }

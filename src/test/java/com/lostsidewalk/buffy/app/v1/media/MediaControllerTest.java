@@ -7,9 +7,8 @@ import com.lostsidewalk.buffy.post.ContentObject;
 import com.lostsidewalk.buffy.post.PostMedia;
 import com.lostsidewalk.buffy.post.StagingPost;
 import com.rometools.modules.mediarss.MediaEntryModuleImpl;
-import com.rometools.modules.mediarss.types.MediaContent;
-import com.rometools.modules.mediarss.types.MediaGroup;
 import com.rometools.modules.mediarss.types.Metadata;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,9 +28,11 @@ import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+
+@Slf4j
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(controllers = MediaController.class)
-public class MediaControllerTest extends BaseWebControllerTest {
+class MediaControllerTest extends BaseWebControllerTest {
 
     @BeforeEach
     void test_setup() throws Exception {
@@ -50,8 +51,8 @@ public class MediaControllerTest extends BaseWebControllerTest {
     private static final MediaEntryModuleImpl TEST_MEDIA_ENTRY_MODULE = new MediaEntryModuleImpl();
     static {
         TEST_MEDIA_ENTRY_MODULE.setMetadata(TEST_MEDIA_ENTRY_METADATA);
-        TEST_MEDIA_ENTRY_MODULE.setMediaContents(new MediaContent[] {});
-        TEST_MEDIA_ENTRY_MODULE.setMediaGroups(new MediaGroup[] {});
+//        TEST_MEDIA_ENTRY_MODULE.setMediaContents(new MediaContent[]);
+//        TEST_MEDIA_ENTRY_MODULE.setMediaGroups(new MediaGroup[] {});
     }
 
     private static final PostMedia TEST_POST_MEDIA;
@@ -59,9 +60,9 @@ public class MediaControllerTest extends BaseWebControllerTest {
         TEST_POST_MEDIA = PostMedia.from(TEST_MEDIA_ENTRY_MODULE);
     }
 
-    private static final ContentObject TEST_POST_TITLE = ContentObject.from("testTitleType", "testTitleValue");
+    private static final ContentObject TEST_POST_TITLE = ContentObject.from("testTitleIdent", "testTitleType", "testTitleValue");
 
-    private static final ContentObject TEST_POST_DESC = ContentObject.from("testDescType", "testDescValue");
+    private static final ContentObject TEST_POST_DESC = ContentObject.from("testDescIdent", "testDescType", "testDescValue");
 
     private static final Date NOW = new Date();
 
@@ -96,8 +97,8 @@ public class MediaControllerTest extends BaseWebControllerTest {
     );
 
     @Test
-    public void test_getPostMedia() throws Exception {
-        when(this.stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
+    void test_getPostMedia() throws Exception {
+        when(stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/posts/1/media")
                         .servletPath("/v1/posts/1/media")
@@ -112,7 +113,8 @@ public class MediaControllerTest extends BaseWebControllerTest {
     }
 
     @Test
-    public void test_updatePostMedia() throws Exception {
+    void test_updatePostMedia() throws Exception {
+        when(stagingPostService.updatePostMedia(eq("me"), eq(1L), any(PostMedia.class), eq(false))).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/v1/posts/1/media")
                         .servletPath("/v1/posts/1/media")
@@ -123,14 +125,15 @@ public class MediaControllerTest extends BaseWebControllerTest {
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"message\":\"Updated media on post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"postDTO\":{\"postTitle\":{\"ident\":\"testTitleIdent\",\"type\":\"testTitleType\",\"value\":\"testTitleValue\"},\"postDesc\":{\"ident\":\"testDescIdent\",\"type\":\"testDescType\",\"value\":\"testDescValue\"},\"postUrl\":\"testPostUrl\",\"published\":false},\"deployed\":false}", responseContent);
                 })
                 .andExpect(status().isOk());
-        verify(this.stagingPostService).updatePostMedia(eq("me"), eq(1L), any(PostMedia.class), eq(false));
+        verify(stagingPostService).updatePostMedia(eq("me"), eq(1L), any(PostMedia.class), eq(false));
     }
 
     @Test
-    public void test_patchPostMedia() throws Exception {
+    void test_patchPostMedia() throws Exception {
+        when(stagingPostService.updatePostMedia(eq("me"), eq(1L), any(PostMedia.class), eq(true))).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .patch("/v1/posts/1/media")
                         .servletPath("/v1/posts/1/media")
@@ -141,14 +144,19 @@ public class MediaControllerTest extends BaseWebControllerTest {
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"message\":\"Updated media on post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"postDTO\":{\"postTitle\":{\"ident\":\"testTitleIdent\",\"type\":\"testTitleType\",\"value\":\"testTitleValue\"},\"postDesc\":{\"ident\":\"testDescIdent\",\"type\":\"testDescType\",\"value\":\"testDescValue\"},\"postUrl\":\"testPostUrl\",\"published\":false},\"deployed\":false}", responseContent);
                 })
                 .andExpect(status().isOk());
-        verify(this.stagingPostService).updatePostMedia(eq("me"), eq(1L), any(PostMedia.class), eq(true));
+        verify(stagingPostService).updatePostMedia(eq("me"), eq(1L), any(PostMedia.class), eq(true));
     }
 
     @Test
-    public void test_deletePostMedia() throws Exception {
+    void test_deletePostMedia() throws Exception {
+        StagingPost updatedPost = copyTestStagingPost();
+        updatedPost.setPostMedia(null);
+        when(stagingPostService.resolveQueueId("me", 1L)).thenReturn(1L);
+        when(stagingPostService.findById("me", 1L)).thenReturn(updatedPost);
+        when(queueDefinitionService.resolveQueueIdent("me", 1L)).thenReturn("1");
         mockMvc.perform(MockMvcRequestBuilders
                         .delete("/v1/posts/1/media")
                         .servletPath("/v1/posts/1/media")
@@ -157,9 +165,48 @@ public class MediaControllerTest extends BaseWebControllerTest {
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"message\":\"Deleted media from post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"postDTO\":{\"queueIdent\":\"1\",\"postTitle\":{\"ident\":\"testTitleIdent\",\"type\":\"testTitleType\",\"value\":\"testTitleValue\"},\"postDesc\":{\"ident\":\"testDescIdent\",\"type\":\"testDescType\",\"value\":\"testDescValue\"},\"postUrl\":\"testPostUrl\",\"published\":false},\"deployed\":false}", responseContent);
                 })
                 .andExpect(status().isOk());
-        verify(this.stagingPostService).clearPostMedia("me", 1L);
+        verify(stagingPostService).clearPostMedia("me", 1L);
+    }
+
+    //
+    //
+    //
+
+    private static StagingPost copyTestStagingPost() {
+        StagingPost stagingPost = StagingPost.from(
+                TEST_STAGING_POST.getImporterId(),
+                TEST_STAGING_POST.getQueueId(),
+                TEST_STAGING_POST.getImporterDesc(),
+                TEST_STAGING_POST.getSubscriptionId(),
+                TEST_STAGING_POST.getPostTitle(),
+                TEST_STAGING_POST.getPostDesc(),
+                TEST_STAGING_POST.getPostContents(),
+                TEST_STAGING_POST.getPostMedia(),
+                TEST_STAGING_POST.getPostITunes(),
+                TEST_STAGING_POST.getPostUrl(),
+                TEST_STAGING_POST.getPostUrls(),
+                TEST_STAGING_POST.getPostImgUrl(),
+                TEST_STAGING_POST.getPostImgTransportIdent(),
+                TEST_STAGING_POST.getImportTimestamp(),
+                TEST_STAGING_POST.getPostHash(),
+                TEST_STAGING_POST.getUsername(),
+                TEST_STAGING_POST.getPostComment(),
+                TEST_STAGING_POST.getPostRights(),
+                TEST_STAGING_POST.getContributors(),
+                TEST_STAGING_POST.getAuthors(),
+                TEST_STAGING_POST.getPostCategories(),
+                TEST_STAGING_POST.getPublishTimestamp(),
+                TEST_STAGING_POST.getExpirationTimestamp(),
+                TEST_STAGING_POST.getEnclosures(),
+                TEST_STAGING_POST.getLastUpdatedTimestamp(),
+                TEST_STAGING_POST.getCreated(),
+                TEST_STAGING_POST.getLastModified()
+        );
+        stagingPost.setId(TEST_STAGING_POST.getId());
+
+        return stagingPost;
     }
 }

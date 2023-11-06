@@ -16,11 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,19 +32,20 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 /**
  * This controller handles authentication functionality (i.e., login, logout).
- *
+ * <p>
  * Password reset, user registration, and email validation are handled elsewhere.
- *
+ * <p>
  * The 'currentUser' call is used by the front-end to determine if the user
  * has a valid refresh token.
- *
+ * <p>
  * The 'authenticate' call is used to setup a logged-in session.  This call also adds a
  * refresh token cookie to the response, so that the user remains 'logged in' as long as
  * the cookie persists.
- *
+ * <p>
  * The 'deauthenticate' call is used to log out.  Calling this method finalized the auth claim
  * on the user object, so that the further attempts to validate already-generated tokens will fail.
  */
+@SuppressWarnings("DesignForExtension")
 @Slf4j
 @RestController
 @Validated
@@ -60,6 +59,7 @@ class AuthenticationController {
 
     @Autowired
     Validator validator;
+
     //
     // auth check
     //
@@ -75,13 +75,14 @@ class AuthenticationController {
         validator.validate(authenticationResponse);
         return ok(authenticationResponse);
     }
+
     //
     // login (open access)
     //
     @RequestMapping(value = "/authenticate", method = POST)
     @Transactional
     public ResponseEntity<LoginResponse> createAuthenticationToken(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response)
-            throws BadCredentialsException, UsernameNotFoundException, AuthProviderException, AuthClaimException, DataAccessException {
+            throws AuthProviderException, AuthClaimException, DataAccessException {
         // extract username
         String username = loginRequest.getUsername();
         // validate the auth provider
@@ -102,12 +103,13 @@ class AuthenticationController {
         return ok(authenticationResponse);
     }
 
-    private LoginResponse buildAuthenticationResponse(String authToken, String username) {
+    private static LoginResponse buildAuthenticationResponse(String authToken, String username) {
         LoginResponse loginResponse;
         loginResponse = LoginResponse.from(authToken, username);
 
         return loginResponse;
     }
+
     //
     // logout (open access)
     //
@@ -117,10 +119,18 @@ class AuthenticationController {
         if (authentication != null) {
             UserDetails userDetails = (UserDetails) authentication.getDetails();
             String username = userDetails.getUsername();
-            // finalize the auth claim
             authService.finalizeAuthClaim(username);
             log.info("Finalized auth claim for username={}", username);
         }
         return ok().build();
+    }
+
+    @Override
+    public String toString() {
+        return "AuthenticationController{" +
+                "authService=" + authService +
+                ", authenticationManager=" + authenticationManager +
+                ", validator=" + validator +
+                '}';
     }
 }

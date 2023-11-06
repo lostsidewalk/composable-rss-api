@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.security.SecuritySchemes;
 import io.swagger.v3.oas.annotations.servers.Server;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -24,19 +25,12 @@ import static com.lostsidewalk.buffy.app.auth.AuthTokenFilter.API_SECRET_HEADER_
 import static io.swagger.v3.oas.annotations.enums.SecuritySchemeIn.HEADER;
 import static io.swagger.v3.oas.annotations.enums.SecuritySchemeType.APIKEY;
 
-@OpenAPIDefinition(
-        info = @Info(
-                title = "ComposableRSS API",
-                version = "1.0",
-                description = "ComposableRSS API",
-                contact = @Contact(name = "Lost Sidewalk Software LLC", url = "https://www.lostsidewalk.com", email = "meh@lostsidewalk.com")
-        ),
-        servers = {@Server(url = "https://api.composablerss.com", description = "ComposableRSS API Gateway")},
-        externalDocs = @ExternalDocumentation(url = "https://www.composablerss.com", description = "Composable RSS Official Documentation"),
-        security = {
-                @SecurityRequirement(name = "apikey"),
-                @SecurityRequirement(name = "apisecret")
-        })
+@SuppressWarnings("AccessOfSystemProperties")
+@Slf4j
+@OpenAPIDefinition(info = @Info(title = "ComposableRSS API", version = "1.0", description = "ComposableRSS API", contact = @Contact(name = "Lost Sidewalk Software LLC", url = "https://www.lostsidewalk.com", email = "meh@lostsidewalk.com")), servers = @Server(url = "https://api.composablerss.com", description = "ComposableRSS API Gateway"), externalDocs = @ExternalDocumentation(url = "https://www.composablerss.com", description = "Composable RSS Official Documentation"), security = {
+        @SecurityRequirement(name = "apikey"),
+        @SecurityRequirement(name = "apisecret")
+})
 @SecuritySchemes({
         @SecurityScheme(type = APIKEY, name = "apikey", paramName = API_KEY_HEADER_NAME, in = HEADER),
         @SecurityScheme(type = APIKEY, name = "apisecret", paramName = API_SECRET_HEADER_NAME, in = HEADER)

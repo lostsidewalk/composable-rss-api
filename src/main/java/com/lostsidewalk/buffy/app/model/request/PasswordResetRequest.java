@@ -5,7 +5,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
+
+@Slf4j
 @Data
 @AllArgsConstructor
 public class PasswordResetRequest {

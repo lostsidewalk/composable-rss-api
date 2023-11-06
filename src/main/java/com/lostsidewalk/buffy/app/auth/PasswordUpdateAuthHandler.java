@@ -4,6 +4,7 @@ import com.lostsidewalk.buffy.DataAccessException;
 import com.lostsidewalk.buffy.app.audit.AuthClaimException;
 import com.lostsidewalk.buffy.app.audit.TokenValidationException;
 import com.lostsidewalk.buffy.app.token.TokenService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import static com.lostsidewalk.buffy.app.model.TokenType.PW_AUTH;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+@Slf4j
 @Component
 public class PasswordUpdateAuthHandler {
 
@@ -24,7 +26,7 @@ public class PasswordUpdateAuthHandler {
     @Autowired
     JwtProcessor jwtProcessor;
 
-    void processPasswordUpdate(HttpServletRequest request) throws TokenValidationException, AuthClaimException, DataAccessException {
+    final void processPasswordUpdate(HttpServletRequest request) throws TokenValidationException, AuthClaimException, DataAccessException {
         String cValue = authService.getTokenCookieFromRequest(PW_AUTH, request);
         if (isNotBlank(cValue)) {
             TokenService.JwtUtil jwtUtil = tokenService.instanceFor(PW_AUTH, cValue);
@@ -39,5 +41,14 @@ public class PasswordUpdateAuthHandler {
         } else {
             throw new TokenValidationException("Unable to locate authentication token");
         }
+    }
+
+    @Override
+    public final String toString() {
+        return "PasswordUpdateAuthHandler{" +
+                "authService=" + authService +
+                ", tokenService=" + tokenService +
+                ", jwtProcessor=" + jwtProcessor +
+                '}';
     }
 }

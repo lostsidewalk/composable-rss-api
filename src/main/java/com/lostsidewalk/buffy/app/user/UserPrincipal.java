@@ -1,17 +1,27 @@
 package com.lostsidewalk.buffy.app.user;
 
 import com.lostsidewalk.buffy.auth.User;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
+import java.io.Serial;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
-import static com.lostsidewalk.buffy.app.user.UserRoles.VERIFIED_AUTHORITY;
+import static com.lostsidewalk.buffy.app.auth.UserRoles.VERIFIED_AUTHORITY;
+import static java.util.Collections.unmodifiableCollection;
+import static java.util.Collections.unmodifiableMap;
 
+
+@Slf4j
 class UserPrincipal implements OAuth2User, UserDetails {
+
+    @Serial
+    private static final long serialVersionUID = 114236788456437323L;
+
     private final Long id;
     private final String username;
     private final String email;
@@ -19,7 +29,7 @@ class UserPrincipal implements OAuth2User, UserDetails {
     private final Collection<? extends GrantedAuthority> authorities;
     private Map<String, Object> attributes;
 
-    public UserPrincipal(Long id, String username, String email, String password, Collection<? extends GrantedAuthority> authorities) {
+    private UserPrincipal(Long id, String username, String email, String password, Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.username = username;
         this.email = email;
@@ -27,6 +37,7 @@ class UserPrincipal implements OAuth2User, UserDetails {
         this.authorities = authorities;
     }
 
+    @SuppressWarnings({"NestedMethodCall", "WeakerAccess"})
     public static UserPrincipal create(User user) {
         return new UserPrincipal(
                 user.getId(),
@@ -38,65 +49,74 @@ class UserPrincipal implements OAuth2User, UserDetails {
     }
 
     public static UserPrincipal create(User user, Map<String, Object> attributes) {
-        UserPrincipal userPrincipal = UserPrincipal.create(user);
-        userPrincipal.setAttributes(attributes);
+        UserPrincipal userPrincipal = create(user);
+        //noinspection AccessingNonPublicFieldOfAnotherObject
+        userPrincipal.attributes = unmodifiableMap(attributes);
         return userPrincipal;
     }
 
-    public Long getId() {
+    public final Long getId() {
         return id;
     }
 
-    public String getEmail() {
+    public final String getEmail() {
         return email;
     }
 
     @Override
-    public String getPassword() {
+    public final String getPassword() {
         return password;
     }
 
     @Override
-    public String getUsername() {
+    public final String getUsername() {
         return username;
     }
 
     @Override
-    public boolean isAccountNonExpired() {
+    public final boolean isAccountNonExpired() {
         return true;
     }
 
     @Override
-    public boolean isAccountNonLocked() {
+    public final boolean isAccountNonLocked() {
         return true;
     }
 
     @Override
-    public boolean isCredentialsNonExpired() {
+    public final boolean isCredentialsNonExpired() {
         return true;
     }
 
     @Override
-    public boolean isEnabled() {
+    public final boolean isEnabled() {
         return true;
     }
 
     @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return authorities;
+    public final Collection<? extends GrantedAuthority> getAuthorities() {
+        return unmodifiableCollection(authorities);
     }
 
     @Override
-    public Map<String, Object> getAttributes() {
-        return attributes;
-    }
-
-    public void setAttributes(Map<String, Object> attributes) {
-        this.attributes = attributes;
+    public final Map<String, Object> getAttributes() {
+        return unmodifiableMap(attributes);
     }
 
     @Override
-    public String getName() {
+    public final String getName() {
         return String.valueOf(id);
+    }
+
+    @Override
+    public final String toString() {
+        return "UserPrincipal{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                ", authorities=" + authorities +
+                ", attributes=" + attributes +
+                '}';
     }
 }

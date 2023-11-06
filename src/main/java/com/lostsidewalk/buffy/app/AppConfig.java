@@ -9,15 +9,18 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+
 @Slf4j
 @Configuration
 public class AppConfig {
 
+    @SuppressWarnings({"MethodMayBeStatic", "DesignForExtension"})
     @Bean
     ConcurrentHashMap<String, Integer> errorStatusMap() {
-        return new ConcurrentHashMap<>();
+        return new ConcurrentHashMap<>(32);
     }
 
+    @SuppressWarnings({"MethodMayBeStatic", "DesignForExtension"})
     @Bean
     public MessageSource messageSource() {
         ReloadableResourceBundleMessageSource messageSource = new ReloadableResourceBundleMessageSource();
@@ -26,10 +29,12 @@ public class AppConfig {
         return messageSource;
     }
 
+    @SuppressWarnings("DesignForExtension")
     @Bean
     public LocalValidatorFactoryBean getValidator() {
         LocalValidatorFactoryBean bean = new LocalValidatorFactoryBean();
-        bean.setValidationMessageSource(messageSource());
+        MessageSource messageSource = messageSource();
+        bean.setValidationMessageSource(messageSource);
         return bean;
     }
 }

@@ -3,6 +3,7 @@ package com.lostsidewalk.buffy.app.model.v1.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.lostsidewalk.buffy.post.*;
+import com.lostsidewalk.buffy.post.StagingPost.PostPubStatus;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -14,6 +15,7 @@ import java.util.Date;
 import java.util.List;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT;
+import static org.apache.commons.lang3.BooleanUtils.isTrue;
 
 /**
  * A response model for a post.
@@ -180,12 +182,22 @@ public class PostDTO {
      */
     boolean isPublished;
 
+    /**
+     * The current status of the post (PUB_PENDING, DEPUB_PENDING, etc.).
+     */
+    PostPubStatus postPubStatus;
+
+    /**
+     * Indicates whether the post is currently archived.
+     */
+    Boolean isArchived;
+
     private PostDTO(Long id, String queueIdent, ContentObject postTitle, ContentObject postDesc,
                     List<ContentObject> postContents, PostITunes postITunes, String postUrl,
                     List<PostUrl> postUrls, String postComment, String postRights,
                     List<PostPerson> contributors, List<PostPerson> authors, List<String> postCategories,
                     Date publishTimestamp, Date expirationTimestamp, List<PostEnclosure> enclosures,
-                    Date lastUpdatedTimestamp, boolean isPublished) {
+                    Date lastUpdatedTimestamp, boolean isPublished, PostPubStatus postPubStatus, Boolean isArchived) {
         this.id = id;
         this.queueIdent = queueIdent;
         this.postTitle = postTitle;
@@ -204,22 +216,51 @@ public class PostDTO {
         this.enclosures = enclosures;
         this.lastUpdatedTimestamp = lastUpdatedTimestamp;
         this.isPublished = isPublished;
+        this.postPubStatus = postPubStatus;
+        this.isArchived = isArchived;
     }
 
     /**
      * Static factory method to create a Post data transfer object from the supplied parameters.
      */
+    @SuppressWarnings("WeakerAccess")
     public static PostDTO from(Long id, String queueIdent, ContentObject postTitle, ContentObject postDesc,
                                List<ContentObject> postContents, PostITunes postITunes, String postUrl,
                                List<PostUrl> postUrls, String postComment, String postRights,
                                List<PostPerson> contributors, List<PostPerson> authors, List<String> postCategories,
                                Date publishTimestamp, Date expirationTimestamp, List<PostEnclosure> enclosures,
-                               Date lastUpdatedTimestamp, boolean isPublished) {
+                               Date lastUpdatedTimestamp, Boolean isPublished, PostPubStatus postPubStatus,
+                               Boolean isArchived) {
         return new PostDTO(id, queueIdent, postTitle, postDesc,
                 postContents, postITunes, postUrl,
                 postUrls, postComment, postRights,
                 contributors, authors, postCategories,
                 publishTimestamp, expirationTimestamp, enclosures,
-                lastUpdatedTimestamp, isPublished);
+                lastUpdatedTimestamp, isPublished, postPubStatus, isArchived);
+    }
+
+    public static PostDTO from(StagingPost stagingPost, String queueIdent) {
+        return from(stagingPost.getId(),
+                queueIdent,
+                stagingPost.getPostTitle(),
+                stagingPost.getPostDesc(),
+                stagingPost.getPostContents(),
+                stagingPost.getPostITunes(),
+                stagingPost.getPostUrl(),
+                stagingPost.getPostUrls(),
+                stagingPost.getPostComment(),
+                stagingPost.getPostRights(),
+                stagingPost.getContributors(),
+                stagingPost.getAuthors(),
+                stagingPost.getPostCategories(),
+                stagingPost.getPublishTimestamp(),
+                stagingPost.getExpirationTimestamp(),
+                stagingPost.getEnclosures(),
+                stagingPost.getLastUpdatedTimestamp(),
+                // Note: always include isPublished in the DTO
+                isTrue(stagingPost.isPublished()),
+                stagingPost.getPostPubStatus(),
+                // Note: only return isArchived if it is true; otherwise exclude it from the DTO
+                isTrue(stagingPost.isArchived()) ? true : null);
     }
 }

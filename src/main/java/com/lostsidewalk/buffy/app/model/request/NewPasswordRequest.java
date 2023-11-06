@@ -3,7 +3,10 @@ package com.lostsidewalk.buffy.app.model.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
+
+@Slf4j
 @Data
 public class NewPasswordRequest {
 

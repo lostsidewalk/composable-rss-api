@@ -1,18 +1,27 @@
 package com.lostsidewalk.buffy.app.model.v1;
 
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import java.io.Serial;
+import java.io.Serializable;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT;
 
 /**
  * Configuration options for ATOM 1.0 export.
  */
+@Slf4j
 @Data
 @NoArgsConstructor
 @JsonInclude(NON_ABSENT)
-public class Atom10Config {
+public class Atom10Config implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 239423412223419048L;
 
     /**
      * A human-readable name for the author of the feed.
@@ -84,5 +93,10 @@ public class Atom10Config {
         return new Atom10Config(authorName, authorEmail, authorUri,
                 contributorName, contributorEmail, contributorUri,
                 categoryTerm, categoryLabel, categoryScheme);
+    }
+
+    @JsonAnySetter
+    public static void handleUnrecognizedField(String key, Object value) {
+        throw new IllegalArgumentException("Unrecognized field: " + key);
     }
 }

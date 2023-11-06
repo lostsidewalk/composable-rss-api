@@ -27,17 +27,29 @@ class ApplicationAuthHandler {
     @Autowired
     JwtProcessor jwtProcessor;
 
-    void processAllOthers(HttpServletRequest request, @SuppressWarnings("unused") HttpServletResponse response) throws AuthClaimException, TokenValidationException, DataAccessException {
+    final void processAllOthers(HttpServletRequest request, @SuppressWarnings("unused") HttpServletResponse response) throws AuthClaimException, TokenValidationException, DataAccessException {
         String headerAuth = request.getHeader("Authorization");
         if (hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
             String jwt = headerAuth.substring(7);
             JwtUtil jwtUtil = tokenService.instanceFor(APP_AUTH, jwt);
             jwtUtil.requireNonExpired();
             String username = jwtUtil.extractUsername();
-            jwtProcessor.processJwt(jwtUtil, username, authService.requireAuthClaim(username), jwt);
-            log.debug("Logged in username={} via JWT header auth for requestUrl={}, requestMethod={}", username, request.getRequestURL(), request.getMethod());
+            String userValidationClaim = authService.requireAuthClaim(username);
+            jwtProcessor.processJwt(jwtUtil, username, userValidationClaim, jwt);
+            StringBuffer requestURL = request.getRequestURL();
+            String method = request.getMethod();
+            log.debug("Logged in username={} via JWT header auth for requestUrl={}, requestMethod={}", username, requestURL, method);
         } else {
             throw new TokenValidationException("Unable to locate authentication token");
         }
+    }
+
+    @Override
+    public final String toString() {
+        return "ApplicationAuthHandler{" +
+                "authService=" + authService +
+                ", tokenService=" + tokenService +
+                ", jwtProcessor=" + jwtProcessor +
+                '}';
     }
 }

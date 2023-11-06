@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.lostsidewalk.buffy.FrameworkConfig;
 import com.lostsidewalk.buffy.app.model.request.SettingsUpdateRequest;
 import com.lostsidewalk.buffy.app.model.response.SettingsResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,15 +22,17 @@ import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+
+@Slf4j
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(controllers = SettingsController.class)
-public class SettingsControllerTest extends BaseWebControllerTest {
+class SettingsControllerTest extends BaseWebControllerTest {
 
     @BeforeEach
     void test_setup() throws Exception {
-        when(this.tokenService.instanceFor(APP_AUTH, "testToken")).thenReturn(TEST_JWT_UTIL);
-        when(this.authService.requireAuthClaim("me")).thenReturn("testAuthClaim");
-        when(this.userService.loadUserByUsername("me")).thenReturn(TEST_USER_DETAILS);
+        when(tokenService.instanceFor(APP_AUTH, "testToken")).thenReturn(TEST_JWT_UTIL);
+        when(authService.requireAuthClaim("me")).thenReturn("testAuthClaim");
+        when(userService.loadUserByUsername("me")).thenReturn(TEST_USER_DETAILS);
     }
 
     private static final SettingsResponse TEST_SETTINGS_RESPONSE = SettingsResponse.from(
@@ -46,7 +49,7 @@ public class SettingsControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_getSettings() throws Exception {
-        when(this.settingsService.getFrameworkConfig("me")).thenReturn(TEST_SETTINGS_RESPONSE);
+        when(settingsService.getFrameworkConfig("me")).thenReturn(TEST_SETTINGS_RESPONSE);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/settings")
                         .header("Authorization", "Bearer testToken")
@@ -81,6 +84,6 @@ public class SettingsControllerTest extends BaseWebControllerTest {
                         .contentType(APPLICATION_JSON_VALUE)
                         .content(GSON.toJson(TEST_SETTINGS_UPDATE_REQUEST)))
                 .andExpect(status().isOk());
-        verify(this.settingsService).updateFrameworkConfig("me", TEST_SETTINGS_UPDATE_REQUEST);
+        verify(settingsService).updateFrameworkConfig("me", TEST_SETTINGS_UPDATE_REQUEST);
     }
 }

@@ -7,6 +7,7 @@ import com.lostsidewalk.buffy.app.BaseWebControllerTest;
 import com.lostsidewalk.buffy.app.model.v1.request.ContentObjectConfigRequest;
 import com.lostsidewalk.buffy.post.ContentObject;
 import com.lostsidewalk.buffy.post.StagingPost;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,9 +27,11 @@ import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+
+@Slf4j
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(controllers = ContentController.class)
-public class ContentControllerTest extends BaseWebControllerTest {
+class ContentControllerTest extends BaseWebControllerTest {
 
     @BeforeEach
     void test_setup() throws Exception {
@@ -48,8 +51,9 @@ public class ContentControllerTest extends BaseWebControllerTest {
     private static final List<ContentObjectConfigRequest> TEST_POST_CONTENT_REQUESTS = List.of(TEST_POST_CONTENT_REQUEST);
 
     @Test
-    public void test_addPostContent() throws Exception {
-        when(this.stagingPostService.addContent("me", 1L, TEST_POST_CONTENT_REQUEST)).thenReturn("testContent");
+    void test_addPostContent() throws Exception {
+        when(stagingPostService.addContent("me", 1L, TEST_POST_CONTENT_REQUEST)).thenReturn("testContent");
+        when(stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/v1/posts/1/content")
                         .contentType(APPLICATION_JSON_VALUE)
@@ -59,15 +63,15 @@ public class ContentControllerTest extends BaseWebControllerTest {
                         .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"message\":\"Added content 'testContent' to post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"postDTO\":{\"postTitle\":{\"ident\":\"testTitleIdent\",\"type\":\"testTitleType\",\"value\":\"testTitleValue\"},\"postDesc\":{\"ident\":\"testDescIdent\",\"type\":\"testDescType\",\"value\":\"testDescValue\"},\"postContents\":[{\"ident\":\"2\",\"type\":\"testContentType\",\"value\":\"testContentValue\"}],\"postUrl\":\"testPostUrl\",\"published\":false},\"deployed\":false}", responseContent);
                 })
                 .andExpect(status().isCreated());
-        verify(this.stagingPostService).addContent("me", 1L, TEST_POST_CONTENT_REQUEST);
+        verify(stagingPostService).addContent("me", 1L, TEST_POST_CONTENT_REQUEST);
     }
 
-    private static final ContentObject TEST_POST_TITLE = ContentObject.from("testTitleType", "testTitleValue");
+    private static final ContentObject TEST_POST_TITLE = ContentObject.from("testTitleIdent", "testTitleType", "testTitleValue");
 
-    private static final ContentObject TEST_POST_DESC = ContentObject.from("testDescType", "testDescValue");
+    private static final ContentObject TEST_POST_DESC = ContentObject.from("testDescIdent", "testDescType", "testDescValue");
 
     private static final ContentObject TEST_POST_CONTENT = new ContentObject();
     static {
@@ -111,8 +115,8 @@ public class ContentControllerTest extends BaseWebControllerTest {
     );
 
     @Test
-    public void test_getPostContents() throws Exception {
-        when(this.stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
+    void test_getPostContents() throws Exception {
+        when(stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/posts/1/content")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -126,8 +130,8 @@ public class ContentControllerTest extends BaseWebControllerTest {
     }
 
     @Test
-    public void test_getPostContent() throws Exception {
-        when(this.stagingPostService.findContentByIdent("me", 1L, "1")).thenReturn(TEST_POST_CONTENT);
+    void test_getPostContent() throws Exception {
+        when(stagingPostService.findContentByIdent("me", 1L, "1")).thenReturn(TEST_POST_CONTENT);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/posts/1/content/1")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -141,7 +145,8 @@ public class ContentControllerTest extends BaseWebControllerTest {
     }
 
     @Test
-    public void test_updatePostContent() throws Exception {
+    void test_updatePostContent() throws Exception {
+        when(stagingPostService.updateContent("me", 1L, "2", TEST_POST_CONTENT_REQUEST, false)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/v1/posts/1/content/2")
                         .servletPath("/v1/posts/1/content/2")
@@ -152,14 +157,15 @@ public class ContentControllerTest extends BaseWebControllerTest {
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"message\":\"Updated content '2' on post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"postDTO\":{\"postTitle\":{\"ident\":\"testTitleIdent\",\"type\":\"testTitleType\",\"value\":\"testTitleValue\"},\"postDesc\":{\"ident\":\"testDescIdent\",\"type\":\"testDescType\",\"value\":\"testDescValue\"},\"postContents\":[{\"ident\":\"2\",\"type\":\"testContentType\",\"value\":\"testContentValue\"}],\"postUrl\":\"testPostUrl\",\"published\":false},\"deployed\":false}", responseContent);
                 })
                 .andExpect(status().isOk());
-        verify(this.stagingPostService).updateContent("me", 1L, "2", TEST_POST_CONTENT_REQUEST, false);
+        verify(stagingPostService).updateContent("me", 1L, "2", TEST_POST_CONTENT_REQUEST, false);
     }
 
     @Test
-    public void test_updatePostContents() throws Exception {
+    void test_updatePostContents() throws Exception {
+        when(stagingPostService.updateContents("me", 1L, TEST_POST_CONTENT_REQUESTS, false)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/v1/posts/1/content")
                         .servletPath("/v1/posts/1/content")
@@ -170,14 +176,15 @@ public class ContentControllerTest extends BaseWebControllerTest {
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"message\":\"Updated contents on post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"postDTO\":{\"postTitle\":{\"ident\":\"testTitleIdent\",\"type\":\"testTitleType\",\"value\":\"testTitleValue\"},\"postDesc\":{\"ident\":\"testDescIdent\",\"type\":\"testDescType\",\"value\":\"testDescValue\"},\"postContents\":[{\"ident\":\"2\",\"type\":\"testContentType\",\"value\":\"testContentValue\"}],\"postUrl\":\"testPostUrl\",\"published\":false},\"deployed\":false}", responseContent);
                 })
                 .andExpect(status().isOk());
-        verify(this.stagingPostService).updateContents("me", 1L, TEST_POST_CONTENT_REQUESTS, false);
+        verify(stagingPostService).updateContents("me", 1L, TEST_POST_CONTENT_REQUESTS, false);
     }
 
     @Test
-    public void test_patchPostContent() throws Exception {
+    void test_patchPostContent() throws Exception {
+        when(stagingPostService.updateContent("me", 1L, "2", TEST_POST_CONTENT_REQUEST, true)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .patch("/v1/posts/1/content/2")
                         .servletPath("/v1/posts/1/content/2")
@@ -188,14 +195,15 @@ public class ContentControllerTest extends BaseWebControllerTest {
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"message\":\"Updated content '2' on post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"postDTO\":{\"postTitle\":{\"ident\":\"testTitleIdent\",\"type\":\"testTitleType\",\"value\":\"testTitleValue\"},\"postDesc\":{\"ident\":\"testDescIdent\",\"type\":\"testDescType\",\"value\":\"testDescValue\"},\"postContents\":[{\"ident\":\"2\",\"type\":\"testContentType\",\"value\":\"testContentValue\"}],\"postUrl\":\"testPostUrl\",\"published\":false},\"deployed\":false}", responseContent);
                 })
                 .andExpect(status().isOk());
-        verify(this.stagingPostService).updateContent("me", 1L, "2", TEST_POST_CONTENT_REQUEST, true);
+        verify(stagingPostService).updateContent("me", 1L, "2", TEST_POST_CONTENT_REQUEST, true);
     }
 
     @Test
-    public void test_patchPostContents() throws Exception {
+    void test_patchPostContents() throws Exception {
+        when(stagingPostService.updateContents("me", 1L, TEST_POST_CONTENT_REQUESTS, true)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .patch("/v1/posts/1/content")
                         .servletPath("/v1/posts/1/content")
@@ -206,14 +214,17 @@ public class ContentControllerTest extends BaseWebControllerTest {
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"message\":\"Updated contents on post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"postDTO\":{\"postTitle\":{\"ident\":\"testTitleIdent\",\"type\":\"testTitleType\",\"value\":\"testTitleValue\"},\"postDesc\":{\"ident\":\"testDescIdent\",\"type\":\"testDescType\",\"value\":\"testDescValue\"},\"postContents\":[{\"ident\":\"2\",\"type\":\"testContentType\",\"value\":\"testContentValue\"}],\"postUrl\":\"testPostUrl\",\"published\":false},\"deployed\":false}", responseContent);
                 })
                 .andExpect(status().isOk());
-        verify(this.stagingPostService).updateContents("me", 1L, TEST_POST_CONTENT_REQUESTS, true);
+        verify(stagingPostService).updateContents("me", 1L, TEST_POST_CONTENT_REQUESTS, true);
     }
 
     @Test
-    public void test_deletePostContent() throws Exception {
+    void test_deletePostContent() throws Exception {
+        StagingPost updatedPost = copyTestStagingPost();
+        updatedPost.setPostContents(null);
+        when(stagingPostService.deletePostContent("me", 1L, "2")).thenReturn(updatedPost);
         mockMvc.perform(MockMvcRequestBuilders
                         .delete("/v1/posts/1/content/2")
                         .servletPath("/v1/posts/1/content/2")
@@ -222,14 +233,17 @@ public class ContentControllerTest extends BaseWebControllerTest {
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"message\":\"Deleted content '2' from post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"postDTO\":{\"postTitle\":{\"ident\":\"testTitleIdent\",\"type\":\"testTitleType\",\"value\":\"testTitleValue\"},\"postDesc\":{\"ident\":\"testDescIdent\",\"type\":\"testDescType\",\"value\":\"testDescValue\"},\"postUrl\":\"testPostUrl\",\"published\":false},\"deployed\":false}", responseContent);
                 })
                 .andExpect(status().isOk());
-        verify(this.stagingPostService).deleteContent("me", 1L, "2");
+        verify(stagingPostService).deletePostContent("me", 1L, "2");
     }
 
     @Test
-    public void test_deletePostContents() throws Exception {
+    void test_deletePostContents() throws Exception {
+        StagingPost updatedPost = copyTestStagingPost();
+        updatedPost.setPostContents(null);
+        when(stagingPostService.deletePostContents("me", 1L)).thenReturn(updatedPost);
         mockMvc.perform(MockMvcRequestBuilders
                         .delete("/v1/posts/1/content")
                         .servletPath("/v1/posts/1/content")
@@ -238,9 +252,48 @@ public class ContentControllerTest extends BaseWebControllerTest {
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"message\":\"Deleted contents from post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"postDTO\":{\"postTitle\":{\"ident\":\"testTitleIdent\",\"type\":\"testTitleType\",\"value\":\"testTitleValue\"},\"postDesc\":{\"ident\":\"testDescIdent\",\"type\":\"testDescType\",\"value\":\"testDescValue\"},\"postUrl\":\"testPostUrl\",\"published\":false},\"deployed\":false}", responseContent);
                 })
                 .andExpect(status().isOk());
-        verify(this.stagingPostService).deletePostContents("me", 1L);
+        verify(stagingPostService).deletePostContents("me", 1L);
+    }
+
+    //
+    //
+    //
+
+    private static StagingPost copyTestStagingPost() {
+        StagingPost stagingPost = StagingPost.from(
+                TEST_STAGING_POST.getImporterId(),
+                TEST_STAGING_POST.getQueueId(),
+                TEST_STAGING_POST.getImporterDesc(),
+                TEST_STAGING_POST.getSubscriptionId(),
+                TEST_STAGING_POST.getPostTitle(),
+                TEST_STAGING_POST.getPostDesc(),
+                TEST_STAGING_POST.getPostContents(),
+                TEST_STAGING_POST.getPostMedia(),
+                TEST_STAGING_POST.getPostITunes(),
+                TEST_STAGING_POST.getPostUrl(),
+                TEST_STAGING_POST.getPostUrls(),
+                TEST_STAGING_POST.getPostImgUrl(),
+                TEST_STAGING_POST.getPostImgTransportIdent(),
+                TEST_STAGING_POST.getImportTimestamp(),
+                TEST_STAGING_POST.getPostHash(),
+                TEST_STAGING_POST.getUsername(),
+                TEST_STAGING_POST.getPostComment(),
+                TEST_STAGING_POST.getPostRights(),
+                TEST_STAGING_POST.getContributors(),
+                TEST_STAGING_POST.getAuthors(),
+                TEST_STAGING_POST.getPostCategories(),
+                TEST_STAGING_POST.getPublishTimestamp(),
+                TEST_STAGING_POST.getExpirationTimestamp(),
+                TEST_STAGING_POST.getEnclosures(),
+                TEST_STAGING_POST.getLastUpdatedTimestamp(),
+                TEST_STAGING_POST.getCreated(),
+                TEST_STAGING_POST.getLastModified()
+        );
+        stagingPost.setId(TEST_STAGING_POST.getId());
+
+        return stagingPost;
     }
 }

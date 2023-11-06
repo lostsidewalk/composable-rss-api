@@ -7,11 +7,13 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.constraints.NotBlank;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT;
 
+@Slf4j
 @Data
 @JsonInclude(NON_ABSENT)
 public class SettingsResponse {

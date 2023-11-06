@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableSet;
 import com.lostsidewalk.buffy.DataAccessException;
 import com.lostsidewalk.buffy.app.audit.ApiKeyException;
 import com.lostsidewalk.buffy.app.audit.AuthClaimException;
-import com.lostsidewalk.buffy.app.audit.ErrorLogService;
 import com.lostsidewalk.buffy.app.audit.TokenValidationException;
 import com.lostsidewalk.buffy.app.auth.OptionsAuthHandler.MissingOptionsHeaderException;
 import jakarta.servlet.FilterChain;
@@ -21,7 +20,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.stream.Stream;
 
+import static com.lostsidewalk.buffy.app.audit.ErrorLogService.logDataAccessException;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
@@ -29,105 +30,118 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMess
 @Component
 public class AuthTokenFilter extends OncePerRequestFilter {
 
-	@Autowired
-	ErrorLogService errorLogService;
+    @Autowired
+    OptionsAuthHandler optionsAuthHandler;
 
-	@Autowired
-	OptionsAuthHandler optionsAuthHandler;
+    @Autowired
+    CurrentUserAuthHandler currentUserAuthHandler;
 
-	@Autowired
-	CurrentUserAuthHandler currentUserAuthHandler;
+    @Autowired
+    PasswordUpdateAuthHandler passwordUpdateAuthHandler;
 
-	@Autowired
-	PasswordUpdateAuthHandler passwordUpdateAuthHandler;
+    @Autowired
+    ApiAuthHandler apiAuthHandler;
 
-	@Autowired
-	ApiAuthHandler apiAuthHandler;
+    @Autowired
+    ApplicationAuthHandler applicationAuthHandler;
 
-	@Autowired
-	ApplicationAuthHandler applicationAuthHandler;
+    @Override
+    protected final void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
+            throws ServletException, IOException {
+        String requestPath = getPath(request);
+        if (shouldApplyFilter(requestPath)) {
+            //
+            // the authentication filtering logic works as follows:
+            //
+            // /currentuser is called by the FE on initialization; if a valid auth refresh cookie is present, this will
+            // update the refresh cookie just received and pass through to the AuthenticationController to fetch a
+            // short-lived authentication token for follow-on requests
+            //
+            // all other requests must contain an authorization header with an auth token fetch from /currentuser
+            //
+            // there is special handling for password updates
+            //
+            String method = request.getMethod();
+            StringBuffer requestURL = request.getRequestURL();
+            try {
+                if (StringUtils.equals(method, "OPTIONS")) {
+                    OptionsAuthHandler.processRequest(request);
+                } else if (StringUtils.equals(requestPath, "/currentuser")) {
+                    currentUserAuthHandler.processCurrentUser(request, response);
+                } else if (StringUtils.startsWith(requestPath, "/pw_update")) {
+                    //
+                    // pw_reset->POST => password reset init call (no filter)
+                    // pw_reset->GET => password reset callback (continuation, no filter)
+                    // pw_update->PUT => password update call (special filter)
+                    //
+                    passwordUpdateAuthHandler.processPasswordUpdate(request);
+                } else {
+                    String apiKey = request.getHeader(API_KEY_HEADER_NAME);
+                    String apiSecret = request.getHeader(API_SECRET_HEADER_NAME);
+                    if (isNoneBlank(apiKey, apiSecret)) {
+                        String r = requestURL.toString();
+                        apiAuthHandler.processApiRequest(apiKey, apiSecret, r, method, response);
+                    } else {
+                        applicationAuthHandler.processAllOthers(request, response);
+                    }
+                }
+            } catch (MissingOptionsHeaderException e) {
+                log.error("Invalid OPTIONS call for requestUrl={}, request header names: {}", requestURL, e.headerNames);
+            } catch (TokenValidationException | UsernameNotFoundException ignored) {
+                // ignore
+            } catch (AuthClaimException | ApiKeyException e) {
+                String rootCauseMessage = getRootCauseMessage(e);
+                log.error("Cannot set user authentication for requestUrl={}, requestMethod={}, due to: {}", requestURL, method, rootCauseMessage);
+            } catch (DataAccessException e) {
+                logDataAccessException("sys", new Date(), e);
+            }
+        }
 
-	@Override
-	protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
-			throws ServletException, IOException {
-		String requestPath = getPath(request);
-		if (shouldApplyFilter(requestPath)) {
-			//
-			// the authentication filtering logic works as follows:
-			//
-			// /currentuser is called by the FE on initialization; if a valid auth refresh cookie is present, this will
-			// update the refresh cookie just received and pass through to the AuthenticationController to fetch a
-			// short-lived authentication token for follow-on requests
-			//
-			// all other requests must contain an authorization header with an auth token fetch from /currentuser
-			//
-			// there is special handling for password updates
-			//
-			try {
-				if (StringUtils.equals(request.getMethod(), "OPTIONS")) {
-					optionsAuthHandler.processRequest(request);
-				} else if (StringUtils.equals(requestPath, "/currentuser")) {
-					currentUserAuthHandler.processCurrentUser(request, response);
-				} else if (StringUtils.startsWith(requestPath, "/pw_update")) {
-					//
-					// pw_reset->POST => password reset init call (no filter)
-					// pw_reset->GET => password reset callback (continuation, no filter)
-					// pw_update->PUT => password update call (special filter)
-					//
-					passwordUpdateAuthHandler.processPasswordUpdate(request);
-				} else {
-					String apiKey = request.getHeader(API_KEY_HEADER_NAME);
-					String apiSecret = request.getHeader(API_SECRET_HEADER_NAME);
-					if (isNoneBlank(apiKey, apiSecret)) {
-						apiAuthHandler.processApiRequest(apiKey, apiSecret, request.getRequestURL().toString(), request.getMethod(), response);
-					} else {
-						applicationAuthHandler.processAllOthers(request, response);
-					}
-				}
-			} catch (MissingOptionsHeaderException e) {
-				log.error("Invalid OPTIONS call for requestUrl={}, request header names: {}", request.getRequestURL(), e.headerNames);
-			} catch (TokenValidationException | UsernameNotFoundException ignored) {
-				// ignore
-			} catch (AuthClaimException | ApiKeyException e) {
-				log.error("Cannot set user authentication for requestUrl={}, requestMethod={}, due to: {}", request.getRequestURL(), request.getMethod(), getRootCauseMessage(e));
-			} catch (DataAccessException e) {
-				errorLogService.logDataAccessException("sys", new Date(), e);
-			}
-		}
+        filterChain.doFilter(request, response);
+    }
 
-		filterChain.doFilter(request, response);
-	}
+    private static boolean shouldApplyFilter(String requestPath) {
+        return !isOpenServletPath(requestPath);
+    }
 
-	private boolean shouldApplyFilter(String requestPath) {
-		return !isOpenServletPath(requestPath);
-	}
+    private static String getPath(HttpServletRequest request) {
+        return request.getServletPath();
+    }
 
-	private String getPath(HttpServletRequest request) {
-		return request.getServletPath();
-	}
+    private static final ImmutableSet<String> OPEN_PATHS = ImmutableSet.of(
+            "/authenticate",
+            "/v3/api-docs"
+    );
 
-	private static final ImmutableSet<String> OPEN_PATHS = ImmutableSet.of(
-			"/authenticate",
-			"/v3/api-docs"
-	);
+    private static final ImmutableSet<String> OPEN_PATH_PREFIXES = ImmutableSet.of(
+            "/pw_reset",
+            "/register",
+            "/verify",
+            "/stripe",
+            "/proxy/unsecured"
+    );
 
-	private static final ImmutableSet<String> OPEN_PATH_PREFIXES = ImmutableSet.of(
-			"/pw_reset",
-			"/register",
-			"/verify",
-			"/stripe",
-			"/proxy/unsecured"
-	);
+    private static boolean isOpenServletPath(String servletPath) {
+        Stream<String> stream = OPEN_PATH_PREFIXES.stream();
+        return OPEN_PATHS.contains(servletPath) || stream.anyMatch(servletPath::startsWith);
+    }
 
-	private boolean isOpenServletPath(String servletPath) {
-		return OPEN_PATHS.contains(servletPath) || OPEN_PATH_PREFIXES.stream().anyMatch(servletPath::startsWith);
-	}
+    //
+    //
+    //
 
-	//
-	//
-	//
+    public static final String API_KEY_HEADER_NAME = "X-ComposableRSS-API-Key";
 
-	public static final String API_KEY_HEADER_NAME = "X-ComposableRSS-API-Key";
+    public static final String API_SECRET_HEADER_NAME = "X-ComposableRSS-API-Secret";
 
-	public static final String API_SECRET_HEADER_NAME = "X-ComposableRSS-API-Secret";
+    @Override
+    public final String toString() {
+        return "AuthTokenFilter{" +
+                "optionsAuthHandler=" + optionsAuthHandler +
+                ", currentUserAuthHandler=" + currentUserAuthHandler +
+                ", passwordUpdateAuthHandler=" + passwordUpdateAuthHandler +
+                ", apiAuthHandler=" + apiAuthHandler +
+                ", applicationAuthHandler=" + applicationAuthHandler +
+                '}';
+    }
 }

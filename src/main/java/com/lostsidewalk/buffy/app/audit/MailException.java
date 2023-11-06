@@ -1,8 +1,13 @@
 package com.lostsidewalk.buffy.app.audit;
 
+import java.io.Serial;
+
 public class MailException extends Exception {
 
-    public MailException(String msg) {
-        super(msg);
+    @Serial
+    private static final long serialVersionUID = 2346242323462357523L;
+
+    public MailException(String message) {
+        super(message);
     }
 }

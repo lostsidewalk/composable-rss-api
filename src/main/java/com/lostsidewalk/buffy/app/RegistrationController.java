@@ -11,7 +11,7 @@ import com.lostsidewalk.buffy.app.model.request.RegistrationRequest;
 import com.lostsidewalk.buffy.app.model.response.RegistrationResponse;
 import com.lostsidewalk.buffy.app.token.TokenService;
 import com.lostsidewalk.buffy.app.token.TokenService.JwtUtil;
-import com.lostsidewalk.buffy.app.user.LocalUserService;
+import com.lostsidewalk.buffy.app.auth.LocalUserService;
 import com.lostsidewalk.buffy.app.utils.ResponseMessageUtils.ResponseMessage;
 import com.lostsidewalk.buffy.auth.ApiKey;
 import jakarta.servlet.http.HttpServletResponse;
@@ -38,14 +38,11 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.web.bind.annotation.RequestMethod.*;
 
-@CrossOrigin(origins = {"http://localhost:3000"})
+@CrossOrigin(origins = "http://localhost:3000")
 @Slf4j
 @RestController
 @Validated
 public class RegistrationController {
-
-    @Autowired
-    AppLogService appLogService;
 
     @Autowired
     LocalUserService userService;
@@ -67,12 +64,14 @@ public class RegistrationController {
 
     @Value("${verification.continue.redirect.url}")
     String verificationContinueRedirectUrl;
+
     //
     // registration and verification span the following two calls:
     //
     // the initial registration process starts here
     //
-    @RequestMapping(path = "/register", method = POST, produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
+    @SuppressWarnings("DesignForExtension")
+    @RequestMapping(path = "/register", method = POST, produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     @Transactional
     public ResponseEntity<RegistrationResponse> register(@Valid @RequestBody RegistrationRequest registrationRequest) throws RegistrationException, AuthClaimException, DataAccessException, DataUpdateException, DataConflictException {
         //
@@ -110,12 +109,14 @@ public class RegistrationController {
         RegistrationResponse registrationResponse = new RegistrationResponse(username, password);
         validator.validate(registrationResponse);
         stopWatch.stop();
-        appLogService.logUserRegistration(username, stopWatch);
+        AppLogService.logUserRegistration(username, stopWatch);
         return ok(registrationResponse);
     }
+
     //
     // the verification step is completed when the user clicks the get-back link from their email
     //
+    @SuppressWarnings("DesignForExtension")
     @RequestMapping(path = "/verify/{token}", method = GET)
     @Transactional
     public void verify(@PathVariable String token, HttpServletResponse response) throws TokenValidationException, IOException, DataAccessException, DataUpdateException {
@@ -124,7 +125,7 @@ public class RegistrationController {
         //
         JwtUtil jwtUtil = tokenService.instanceFor(VERIFICATION, token); // token w/claims
         if (jwtUtil.isTokenExpired()) {
-            response.sendRedirect(this.verificationErrorRedirectUrl);
+            response.sendRedirect(verificationErrorRedirectUrl);
         }
         //
         // (6) extract username from token and mark user as verified
@@ -141,14 +142,15 @@ public class RegistrationController {
         //
         //
         stopWatch.stop();
-        appLogService.logUserVerification(username, stopWatch);
+        AppLogService.logUserVerification(username, stopWatch);
         //
         // (7) user verification is complete, hand-off to front-end
         //
-        response.sendRedirect(this.verificationContinueRedirectUrl);
+        response.sendRedirect(verificationContinueRedirectUrl);
     }
 
-    @RequestMapping(path = "/deregister", method = DELETE, produces = {APPLICATION_JSON_VALUE})
+    @SuppressWarnings("DesignForExtension")
+    @RequestMapping(path = "/deregister", method = DELETE, produces = APPLICATION_JSON_VALUE)
     @Transactional
     public ResponseEntity<ResponseMessage> deregister(Authentication authentication) throws DataAccessException, DataUpdateException {
         UserDetails userDetails = (UserDetails) authentication.getDetails();
@@ -161,8 +163,23 @@ public class RegistrationController {
         userService.deregisterUser(username);
         //
         stopWatch.stop();
-        appLogService.logUserDeregistration(username, stopWatch);
+        AppLogService.logUserDeregistration(username, stopWatch);
 
-        return ok().body(buildResponseMessage(EMPTY));
+        ResponseEntity.BodyBuilder responseBuilder = ok();
+        ResponseMessage body = buildResponseMessage(EMPTY);
+        return responseBuilder.body(body);
+    }
+
+    @Override
+    public final String toString() {
+        return "RegistrationController{" +
+                ", userService=" + userService +
+                ", authService=" + authService +
+                ", mailService=" + mailService +
+                ", tokenService=" + tokenService +
+                ", validator=" + validator +
+                ", verificationErrorRedirectUrl='" + verificationErrorRedirectUrl + '\'' +
+                ", verificationContinueRedirectUrl='" + verificationContinueRedirectUrl + '\'' +
+                '}';
     }
 }

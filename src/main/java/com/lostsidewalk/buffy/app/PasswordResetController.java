@@ -45,9 +45,6 @@ public class PasswordResetController {
     private static final String INIT_PASSWORD_RESET_DEFAULT_RESPONSE_TEXT = "Ok";
 
     @Autowired
-    AppLogService appLogService;
-
-    @Autowired
     AuthService authService;
 
     @Autowired
@@ -61,9 +58,11 @@ public class PasswordResetController {
 
     @Value("${pwreset.continue.redirect.url}")
     String pwResetContinueRedirectUrl;
+
     //
     // pw reset init (open access)
     //
+    @SuppressWarnings("DesignForExtension")
     @RequestMapping(value = "/pw_reset", method = POST)
     @Transactional
     public ResponseEntity<String> initPasswordReset(@Valid @RequestBody PasswordResetRequest passwordResetRequest) throws AuthClaimException, DataAccessException, DataUpdateException, MailException {
@@ -73,40 +72,44 @@ public class PasswordResetController {
             authService.requireAuthProvider(username, LOCAL);
             AppToken pwResetToken = authService.initPasswordReset(passwordResetRequest);
             try {
-                mailService.sendPasswordResetEmail(passwordResetRequest.getUsername(), pwResetToken);
+                mailService.sendPasswordResetEmail(username, pwResetToken);
             } catch (UsernameNotFoundException ignored) {
                 // ignored (user requesting PW reset for unknown user)
             }
             stopWatch.stop();
-            appLogService.logPasswordResetInit(passwordResetRequest.getUsername(), stopWatch);
+            AppLogService.logPasswordResetInit(username, stopWatch);
         } catch (UsernameNotFoundException | AuthProviderException e) {
             // ignored (user requesting PW reset for non-existent/non-local user)
         }
 
         return ok(INIT_PASSWORD_RESET_DEFAULT_RESPONSE_TEXT);
     }
+
     //
     // pw reset callback from emailed link (open access)
     //
+    @SuppressWarnings("DesignForExtension")
     @RequestMapping(value = "/pw_reset/{token}", method = GET)
     @Transactional
     public void continuePasswordReset(@PathVariable("token") String token, HttpServletResponse response) throws IOException, TokenValidationException, DataAccessException, DataUpdateException {
         JwtUtil jwtUtil = tokenService.instanceFor(PW_RESET, token); // token w/claims
         if (jwtUtil.isTokenExpired()) {
-            response.sendRedirect(this.pwResetErrorRedirectUrl);
+            response.sendRedirect(pwResetErrorRedirectUrl);
         }
         String username = jwtUtil.extractUsername();
         log.info("Password reset continuation received for username={}", username);
         StopWatch stopWatch = StopWatch.createStarted();
         authService.continuePasswordReset(username, response);
         stopWatch.stop();
-        appLogService.logPasswordResetContinue(username, stopWatch);
+        AppLogService.logPasswordResetContinue(username, stopWatch);
 
-        response.sendRedirect(this.pwResetContinueRedirectUrl);
+        response.sendRedirect(pwResetContinueRedirectUrl);
     }
+
     //
     // pw reset finalize (token validation is done in AuthTokenFilter against the PW_AUTH token, not the APP_AUTH token)
     //
+    @SuppressWarnings("DesignForExtension")
     @RequestMapping(value = "/pw_update", method = RequestMethod.PUT)
     @Transactional
     public ResponseEntity<String> finalizePasswordReset(Authentication authentication, @Valid @RequestBody NewPasswordRequest newPasswordRequest) throws DataAccessException, DataUpdateException {
@@ -115,14 +118,26 @@ public class PasswordResetController {
         String newPassword = newPasswordRequest.getNewPassword();
         String newPasswordConfirmed = newPasswordRequest.getNewPasswordConfirmed();
         if (!StringUtils.equals(newPassword, newPasswordConfirmed)) {
-            return badRequest().body("Password confirmation failed to match");
+            ResponseEntity.BodyBuilder responseBuilder = badRequest();
+            return responseBuilder.body("Password confirmation failed to match");
         }
         StopWatch stopWatch = StopWatch.createStarted();
         authService.finalizePwResetAuthClaim(username);
         authService.updatePassword(username, newPassword);
         stopWatch.stop();
-        appLogService.logPasswordResetFinalize(username, stopWatch);
+        AppLogService.logPasswordResetFinalize(username, stopWatch);
 
         return ok("Password changed successfully");
+    }
+
+    @Override
+    public final String toString() {
+        return "PasswordResetController{" +
+                ", authService=" + authService +
+                ", tokenService=" + tokenService +
+                ", mailService=" + mailService +
+                ", pwResetErrorRedirectUrl='" + pwResetErrorRedirectUrl + '\'' +
+                ", pwResetContinueRedirectUrl='" + pwResetContinueRedirectUrl + '\'' +
+                '}';
     }
 }

@@ -1,17 +1,20 @@
 package com.lostsidewalk.buffy.app.model.v1.request;
 
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT;
 
 /**
  * A request model for configuring a queue.
  */
+@Slf4j
 @Data
 @NoArgsConstructor
 @JsonInclude(NON_ABSENT)
@@ -84,6 +87,7 @@ public class QueueConfigRequest {
      *
      * @return an QueueConfigRequest built from the supplied parameters
      */
+    @SuppressWarnings("StaticMethodOnlyUsedInOneClass")
     public static QueueConfigRequest from(String ident, String title, String description, String generator,
                                           ExportConfigRequest options,
                                           String copyright, String language, String imgSrc) {
@@ -97,5 +101,10 @@ public class QueueConfigRequest {
                 language,
                 imgSrc
         );
+    }
+
+    @JsonAnySetter
+    public static void handleUnrecognizedField(String key, Object value) {
+        throw new IllegalArgumentException("Unrecognized field: " + key);
     }
 }

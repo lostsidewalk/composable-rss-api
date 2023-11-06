@@ -16,14 +16,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collector;
 
 import static com.lostsidewalk.buffy.app.user.CustomOAuth2UserService.CustomOAuth2ErrorCodes.*;
 import static com.lostsidewalk.buffy.app.user.OAuth2UserInfoFactory.getOAuth2UserInfo;
@@ -46,12 +49,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     PasswordEncoder passwordEncoder;
 
     @Autowired
-    AppLogService appLogService;
-
-    @Autowired
-    ErrorLogService errorLogService;
-
-    @Autowired
     MailService mailService;
 
     @Autowired
@@ -61,58 +58,69 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private ApiKeyDao apiKeyDao;
 
     @Override
-    public OAuth2User loadUser(OAuth2UserRequest oAuth2UserRequest) throws OAuth2AuthenticationException {
+    public final OAuth2User loadUser(OAuth2UserRequest oAuth2UserRequest) {
         OAuth2User oAuth2User = super.loadUser(oAuth2UserRequest);
 
+        String name = oAuth2User.getName();
         try {
             return processOAuth2User(oAuth2UserRequest, oAuth2User);
         } catch (AuthenticationException ex) {
-            throw new OAuth2AuthenticationException(new OAuth2Error("AUTH", ex.getMessage(), null));
+            String message = ex.getMessage();
+            throw new OAuth2AuthenticationException(new OAuth2Error("AUTH", message, null));
         } catch (RegistrationException ex) {
-            errorLogService.logRegistrationException(oAuth2User.getName(), new Date(), ex);
-            throw new OAuth2AuthenticationException(new OAuth2Error(ex.getMessage()));
+            ErrorLogService.logRegistrationException(name, new Date(), ex);
+            String message = ex.getMessage();
+            throw new OAuth2AuthenticationException(new OAuth2Error(message));
         } catch (DataAccessException ex) {
-            errorLogService.logDataAccessException(oAuth2User.getName(), new Date(), ex);
+            ErrorLogService.logDataAccessException(name, new Date(), ex);
             throw new RuntimeException(ex);
         } catch (DataUpdateException ex) {
-            errorLogService.logDataUpdateException(oAuth2User.getName(), new Date(), ex);
+            ErrorLogService.logDataUpdateException(name, new Date(), ex);
             throw new RuntimeException(ex);
         } catch (DataConflictException ex) {
-            errorLogService.logDataConflictException(oAuth2User.getName(), new Date(), ex);
+            ErrorLogService.logDataConflictException(name, new Date(), ex);
             throw new RuntimeException(ex);
         }
     }
 
-    private OAuth2User processOAuth2User(OAuth2UserRequest oAuth2UserRequest, OAuth2User oAuth2User) throws RegistrationException, DataAccessException, DataUpdateException, DataConflictException {
-        OAuth2UserInfo oAuth2UserInfo = getOAuth2UserInfo(oAuth2UserRequest.getClientRegistration().getRegistrationId(), oAuth2User.getAttributes());
-        if (isEmpty(oAuth2UserInfo.getEmail())) {
+    private OAuth2User processOAuth2User(OAuth2UserRequest oAuth2UserRequest, OAuth2AuthenticatedPrincipal oAuth2User) throws RegistrationException, DataAccessException, DataUpdateException, DataConflictException {
+        ClientRegistration clientRegistration = oAuth2UserRequest.getClientRegistration();
+        String registrationId = clientRegistration.getRegistrationId();
+        Map<String, Object> attributes = oAuth2User.getAttributes();
+        OAuth2UserInfo oAuth2UserInfo = getOAuth2UserInfo(registrationId, attributes);
+        String email = oAuth2UserInfo.getEmail();
+        if (isEmpty(email)) {
             throw new OAuth2AuthenticationProcessingException("Email not found from OAuth2 provider");
         }
 
-        AuthProvider authProvider = byRegistrationId(oAuth2UserRequest.getClientRegistration().getRegistrationId());
+        AuthProvider authProvider = byRegistrationId(registrationId);
         String authProviderId = oAuth2UserInfo.getId();
         User user = userDao.findByAuthProviderId(authProvider, authProviderId);
+        String imageUrl = oAuth2UserInfo.getImageUrl();
+        String name = oAuth2UserInfo.getName();
         if (user == null) {
-            user = registerNewUser(authProvider, authProviderId, oAuth2UserInfo.getImageUrl(), oAuth2UserInfo.getName(), oAuth2UserInfo.getEmail());
+            user = registerNewUser(authProvider, authProviderId, imageUrl, name, email);
         } else {
-            updateUser(user, oAuth2UserInfo.getImageUrl(), oAuth2UserInfo.getName(), oAuth2UserInfo.getEmail());
+            updateUser(user, imageUrl, name, email);
         }
 
-        return create(user, oAuth2User.getAttributes());
+        return create(user, attributes);
     }
 
+    @SuppressWarnings("NestedMethodCall")
     private User registerNewUser(AuthProvider authProvider, String authProviderId, String authProviderProfileImgUrl, String authProviderUsername, String email) throws RegistrationException, DataAccessException, DataUpdateException, DataConflictException {
         String username = authProvider + "_" + email;
 
-        List<CustomOAuth2ErrorCodes> errorCodes = new ArrayList<>();
+        Collection<CustomOAuth2ErrorCodes> errorCodes = new ArrayList<>(3);
         errorCodes.addAll(validateEmailAddress(email));
         errorCodes.addAll(validateUsername(username));
         errorCodes.addAll(validateUser(username, email));
 
+        Collector<String, ?, List<String>> stringListCollector = toList();
         List<String> results = errorCodes.stream()
                 .filter(Objects::nonNull)
-                .map(c -> c.errorCode)
-                .collect(toList());
+                .map(errorCode -> errorCode.errorCode)
+                .collect(stringListCollector);
 
         boolean isValid = results.isEmpty();
 
@@ -132,7 +140,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             //
             // (2) generate auth claims for the user
             //
-            newUser.setAuthClaim(randomClaimValue());
+            String authClaim = randomClaimValue();
+            newUser.setAuthClaim(authClaim);
             newUser.setVerified(false);
             //
             // (3) persist the user entity
@@ -141,7 +150,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             //
             // (4) generate API keys
             //
-            ApiKey apiKey = generateApiKey(u.getUsername());
+            ApiKey apiKey = generateApiKey(username);
             //
             // (5) generate and send verification token
             //
@@ -155,14 +164,15 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             //
             // (6) user registration is complete
             //
-            appLogService.logUserRegistration(u.getUsername(), stopWatch);
+            AppLogService.logUserRegistration(username, stopWatch);
             return u;
         } else {
-            throw new RegistrationException(join("; ", results));
+            String message = join("; ", results);
+            throw new RegistrationException(message);
         }
     }
 
-    public ApiKey generateApiKey(String username) throws DataAccessException, DataUpdateException, DataConflictException {
+    private ApiKey generateApiKey(String username) throws DataAccessException, DataUpdateException, DataConflictException {
         User user = userDao.findByName(username);
         if (user == null) {
             throw new UsernameNotFoundException(username);
@@ -170,10 +180,12 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String uuid = UUID.randomUUID().toString();
         String rawApiSecret = generateRandomString(32);
         String secret = passwordEncoder.encode(rawApiSecret);
-        ApiKey apiKey = ApiKey.from(user.getId(), uuid, secret);
+        Long id = user.getId();
+        ApiKey apiKey = ApiKey.from(id, uuid, secret);
         return apiKeyDao.add(apiKey);
     }
 
+    @SuppressWarnings("NestedMethodCall")
     private void updateUser(User user, String authProviderProfileImgUrl, String authProviderUsername, String emailAddress) throws DataAccessException, DataConflictException {
         boolean doUpdate = false;
         if (!StringUtils.equals(user.getAuthProviderProfileImgUrl(), authProviderProfileImgUrl)) {
@@ -192,7 +204,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             StopWatch stopWatch = StopWatch.createStarted();
             userDao.update(user);
             stopWatch.stop();
-            appLogService.logUserUpdate(user, stopWatch);
+            AppLogService.logUserUpdate(user, stopWatch);
         }
     }
 
@@ -206,9 +218,16 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         CustomOAuth2ErrorCodes(String errorCode) {
             this.errorCode = errorCode;
         }
+
+        @Override
+        public String toString() {
+            return "CustomOAuth2ErrorCodes{" +
+                    "errorCode='" + errorCode + '\'' +
+                    '}';
+        }
     }
 
-    private List<CustomOAuth2ErrorCodes> validateUsername(String username) {
+    private static List<CustomOAuth2ErrorCodes> validateUsername(String username) {
         if (isBlank(username)) {
             return singletonList(INVALID_USERNAME);
         }
@@ -216,7 +235,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return emptyList();
     }
 
-    private List<CustomOAuth2ErrorCodes> validateEmailAddress(String email) {
+    private static List<CustomOAuth2ErrorCodes> validateEmailAddress(String email) {
         if (isBlank(email)) {
             return singletonList(INVALID_EMAIL);
         }
@@ -234,5 +253,15 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private static String randomClaimValue() {
         return randomAlphanumeric(16);
+    }
+
+    @Override
+    public final String toString() {
+        return "CustomOAuth2UserService{" +
+                "passwordEncoder=" + passwordEncoder +
+                ", mailService=" + mailService +
+                ", userDao=" + userDao +
+                ", apiKeyDao=" + apiKeyDao +
+                '}';
     }
 }

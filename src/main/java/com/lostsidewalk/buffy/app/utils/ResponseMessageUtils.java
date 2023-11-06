@@ -2,9 +2,12 @@ package com.lostsidewalk.buffy.app.utils;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.constraints.NotNull;
 
+
+@Slf4j
 public class ResponseMessageUtils {
 
     @Data

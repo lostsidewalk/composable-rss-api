@@ -1,12 +1,14 @@
 package com.lostsidewalk.buffy.app.model.v1.request;
 
 
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.lostsidewalk.buffy.post.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.constraints.NotNull;
 import java.util.Date;
@@ -16,13 +18,14 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT;
 
 /**
  * A request model for configuring a post.
- *
+ * <p>
  * A queue may contain any number of posts. An post may represent a "story" -- much like a story in a newspaper or
  * magazine; if so its description is a synopsis of the story, and the link points to the full story. A post may also
  * be complete in itself, if so, the description contains the text (entity-encoded HTML is allowed; see examples),
  * and the link and title may be omitted. All elements of a post are optional, however at least one of title or
  * description must be present.
  */
+@Slf4j
 @Data
 @NoArgsConstructor
 @JsonInclude(NON_ABSENT)
@@ -114,4 +117,9 @@ public class PostConfigRequest {
      */
     @Valid
     private List<PostEnclosureConfigRequest> enclosures;
+
+    @JsonAnySetter
+    public static void handleUnrecognizedField(String key, Object value) {
+        throw new IllegalArgumentException("Unrecognized field: " + key);
+    }
 }

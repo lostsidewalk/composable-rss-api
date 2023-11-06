@@ -34,7 +34,7 @@ public class QueueCredentialsService {
      * @throws DataUpdateException  If there is an issue updating the data.
      * @throws DataConflictException If there is a duplicate key.
      */
-    public Long addCredential(String username, Long queueId, String basicUsername, String basicPassword)
+    public final Long addCredential(String username, Long queueId, String basicUsername, String basicPassword)
             throws DataAccessException, DataUpdateException, DataConflictException {
         QueueCredential queueCredential = QueueCredential.from(username, queueId, basicUsername, basicPassword);
         return queueCredentialDao.add(queueCredential);
@@ -49,7 +49,7 @@ public class QueueCredentialsService {
      * @return a queue credential object.
      * @throws DataAccessException if there is an issue accessing the data.
      */
-    public QueueCredential findById(String username, Long queueId, Long credentialId) throws DataAccessException {
+    public final QueueCredential findById(String username, Long queueId, Long credentialId) throws DataAccessException {
         return queueCredentialDao.findById(username, queueId, credentialId);
     }
 
@@ -61,7 +61,7 @@ public class QueueCredentialsService {
      * @return A list of queue credentials.
      * @throws DataAccessException If there is an issue accessing the data.
      */
-    public List<QueueCredential> findByQueueId(String username, Long queueId) throws DataAccessException {
+    public final List<QueueCredential> findByQueueId(String username, Long queueId) throws DataAccessException {
         return queueCredentialDao.findByQueueId(username, queueId);
     }
 
@@ -75,7 +75,7 @@ public class QueueCredentialsService {
      * @throws DataAccessException  If there is an issue accessing the data.
      * @throws DataUpdateException  If there is an issue updating the data.
      */
-    public void updatePassword(String username, Long queueId, Long credentialId, String basicPassword)
+    public final void updatePassword(String username, Long queueId, Long credentialId, String basicPassword)
             throws DataAccessException, DataUpdateException {
         queueCredentialDao.updatePassword(username, queueId, credentialId, basicPassword);
     }
@@ -88,7 +88,7 @@ public class QueueCredentialsService {
      * @throws DataAccessException  If there is an issue accessing the data.
      * @throws DataUpdateException  If there is an issue updating the data.
      */
-    public void deleteQueueCredentials(String username, Long queueId)
+    public final void deleteQueueCredentials(String username, Long queueId)
             throws DataAccessException, DataUpdateException {
         queueCredentialDao.deleteByQueueId(username, queueId);
     }
@@ -102,8 +102,15 @@ public class QueueCredentialsService {
      * @throws DataAccessException  If there is an issue accessing the data.
      * @throws DataUpdateException  If there is an issue updating the data.
      */
-    public void deleteQueueCredential(String username, Long queueId, Long credentialId)
+    public final void deleteQueueCredential(String username, Long queueId, Long credentialId)
             throws DataAccessException, DataUpdateException {
         queueCredentialDao.deleteById(username, queueId, credentialId);
+    }
+
+    @Override
+    public final String toString() {
+        return "QueueCredentialsService{" +
+                "queueCredentialDao=" + queueCredentialDao +
+                '}';
     }
 }

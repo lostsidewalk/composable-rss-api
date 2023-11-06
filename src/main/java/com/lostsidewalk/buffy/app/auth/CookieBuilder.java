@@ -1,9 +1,13 @@
 package com.lostsidewalk.buffy.app.auth;
 
 import jakarta.servlet.http.Cookie;
+import lombok.extern.slf4j.Slf4j;
 
+import static java.lang.Integer.MAX_VALUE;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
+@SuppressWarnings({"ReturnOfThis", "unused"})
+@Slf4j
 public class CookieBuilder {
 
     private final String name;
@@ -14,50 +18,59 @@ public class CookieBuilder {
         this.value = value;
     }
 
-    boolean isHttpOnly = false;
-    boolean isSecure = false;
-    int maxAge = Integer.MAX_VALUE;
-    String path = "/";
-    String domain = EMPTY;
+    private boolean isHttpOnly;
+    private boolean isSecure;
+    private int maxAge = MAX_VALUE;
+    private String path = "/";
+    private String domain = EMPTY;
 
-    @SuppressWarnings("unused")
-    public CookieBuilder setHttpOnly(boolean httpOnly) {
+    final CookieBuilder setHttpOnly(@SuppressWarnings("SameParameterValue") boolean httpOnly) {
         isHttpOnly = httpOnly;
         return this;
     }
 
-    @SuppressWarnings("unused")
-    public CookieBuilder setSecure(boolean secure) {
+    final CookieBuilder setSecure(boolean secure) {
         isSecure = secure;
         return this;
     }
 
-    @SuppressWarnings("unused")
-    public CookieBuilder setMaxAge(int maxAge) {
+    final CookieBuilder setMaxAge(int maxAge) {
         this.maxAge = maxAge;
         return this;
     }
 
-    @SuppressWarnings("unused")
-    public CookieBuilder setPath(String path) {
+    @SuppressWarnings("SameParameterValue")
+    final CookieBuilder setPath(String path) {
         this.path = path;
         return this;
     }
 
-    @SuppressWarnings("unused")
-    public CookieBuilder setDomain(String domain) {
+    final CookieBuilder setDomain(String domain) {
         this.domain = domain;
         return this;
     }
 
-    public Cookie build() {
-        Cookie c = new Cookie(this.name, this.value);
-        c.setHttpOnly(this.isHttpOnly);
-        c.setSecure(this.isSecure); // true for prod/https
-        c.setMaxAge(this.maxAge);
-        c.setPath(this.path);
-        c.setDomain(this.domain);
+    public final Cookie build() {
+        Cookie cookie = new Cookie(name, value);
+        cookie.setHttpOnly(isHttpOnly);
+        cookie.setSecure(isSecure); // true for prod/https
+        cookie.setMaxAge(maxAge);
+        cookie.setPath(path);
+        cookie.setDomain(domain);
 
-        return c;
+        return cookie;
+    }
+
+    @Override
+    public final String toString() {
+        return "CookieBuilder{" +
+                "name='" + name + '\'' +
+                ", value='" + value + '\'' +
+                ", isHttpOnly=" + isHttpOnly +
+                ", isSecure=" + isSecure +
+                ", maxAge=" + maxAge +
+                ", path='" + path + '\'' +
+                ", domain='" + domain + '\'' +
+                '}';
     }
 }

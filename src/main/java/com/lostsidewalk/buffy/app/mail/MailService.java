@@ -32,28 +32,31 @@ public class MailService {
     // password reset
     //
 
-    public void sendPasswordResetEmail(String username, AppToken passwordResetToken) throws MailException, DataAccessException {
+    public final void sendPasswordResetEmail(String username, AppToken passwordResetToken) throws MailException, DataAccessException {
         User user = userDao.findByName(username);
         if (user == null) {
             throw new UsernameNotFoundException(username);
         }
-        String n = user.getUsername();
         String emailAddress = user.getEmailAddress();
         if (isBlank(emailAddress)) {
             throw new MailException("Unable to send password reset email because user has no known email address");
         }
         try {
-            generatePasswordResetEmail(n, emailAddress, passwordResetToken);
-        } catch (Exception e) {
-            throw new MailException("Unable to send password reset email due to: " + e.getMessage());
+            generatePasswordResetEmail(username, emailAddress, passwordResetToken);
+        } catch (RuntimeException e) {
+            String message = e.getMessage();
+            //noinspection ThrowInsideCatchBlockWhichIgnoresCaughtException
+            throw new MailException("Unable to send password reset email due to: " + message);
         }
     }
 
     private void generatePasswordResetEmail(String username, String emailAddress, AppToken passwordResetToken) {
         String from = configProps.getPwResetEmailSender();
         String subject = configProps.getPwResetEmailSubject();
-        String pwResetUrl = String.format(configProps.getPwResetEmailUrlTemplate(), passwordResetToken.authToken);
-        String body = String.format(configProps.getPwResetEmailBodyTemplate(), username, pwResetUrl);
+        String pwResetEmailUrlTemplate = configProps.getPwResetEmailUrlTemplate();
+        String pwResetUrl = String.format(pwResetEmailUrlTemplate, passwordResetToken.authToken);
+        String pwResetEmailBodyTemplate = configProps.getPwResetEmailBodyTemplate();
+        String body = String.format(pwResetEmailBodyTemplate, username, pwResetUrl);
         sendSimpleMessage(from, emailAddress, subject, body);
     }
 
@@ -61,24 +64,27 @@ public class MailService {
     // verification
     //
 
-    public void sendVerificationEmail(String username, AppToken verificationToken, ApiKey apiKey) throws MailException, DataAccessException {
+    public final void sendVerificationEmail(String username, AppToken verificationToken, ApiKey apiKey) throws MailException, DataAccessException {
         User user = userDao.findByName(username);
         if (user == null) {
             throw new UsernameNotFoundException(username);
         }
-        String n = user.getUsername();
         String emailAddress = user.getEmailAddress();
         if (isBlank(emailAddress)) {
             throw new MailException("Unable to send verification email because user has no known email address");
         }
-        generateVerificationEmail(n, emailAddress, verificationToken, apiKey);
+        generateVerificationEmail(username, emailAddress, verificationToken, apiKey);
     }
 
     private void generateVerificationEmail(String username, String emailAddress, AppToken verificationToken, ApiKey apiKey) {
         String from = configProps.getVerificationEmailSender();
         String subject = configProps.getVerificationEmailSubject();
-        String verificationUrl = String.format(configProps.getVerificationEmailUrlTemplate(), verificationToken.authToken);
-        String body = String.format(configProps.getVerificationEmailBodyTemplate(), username, verificationUrl, apiKey.getApiKey(), apiKey.getApiSecret());
+        String verificationEmailUrlTemplate = configProps.getVerificationEmailUrlTemplate();
+        String verificationUrl = String.format(verificationEmailUrlTemplate, verificationToken.authToken);
+        String verificationEmailBodyTemplate = configProps.getVerificationEmailBodyTemplate();
+        String key = apiKey.getApiKey();
+        String secret = apiKey.getApiSecret();
+        String body = String.format(verificationEmailBodyTemplate, username, verificationUrl, key, secret);
         sendSimpleMessage(from, emailAddress, subject, body);
     }
 
@@ -86,27 +92,31 @@ public class MailService {
     // API key recovery
     //
 
-    public void sendApiKeyRecoveryEmail(String username, ApiKey apiKey) throws DataAccessException, MailException {
+    public final void sendApiKeyRecoveryEmail(String username, ApiKey apiKey) throws DataAccessException, MailException {
         User user = userDao.findByName(username);
         if (user == null) {
             throw new UsernameNotFoundException(username);
         }
-        String n = user.getUsername();
         String emailAddress = user.getEmailAddress();
         if (isBlank(emailAddress)) {
             throw new MailException("Unable to send API recovery email because user has no known email address");
         }
         try {
-            generateApiKeyRecoveryEmail(n, emailAddress, apiKey);
-        } catch (Exception e) {
-            throw new MailException("Unable to send API key recovery email due to: " + e.getMessage());
+            generateApiKeyRecoveryEmail(username, emailAddress, apiKey);
+        } catch (RuntimeException e) {
+            String message = e.getMessage();
+            //noinspection ThrowInsideCatchBlockWhichIgnoresCaughtException
+            throw new MailException("Unable to send API key recovery email due to: " + message);
         }
     }
 
     private void generateApiKeyRecoveryEmail(String username, String emailAddress, ApiKey apiKey) {
         String from = configProps.getApiKeyRecoveryEmailSender();
         String subject = configProps.getApiKeyRecoveryEmailSubject();
-        String body = String.format(configProps.getApiKeyRecoveryEmailBodyTemplate(), username, apiKey.getApiKey(), apiKey.getApiSecret());
+        String apiKeyRecoveryEmailBodyTemplate = configProps.getApiKeyRecoveryEmailBodyTemplate();
+        String key = apiKey.getApiKey();
+        String secret = apiKey.getApiSecret();
+        String body = String.format(apiKeyRecoveryEmailBodyTemplate, username, key, secret);
         sendSimpleMessage(from, emailAddress, subject, body);
     }
 
@@ -114,7 +124,7 @@ public class MailService {
     //
     //
 
-    public void sendSimpleMessage(String from, String to, String subject, String text) {
+    private void sendSimpleMessage(String from, String to, String subject, String text) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(from);
         message.setTo(to);
@@ -131,5 +141,14 @@ public class MailService {
         }
 
         mailSender.send(message);
+    }
+
+    @Override
+    public final String toString() {
+        return "MailService{" +
+                "userDao=" + userDao +
+                ", configProps=" + configProps +
+                ", mailSender=" + mailSender +
+                '}';
     }
 }

@@ -22,9 +22,12 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import static com.lostsidewalk.buffy.app.auth.HashingUtils.sha256;
 import static com.lostsidewalk.buffy.app.model.TokenType.*;
@@ -55,10 +58,7 @@ public class AuthService {
     @Value("${comprss.development:false}")
     boolean isDevelopment;
 
-    public AppToken initPasswordReset(PasswordResetRequest passwordResetRequest) throws AuthClaimException, UsernameNotFoundException, DataAccessException, DataUpdateException {
-        if (passwordResetRequest == null) {
-            throw new IllegalArgumentException();
-        }
+    public final AppToken initPasswordReset(PasswordResetRequest passwordResetRequest) throws AuthClaimException, DataAccessException, DataUpdateException {
         // (1) locate the user by name or email
         String username = passwordResetRequest.getUsername();
         User userByName = userDao.findByName(username);
@@ -67,8 +67,9 @@ public class AuthService {
             throw new UsernameNotFoundException(username);
         }
         User userByEmail = null;
-        if (isNotBlank(passwordResetRequest.getEmail())) {
-            userByEmail = userDao.findByEmailAddress(passwordResetRequest.getEmail());
+        String email = passwordResetRequest.getEmail();
+        if (isNotBlank(email)) {
+            userByEmail = userDao.findByEmailAddress(email);
             if (userByEmail == null) {
                 // invalid request (email supplied by user cannot be found)
                 throw new UsernameNotFoundException(username);
@@ -79,13 +80,13 @@ public class AuthService {
             throw new UsernameNotFoundException(username);
         }
         // (2) finalize the current pw reset claim (invalidates all outstanding reset tokens)
-        log.info("Finalizing current PW reset claim for username={}, email={}", passwordResetRequest.getUsername(), passwordResetRequest.getEmail());
-        finalizePwResetClaim(passwordResetRequest.getUsername());
+        log.info("Finalizing current PW reset claim for username={}, email={}", username, email);
+        finalizePwResetClaim(username);
         // (3) generate and email a new pw reset token
-        return generatePasswordResetToken(passwordResetRequest.getUsername());
+        return generatePasswordResetToken(username);
     }
 
-    public void continuePasswordReset(String username, HttpServletResponse response) throws DataAccessException, DataUpdateException {
+    public final void continuePasswordReset(String username, HttpServletResponse response) throws DataAccessException, DataUpdateException {
         // (5) finalize the current pw reset claim (it's being used right now)
         finalizePwResetClaim(username);
         // (6) finalize/regenerate the pw reset auth claim
@@ -93,25 +94,27 @@ public class AuthService {
         // (7) setup a short-lived logged-in session (add the pw_auth claim cookie to the response)
         User user = userDao.findByName(username);
         if (user != null) {
-            addTokenCookieToResponse(TokenType.PW_AUTH, username, user.getPwResetAuthClaim(), response);
+            String pwResetAuthClaim = user.getPwResetAuthClaim();
+            addTokenCookieToResponse(PW_AUTH, username, pwResetAuthClaim, response);
         } else {
             throw new UsernameNotFoundException(username);
         }
     }
 
-    public void requireAuthProvider(String username, AuthProvider authProvider) throws AuthProviderException, DataAccessException {
+    public final void requireAuthProvider(String username, AuthProvider expected) throws AuthProviderException, DataAccessException {
         User user = userDao.findByName(username);
         if (user == null) {
             throw new UsernameNotFoundException(username);
         }
-        of(user).map(User::getAuthProvider)
-                .filter(a -> a == authProvider)
-                .stream()
-                .findAny()
-                .orElseThrow(() -> new AuthProviderException(username, authProvider, user.getAuthProvider()));
+        Stream<AuthProvider> stream = of(user).map(User::getAuthProvider)
+                .filter(a -> a == expected)
+                .stream();
+        Optional<AuthProvider> any = stream.findAny();
+        AuthProvider actual = user.getAuthProvider();
+        any.orElseThrow(() -> new AuthProviderException(username, expected, actual));
     }
 
-    public String requireAuthClaim(String username) throws AuthClaimException, DataAccessException {
+    public final String requireAuthClaim(String username) throws AuthClaimException, DataAccessException {
         User user = userDao.findByName(username);
         if (user == null) {
             throw new UsernameNotFoundException(username);
@@ -120,7 +123,7 @@ public class AuthService {
                 .orElseThrow(() -> new AuthClaimException("User has no auth claim"));
     }
 
-    public ApiKey requireApiKey(String username) throws ApiKeyException, DataAccessException {
+    public final ApiKey requireApiKey(String username) throws ApiKeyException, DataAccessException {
         User user = userDao.findByName(username);
         if (user == null) {
             throw new UsernameNotFoundException(username);
@@ -129,7 +132,7 @@ public class AuthService {
                 .orElseThrow(() -> new ApiKeyException("User has no API key"));
     }
 
-    public void finalizeAuthClaim(String username) throws DataAccessException, DataUpdateException {
+    public final void finalizeAuthClaim(String username) throws DataAccessException, DataUpdateException {
         User user = userDao.findByName(username);
         if (user == null) {
             throw new UsernameNotFoundException(username);
@@ -140,7 +143,7 @@ public class AuthService {
         userDao.updateAuthClaim(user);
     }
 
-    public void finalizePwResetClaim(String username) throws DataAccessException, DataUpdateException {
+    public final void finalizePwResetClaim(String username) throws DataAccessException, DataUpdateException {
         User user = userDao.findByName(username);
         if (user == null) {
             throw new UsernameNotFoundException(username);
@@ -151,7 +154,7 @@ public class AuthService {
         userDao.updatePwResetClaim(user);
     }
 
-    public void finalizeVerificationClaim(String username) throws DataAccessException, DataUpdateException {
+    public final void finalizeVerificationClaim(String username) throws DataAccessException, DataUpdateException {
         User user = userDao.findByName(username);
         if (user == null) {
             throw new UsernameNotFoundException(username);
@@ -162,7 +165,7 @@ public class AuthService {
         userDao.updateVerificationClaim(user);
     }
 
-    public String requirePwResetAuthClaim(String username) throws AuthClaimException, DataAccessException {
+    public final String requirePwResetAuthClaim(String username) throws AuthClaimException, DataAccessException {
         User user = userDao.findByName(username);
         if (user == null) {
             throw new UsernameNotFoundException(username);
@@ -172,7 +175,7 @@ public class AuthService {
                 .orElseThrow(() -> new AuthClaimException("User has no PW reset auth claim"));
     }
 
-    public void finalizePwResetAuthClaim(String username) throws DataAccessException, DataUpdateException {
+    public final void finalizePwResetAuthClaim(String username) throws DataAccessException, DataUpdateException {
         User user = userDao.findByName(username);
         if (user == null) {
             throw new UsernameNotFoundException(username);
@@ -183,24 +186,26 @@ public class AuthService {
         userDao.updatePwResetAuthClaim(user);
     }
 
-    public void addTokenCookieToResponse(TokenType tokenType, String username, String validationClaim, HttpServletResponse response) {
+    public final void addTokenCookieToResponse(TokenType tokenType, String username, String validationClaim, HttpServletResponse response) {
         AppToken appToken = generateAppToken(tokenType, username, validationClaim);
-        final Cookie tokenCookie = new CookieBuilder(tokenType.tokenName, appToken.authToken)
+        Cookie tokenCookie = new CookieBuilder(tokenType.tokenName, appToken.authToken)
                 .setPath("/")
                 .setHttpOnly(true)
                 .setMaxAge(appToken.maxAgeInSeconds)
-                .setSecure(!this.isDevelopment)
+                .setSecure(!isDevelopment)
                 .build();
         // add app token cookie to response
         response.addCookie(tokenCookie);
     }
 
-    public String getTokenCookieFromRequest(TokenType tokenType, HttpServletRequest request) {
+    @SuppressWarnings("MethodMayBeStatic")
+    public final String getTokenCookieFromRequest(TokenType tokenType, HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (isNotEmpty(cookies)) {
-            for (Cookie c : cookies) {
-                if (StringUtils.equals(c.getName(), tokenType.tokenName)) {
-                    return c.getValue();
+            for (Cookie cookie : cookies) {
+                String name = cookie.getName();
+                if (StringUtils.equals(name, tokenType.tokenName)) {
+                    return cookie.getValue();
                 }
             }
         }
@@ -208,49 +213,50 @@ public class AuthService {
         return null;
     }
 
-    public AppToken generateAuthToken(String username) throws AuthClaimException, DataAccessException {
+    public final AppToken generateAuthToken(String username) throws AuthClaimException, DataAccessException {
         User user = userDao.findByName(username);
         if (user == null) {
             throw new UsernameNotFoundException(username);
         }
-        String n = user.getUsername();
+        String u = user.getUsername();
         String authClaimSecret = user.getAuthClaim();
         if (isBlank(authClaimSecret)) {
             throw new AuthClaimException("User has no auth claim");
         }
 
-        return generateAppToken(APP_AUTH, n, authClaimSecret);
+        return generateAppToken(APP_AUTH, u, authClaimSecret);
     }
 
-    public AppToken generatePasswordResetToken(String username) throws AuthClaimException, DataAccessException {
+    @SuppressWarnings("WeakerAccess")
+    public final AppToken generatePasswordResetToken(String username) throws AuthClaimException, DataAccessException {
         User user = userDao.findByName(username);
         if (user == null) {
             throw new UsernameNotFoundException(username);
         }
-        String n = user.getUsername();
+        String u = user.getUsername();
         String pwResetClaimSecret = user.getPwResetClaim();
         if (isBlank(pwResetClaimSecret)) {
             throw new AuthClaimException("User has no PW reset claim");
         }
 
-        return generateAppToken(PW_RESET, n, pwResetClaimSecret);
+        return generateAppToken(PW_RESET, u, pwResetClaimSecret);
     }
 
-    public AppToken generateVerificationToken(String username) throws AuthClaimException, DataAccessException {
+    public final AppToken generateVerificationToken(String username) throws AuthClaimException, DataAccessException {
         User user = userDao.findByName(username);
         if (user == null) {
             throw new UsernameNotFoundException(username);
         }
-        String n = user.getUsername();
-        String verificationClaimSecret = user.getVerificationClaim();
-        if (isBlank(verificationClaimSecret)) {
+        String u = user.getUsername();
+        String vfnClaim = user.getVerificationClaim();
+        if (isBlank(vfnClaim)) {
             throw new AuthClaimException("User has no verification claim");
         }
 
-        return generateAppToken(VERIFICATION, n, verificationClaimSecret);
+        return generateAppToken(VERIFICATION, u, vfnClaim);
     }
 
-    public ApiKey generateApiKey(String username) throws DataAccessException, DataUpdateException, DataConflictException {
+    public final ApiKey generateApiKey(String username) throws DataAccessException, DataUpdateException, DataConflictException {
         User user = userDao.findByName(username);
         if (user == null) {
             throw new UsernameNotFoundException(username);
@@ -258,11 +264,12 @@ public class AuthService {
         String uuid = UUID.randomUUID().toString();
         String rawApiSecret = generateRandomString(32);
         String secret = passwordEncoder.encode(rawApiSecret);
-        ApiKey apiKey = ApiKey.from(user.getId(), uuid, secret);
+        Long id = user.getId();
+        ApiKey apiKey = ApiKey.from(id, uuid, secret);
         return apiKeyDao.add(apiKey);
     }
 
-    public void updatePassword(String username, String newPassword) throws DataAccessException, DataUpdateException {
+    public final void updatePassword(String username, String newPassword) throws DataAccessException, DataUpdateException {
         User user = userDao.findByName(username);
         if (user == null) {
             throw new UsernameNotFoundException(username);
@@ -271,7 +278,7 @@ public class AuthService {
         userDao.updatePassword(user);
     }
 
-    public User findUserByApiKey(String apiKey) throws ApiKeyException, DataAccessException {
+    public final User findUserByApiKey(String apiKey) throws ApiKeyException, DataAccessException {
         User user = userDao.findByApiKey(apiKey);
         if (user == null) {
             throw new ApiKeyException("Unable to locate user by API Key");
@@ -279,12 +286,14 @@ public class AuthService {
 
         return user;
     }
+
     //
     //
     //
-    AppToken generateAppToken(TokenType tokenType, String username, String validationClaim) {
-        Map<String, Object> claimsMap = new HashMap<>();
-        String validationClaimHash = sha256(validationClaim, defaultCharset());
+    final AppToken generateAppToken(TokenType tokenType, String username, String validationClaim) {
+        Map<String, Object> claimsMap = new HashMap<>(1);
+        Charset charset = defaultCharset();
+        String validationClaimHash = sha256(validationClaim, charset);
         claimsMap.put(tokenType.tokenName, validationClaimHash);
         String authToken = tokenService.generateToken(claimsMap, username, tokenType);
         int maxAgeInSeconds = tokenType.maxAgeInSeconds;
@@ -294,5 +303,16 @@ public class AuthService {
 
     private static String randomClaimValue() {
         return randomAlphanumeric(16);
+    }
+
+    @Override
+    public final String toString() {
+        return "AuthService{" +
+                "passwordEncoder=" + passwordEncoder +
+                ", userDao=" + userDao +
+                ", apiKeyDao=" + apiKeyDao +
+                ", tokenService=" + tokenService +
+                ", isDevelopment=" + isDevelopment +
+                '}';
     }
 }

@@ -35,49 +35,21 @@ import static org.springframework.http.ResponseEntity.ok;
 public class SettingsController {
 
     @Autowired
-    AppLogService appLogService;
-
-    @Autowired
     SettingsService settingsService;
 
     @Autowired
     Validator validator;
 
-//    @PreAuthorize("hasAuthority('ROLE_UNVERIFIED')")
-//    @GetMapping("/settings/display")
-//    public ResponseEntity<DisplaySettingsResponse> getDisplaySettings(Authentication authentication) throws DataAccessException {
-//        UserDetails userDetails = (UserDetails) authentication.getDetails();
-//        String username = userDetails.getUsername();
-//        StopWatch stopWatch = StopWatch.createStarted();
-//        DisplaySettingsResponse displaySettingsResponse = settingsService.getDisplaySettings(username);
-//        stopWatch.stop();
-//        appLogService.logDisplaySettingsFetch(username, stopWatch);
-//        //
-//        return ok(displaySettingsResponse);
-//    }
-//
-//    @PreAuthorize("hasAuthority('ROLE_UNVERIFIED')")
-//    @Transactional
-//    @PutMapping("/settings/display")
-//    public ResponseEntity<ResponseMessage> updateDisplaySettings(@Valid @RequestBody DisplaySettingsUpdateRequest displaySettingsUpdateRequest, Authentication authentication) throws DataAccessException, DataUpdateException {
-//        UserDetails userDetails = (UserDetails) authentication.getDetails();
-//        String username = userDetails.getUsername();
-//        StopWatch stopWatch = StopWatch.createStarted();
-//        settingsService.updateDisplaySettings(username, displaySettingsUpdateRequest);
-//        stopWatch.stop();
-//        appLogService.logDisplaySettingsUpdate(username, stopWatch);
-//        return ok().body(buildResponseMessage(EMPTY));
-//    }
-
+    @SuppressWarnings("DesignForExtension")
     @PreAuthorize("hasAuthority('ROLE_UNVERIFIED')")
-    @GetMapping(value = "/settings", produces = {APPLICATION_JSON_VALUE})
+    @GetMapping(value = "/settings", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<SettingsResponse> getSettings(Authentication authentication) throws DataAccessException {
         UserDetails userDetails = (UserDetails) authentication.getDetails();
         String username = userDetails.getUsername();
         StopWatch stopWatch = StopWatch.createStarted();
         SettingsResponse settingsResponse = settingsService.getFrameworkConfig(username);
         stopWatch.stop();
-        appLogService.logSettingsFetch(username, stopWatch);
+        AppLogService.logSettingsFetch(username, stopWatch);
         //
         if (settingsResponse != null) {
             validator.validate(settingsResponse);
@@ -85,16 +57,27 @@ public class SettingsController {
         return ok(settingsResponse);
     }
 
+    @SuppressWarnings("DesignForExtension")
     @PreAuthorize("hasAuthority('ROLE_UNVERIFIED')")
     @Transactional
-    @PutMapping(value = "/settings", produces = {APPLICATION_JSON_VALUE}, consumes = {APPLICATION_JSON_VALUE})
+    @PutMapping(value = "/settings", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity<ResponseMessage> updateSettings(@Valid @RequestBody SettingsUpdateRequest settingsUpdateRequest, Authentication authentication) throws DataAccessException, DataUpdateException, DataConflictException {
         UserDetails userDetails = (UserDetails) authentication.getDetails();
         String username = userDetails.getUsername();
         StopWatch stopWatch = StopWatch.createStarted();
         settingsService.updateFrameworkConfig(username, settingsUpdateRequest);
         stopWatch.stop();
-        appLogService.logSettingsUpdate(username, stopWatch, settingsUpdateRequest);
-        return ok().body(buildResponseMessage(EMPTY));
+        AppLogService.logSettingsUpdate(username, stopWatch, settingsUpdateRequest);
+        ResponseEntity.BodyBuilder responseBuilder = ok();
+        ResponseMessage body = buildResponseMessage(EMPTY);
+        return responseBuilder.body(body);
+    }
+
+    @Override
+    public final String toString() {
+        return "SettingsController{" +
+                "settingsService=" + settingsService +
+                ", validator=" + validator +
+                '}';
     }
 }

@@ -1,7 +1,9 @@
 package com.lostsidewalk.buffy.app.model.v1.response;
 
 
+import com.lostsidewalk.buffy.publisher.Publisher;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.constraints.NotNull;
 import java.util.Map;
@@ -9,11 +11,12 @@ import java.util.Map;
 /**
  * A response model for queue configuration operations.
  */
+@Slf4j
 @Data
 public class QueueConfigResponse {
 
     /**
-     * The queue under configuration.
+     * The queue being configured..
      */
     @NotNull(message = "{queue.config.error.queue-is-null}")
     QueueDTO queueDTO;
@@ -21,7 +24,7 @@ public class QueueConfigResponse {
     /**
      * The results of deployment on all publishers.
      */
-    @NotNull(message = "{queue.config.error.dpeloy-responses-is-null}")
+    @NotNull(message = "{queue.config.error.deploy-responses-is-null}")
     Map<String, DeployResponse> deployResponses;
 
     private QueueConfigResponse(QueueDTO queueDTO, Map<String, DeployResponse> deployResponses) {
@@ -30,13 +33,13 @@ public class QueueConfigResponse {
     }
 
     /**
-     * Static factory method to create a QueueConfig data transfer object from the supplied parameters.
+     * Static factory method to create a QueueConfigResponse data transfer object from the supplied parameters.
      *
      * @param queueDTO        the Queue itself
-     * @param deployResponses a mapping of publisher identifier to deployment responses for the given queue
+     * @param pubResults      optional mapping of publisher identifier to deployment responses for the given queue
      * @return a QueueConfigResponse entity encapsulating this information
      */
-    public static QueueConfigResponse from(QueueDTO queueDTO, Map<String, DeployResponse> deployResponses) {
-        return new QueueConfigResponse(queueDTO, deployResponses);
+    public static QueueConfigResponse from(QueueDTO queueDTO, Map<String, Publisher.PubResult> pubResults) {
+        return new QueueConfigResponse(queueDTO, DeployResponse.from(pubResults));
     }
 }

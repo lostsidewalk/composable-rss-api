@@ -1,21 +1,25 @@
 package com.lostsidewalk.buffy.app.model.v1.response;
 
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.lostsidewalk.buffy.publisher.Publisher.PubResult;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 
-import static java.util.stream.Collectors.toMap;
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
 /**
  * A response model for a queue deployment result.
  */
+@Slf4j
 @Data
+@JsonInclude(NON_EMPTY)
 public class DeployResponse {
 
     /**
@@ -32,14 +36,20 @@ public class DeployResponse {
     String publisherIdent;
 
     /**
-     * The URL of the deployed artifact.
+     * The URLs of the deployed artifact.
      */
-    String url;
+    List<String> urls;
 
-    private DeployResponse(Date timestamp, String publisherIdent, String url) {
+    /**
+     * A list of errors that occurred during the publication, if any.
+     */
+    List<String> errors;
+
+    private DeployResponse(Date timestamp, String publisherIdent, List<String> urls, List<String> errors) {
         this.timestamp = timestamp;
         this.publisherIdent = publisherIdent;
-        this.url = url;
+        this.urls = urls;
+        this.errors = errors;
     }
 
     /**
@@ -48,10 +58,28 @@ public class DeployResponse {
      * @param publicationResults a mapping of publisher identifier to PubResult objects
      * @return a mapping of publisher identifier to DeployResponse objects
      */
+    @SuppressWarnings("MethodWithMultipleLoops")
     public static Map<String, DeployResponse> from(Map<String, PubResult> publicationResults) {
-        return publicationResults.entrySet().stream().collect(toMap(Map.Entry::getKey, e -> {
+        Map<String, DeployResponse> map = new HashMap<>(publicationResults.size());
+        for (Map.Entry<String, PubResult> e : publicationResults.entrySet()) {
+            String publisherIdent = e.getKey();
             PubResult p = e.getValue();
-            return new DeployResponse(p.getPubDate(), e.getKey(), p.getUrl());
-        }));
+            List<Throwable> errors = p.getErrors();
+            List<String> errorMessages = null;
+            if (isNotEmpty(errors)) {
+                errorMessages = new ArrayList<>(errors.size());
+                for (Throwable throwable : errors) {
+                    errorMessages.add(throwable.getMessage());
+                }
+            }
+            DeployResponse deployResponse = new DeployResponse(
+                    p.getPubDate(),
+                    publisherIdent,
+                    List.of(p.getTransportUrl(), p.getUserIdentUrl()),
+                    errorMessages
+            );
+            map.put(publisherIdent, deployResponse);
+        }
+        return map;
     }
 }

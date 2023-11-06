@@ -1,9 +1,11 @@
 package com.lostsidewalk.buffy.app.mail;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 
+@Slf4j
 @Configuration
 @ConfigurationProperties(prefix = "mail.config")
 public class MailConfigProps {
@@ -34,120 +36,139 @@ public class MailConfigProps {
 
     private boolean logMessages;
 
-    public String getPwResetEmailSender() {
+    final String getPwResetEmailSender() {
         return pwResetEmailSender;
     }
 
     @SuppressWarnings("unused")
-    public void setPwResetEmailSender(String pwResetEmailSender) {
+    public final void setPwResetEmailSender(String pwResetEmailSender) {
         this.pwResetEmailSender = pwResetEmailSender;
     }
 
-    public String getPwResetEmailSubject() {
+    final String getPwResetEmailSubject() {
         return pwResetEmailSubject;
     }
 
     @SuppressWarnings("unused")
-    public void setPwResetEmailSubject(String pwResetEmailSubject) {
+    public final void setPwResetEmailSubject(String pwResetEmailSubject) {
         this.pwResetEmailSubject = pwResetEmailSubject;
     }
 
-    public String getPwResetEmailUrlTemplate() {
+    final String getPwResetEmailUrlTemplate() {
         return pwResetEmailUrlTemplate;
     }
 
     @SuppressWarnings("unused")
-    public void setPwResetEmailUrlTemplate(String pwResetEmailUrlTemplate) {
+    public final void setPwResetEmailUrlTemplate(String pwResetEmailUrlTemplate) {
         this.pwResetEmailUrlTemplate = pwResetEmailUrlTemplate;
     }
 
-    public String getPwResetEmailBodyTemplate() {
+    final String getPwResetEmailBodyTemplate() {
         return pwResetEmailBodyTemplate;
     }
 
     @SuppressWarnings("unused")
-    public void setPwResetEmailBodyTemplate(String pwResetEmailBodyTemplate) {
+    public final void setPwResetEmailBodyTemplate(String pwResetEmailBodyTemplate) {
         this.pwResetEmailBodyTemplate = pwResetEmailBodyTemplate;
     }
 
-    public String getApiKeyRecoveryEmailSender() {
+    final String getApiKeyRecoveryEmailSender() {
         return apiKeyRecoveryEmailSender;
     }
 
     @SuppressWarnings("unused")
-    public void setApiKeyRecoveryEmailSender(String apiKeyRecoveryEmailSender) {
+    public final void setApiKeyRecoveryEmailSender(String apiKeyRecoveryEmailSender) {
         this.apiKeyRecoveryEmailSender = apiKeyRecoveryEmailSender;
     }
 
-    public String getApiKeyRecoveryEmailSubject() {
+    final String getApiKeyRecoveryEmailSubject() {
         return apiKeyRecoveryEmailSubject;
     }
 
     @SuppressWarnings("unused")
-    public void setApiKeyRecoveryEmailSubject(String apiKeyRecoveryEmailSubject) {
+    public final void setApiKeyRecoveryEmailSubject(String apiKeyRecoveryEmailSubject) {
         this.apiKeyRecoveryEmailSubject = apiKeyRecoveryEmailSubject;
     }
 
-    public String getApiKeyRecoveryEmailBodyTemplate() {
+    final String getApiKeyRecoveryEmailBodyTemplate() {
         return apiKeyRecoveryEmailBodyTemplate;
     }
 
     @SuppressWarnings("unused")
-    public void setApiKeyRecoveryEmailBodyTemplate(String apiKeyRecoveryEmailBodyTemplate) {
+    public final void setApiKeyRecoveryEmailBodyTemplate(String apiKeyRecoveryEmailBodyTemplate) {
         this.apiKeyRecoveryEmailBodyTemplate = apiKeyRecoveryEmailBodyTemplate;
     }
 
-    public String getVerificationEmailSender() {
+    final String getVerificationEmailSender() {
         return verificationEmailSender;
     }
 
     @SuppressWarnings("unused")
-    public void setVerificationEmailSender(String verificationEmailSender) {
+    public final void setVerificationEmailSender(String verificationEmailSender) {
         this.verificationEmailSender = verificationEmailSender;
     }
 
-    public String getVerificationEmailSubject() {
+    final String getVerificationEmailSubject() {
         return verificationEmailSubject;
     }
 
     @SuppressWarnings("unused")
-    public void setVerificationEmailSubject(String verificationEmailSubject) {
+    public final void setVerificationEmailSubject(String verificationEmailSubject) {
         this.verificationEmailSubject = verificationEmailSubject;
     }
 
-    public String getVerificationEmailUrlTemplate() {
+    final String getVerificationEmailUrlTemplate() {
         return verificationEmailUrlTemplate;
     }
 
     @SuppressWarnings("unused")
-    public void setVerificationEmailUrlTemplate(String verificationEmailUrlTemplate) {
+    public final void setVerificationEmailUrlTemplate(String verificationEmailUrlTemplate) {
         this.verificationEmailUrlTemplate = verificationEmailUrlTemplate;
     }
 
-    public String getVerificationEmailBodyTemplate() {
+    final String getVerificationEmailBodyTemplate() {
         return verificationEmailBodyTemplate;
     }
 
     @SuppressWarnings("unused")
-    public void setVerificationEmailBodyTemplate(String verificationEmailBodyTemplate) {
+    public final void setVerificationEmailBodyTemplate(String verificationEmailBodyTemplate) {
         this.verificationEmailBodyTemplate = verificationEmailBodyTemplate;
     }
 
-    public boolean getDisabled() {
+    final boolean getDisabled() {
         return disabled;
     }
 
     @SuppressWarnings("unused")
-    public void setDisabled(boolean disabled) {
+    public final void setDisabled(boolean disabled) {
         this.disabled = disabled;
     }
 
-    public boolean getLogMessages() {
+    final boolean getLogMessages() {
         return logMessages;
     }
 
     @SuppressWarnings("unused")
-    public void setLogMessages(boolean logMessages) {
+    public final void setLogMessages(boolean logMessages) {
         this.logMessages = logMessages;
+    }
+
+    @Override
+    public final String toString() {
+        return "MailConfigProps{" +
+                "pwResetEmailSender='" + pwResetEmailSender + '\'' +
+                ", pwResetEmailSubject='" + pwResetEmailSubject + '\'' +
+                ", pwResetEmailUrlTemplate='" + pwResetEmailUrlTemplate + '\'' +
+                ", pwResetEmailBodyTemplate='" + pwResetEmailBodyTemplate + '\'' +
+                ", apiKeyRecoveryEmailSender='" + apiKeyRecoveryEmailSender + '\'' +
+                ", apiKeyRecoveryEmailSubject='" + apiKeyRecoveryEmailSubject + '\'' +
+                ", apiKeyRecoveryEmailBodyTemplate='" + apiKeyRecoveryEmailBodyTemplate + '\'' +
+                ", verificationEmailSender='" + verificationEmailSender + '\'' +
+                ", verificationEmailSubject='" + verificationEmailSubject + '\'' +
+                ", verificationEmailUrlTemplate='" + verificationEmailUrlTemplate + '\'' +
+                ", verificationEmailBodyTemplate='" + verificationEmailBodyTemplate + '\'' +
+                ", disabled=" + disabled +
+                ", logMessages=" + logMessages +
+                '}';
     }
 }

@@ -17,15 +17,17 @@ public enum TokenType {
 
     public final int maxAgeInSeconds;
 
+    @SuppressWarnings("WeakerAccess")
     public final String description;
 
     public final String tokenName;
 
     TokenType(int maxAgeInSeconds, String description) {
         this.maxAgeInSeconds = maxAgeInSeconds;
-        this.expirationBuilder = defaultExpirationBuilder(maxAgeInSeconds);
+        expirationBuilder = defaultExpirationBuilder(maxAgeInSeconds);
         this.description = description;
-        this.tokenName = defaultName(name());
+        String name = name();
+        tokenName = defaultName(name);
     }
 
     private static LongFunction<Date> defaultExpirationBuilder(int maxAgeInSeconds) {
@@ -33,6 +35,17 @@ public enum TokenType {
     }
 
     private static String defaultName(String name) {
-        return format("newsgears-%s-token", name.toLowerCase(ROOT));
+        String s = name.toLowerCase(ROOT);
+        return format("newsgears-%s-token", s);
+    }
+
+    @Override
+    public String toString() {
+        return "TokenType{" +
+                "expirationBuilder=" + expirationBuilder +
+                ", maxAgeInSeconds=" + maxAgeInSeconds +
+                ", description='" + description + '\'' +
+                ", tokenName='" + tokenName + '\'' +
+                '}';
     }
 }

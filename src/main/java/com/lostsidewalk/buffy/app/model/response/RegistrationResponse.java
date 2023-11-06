@@ -3,9 +3,11 @@ package com.lostsidewalk.buffy.app.model.response;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Data
-public class RegistrationResponse {
+public final class RegistrationResponse {
 
     @NotBlank(message = "{registration.error.username-is-blank}")
     @Size(max = 100, message = "{registration.error.username-too-long}")

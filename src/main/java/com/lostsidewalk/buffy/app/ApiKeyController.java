@@ -32,16 +32,15 @@ public class ApiKeyController {
     private static final String DEFAULT_RESPONSE_TEXT = "Ok";
 
     @Autowired
-    AppLogService appLogService;
-
-    @Autowired
     AuthService authService;
 
     @Autowired
     MailService mailService;
+
     //
     // API key recovery init
     //
+    @SuppressWarnings("DesignForExtension")
     @RequestMapping(value = "/send_key", method = POST)
     @Transactional
     public ResponseEntity<String> initApiKeyRecovery(Authentication authentication) throws ApiKeyException, DataAccessException, MailException {
@@ -51,8 +50,16 @@ public class ApiKeyController {
         ApiKey apiKey = authService.requireApiKey(username);
         mailService.sendApiKeyRecoveryEmail(username, apiKey);
         stopWatch.stop();
-        appLogService.logApiKeyRecoveryInit(username, stopWatch);
+        AppLogService.logApiKeyRecoveryInit(username, stopWatch);
 
         return ok(DEFAULT_RESPONSE_TEXT);
+    }
+
+    @Override
+    public final String toString() {
+        return "ApiKeyController{" +
+                "authService=" + authService +
+                ", mailService=" + mailService +
+                '}';
     }
 }

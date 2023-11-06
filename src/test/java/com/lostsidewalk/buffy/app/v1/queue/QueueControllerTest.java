@@ -10,12 +10,14 @@ import com.lostsidewalk.buffy.app.model.v1.RSS20Config;
 import com.lostsidewalk.buffy.app.model.v1.request.*;
 import com.lostsidewalk.buffy.app.model.v1.response.ExportConfigDTO;
 import com.lostsidewalk.buffy.post.*;
+import com.lostsidewalk.buffy.post.StagingPost.PostPubStatus;
 import com.lostsidewalk.buffy.publisher.Publisher.PubResult;
 import com.lostsidewalk.buffy.queue.QueueDefinition;
 import com.rometools.modules.itunes.EntryInformationImpl;
 import com.rometools.modules.itunes.ITunes;
 import com.rometools.modules.mediarss.MediaEntryModuleImpl;
 import com.rometools.modules.mediarss.types.Metadata;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,7 +26,9 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.io.Serializable;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +36,7 @@ import java.util.Map;
 import static com.lostsidewalk.buffy.app.auth.AuthTokenFilter.API_KEY_HEADER_NAME;
 import static com.lostsidewalk.buffy.app.auth.AuthTokenFilter.API_SECRET_HEADER_NAME;
 import static com.lostsidewalk.buffy.post.StagingPost.PostPubStatus.PUB_PENDING;
+import static java.time.format.DateTimeFormatter.ISO_INSTANT;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -41,9 +46,11 @@ import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+
+@Slf4j
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(controllers = QueueController.class)
-public class QueueControllerTest extends BaseWebControllerTest {
+class QueueControllerTest extends BaseWebControllerTest {
 
     private static final Gson GSON = new GsonBuilder()
             .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX")
@@ -71,7 +78,9 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     private static final Serializable TEST_EXPORT_CONFIG = ExportConfigDTO.from(
             TEST_ATOM_CONFIG,
-            TEST_RSS_CONFIG
+            TEST_RSS_CONFIG,
+            25,
+            false
     );
 
     private static final QueueDefinition TEST_QUEUE_DEFINITION = QueueDefinition.from(
@@ -116,7 +125,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
     //
 
     private static final ExportConfigRequest TEST_EXPORT_CONFIG_REQUEST = ExportConfigRequest.from(
-            TEST_ATOM_CONFIG, TEST_RSS_CONFIG
+            TEST_ATOM_CONFIG, TEST_RSS_CONFIG, 25, false
     );
 
     private static final QueueConfigRequest TEST_QUEUE_CONFIG_REQUEST = QueueConfigRequest.from(
@@ -131,15 +140,15 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     private static final Date NOW = new Date(15_000_000L);
 
-    private static final PubResult TEST_PUB_RESULT = PubResult.from("testPubUrl", emptyList(), NOW);
+    private static final PubResult TEST_PUB_RESULT = PubResult.from("testTransportUrl", "testUserIdentUrl", emptyList(), NOW);
 
     private static final Map<String, PubResult> TEST_PUB_RESULTS = Map.of("RSS_20", TEST_PUB_RESULT);
 
     @Test
     void test_createQueues() throws Exception {
-        when(this.queueDefinitionService.createQueue("me", TEST_QUEUE_CONFIG_REQUEST)).thenReturn(1L);
-        when(this.postPublisher.publishFeed("me", 1L)).thenReturn(TEST_PUB_RESULTS);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        when(queueDefinitionService.createQueue("me", TEST_QUEUE_CONFIG_REQUEST)).thenReturn(1L);
+        when(postPublisher.publishFeed("me", 1L)).thenReturn(TEST_PUB_RESULTS);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/v1/queues")
                         .servletPath("/v1/queues")
@@ -151,7 +160,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
-                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"}},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{\"RSS_20\":{\"timestamp\":\"1970-01-01T04:10:00.000+00:00\",\"publisherIdent\":\"RSS_20\",\"url\":\"testPubUrl\"}}}", JsonObject.class),
+                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{\"RSS_20\":{\"timestamp\":\"1970-01-01T04:10:00.000+00:00\",\"publisherIdent\":\"RSS_20\",\"urls\":[\"testTransportUrl\",\"testUserIdentUrl\"]}}}", JsonObject.class),
                             GSON.fromJson(responseContent, JsonObject.class)
                     );
                 })
@@ -160,7 +169,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_getQueues() throws Exception {
-        when(this.queueDefinitionService.findByUser("me")).thenReturn(TEST_DEPLOYED_QUEUE_DEFINITIONS);
+        when(queueDefinitionService.findByUser("me")).thenReturn(TEST_DEPLOYED_QUEUE_DEFINITIONS);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/queues")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -169,7 +178,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
-                            GSON.fromJson("[{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"}},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"lastDeployed\":\"1970-01-01T02:46:40.000+00:00\",\"isAuthenticated\":false}]", JsonArray.class),
+                            GSON.fromJson("[{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"lastDeployed\":\"1970-01-01T02:46:40.000+00:00\",\"isAuthenticated\":false}]", JsonArray.class),
                             GSON.fromJson(responseContent, JsonArray.class)
                     );
                 })
@@ -178,8 +187,8 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_getQueueById() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_DEPLOYED_QUEUE_DEFINITION);
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_DEPLOYED_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/queues/1")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -188,7 +197,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
-                            GSON.fromJson("{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"}},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"lastDeployed\":\"1970-01-01T02:46:40.000+00:00\",\"isAuthenticated\":false}", JsonObject.class),
+                            GSON.fromJson("{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"lastDeployed\":\"1970-01-01T02:46:40.000+00:00\",\"isAuthenticated\":false}", JsonObject.class),
                             GSON.fromJson(responseContent, JsonObject.class)
                     );
                 })
@@ -197,8 +206,8 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_getQueueTitle_text() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/queues/1/title")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -213,8 +222,8 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_getQueueTitle_json() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/queues/1/title")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -229,8 +238,8 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_getQueueDescription_text() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/queues/1/description")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -245,8 +254,8 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_getQueueDescription_json() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/queues/1/description")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -261,8 +270,8 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_getQueueGenerator_text() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/queues/1/generator")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -277,8 +286,8 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_getQueueGenerator_json() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/queues/1/generator")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -293,8 +302,8 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_getQueueTransport_text() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/queues/1/transport")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -309,8 +318,8 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_getQueueTransport_json() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/queues/1/transport")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -325,8 +334,8 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_getQueueCopyright_text() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/queues/1/copyright")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -342,8 +351,8 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_getQueueCopyright_json() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/queues/1/copyright")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -359,8 +368,8 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_getQueueLanguage_text() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/queues/1/language")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -375,8 +384,8 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_getQueueLanguage_json() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/queues/1/language")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -389,12 +398,12 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(status().isOk());
     }
 
-    private static final SimpleDateFormat ISO_8601_TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+    private static final DateTimeFormatter ISO_8601_TIMESTAMP_FORMATTER = ISO_INSTANT;
 
     @Test
     void test_getQueueDeployedTimestamp_text() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_DEPLOYED_QUEUE_DEFINITION);
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_DEPLOYED_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/queues/1/deployed")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -403,21 +412,21 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertTrue(isNotBlank(responseContent));
-                    Date deployedTimestamp = null;
+                    Instant instant = null;
                     try {
-                        deployedTimestamp = ISO_8601_TIMESTAMP_FORMAT.parse(responseContent);
-                    } catch (Exception e) {
+                        instant = Instant.from(ISO_8601_TIMESTAMP_FORMATTER.parse(responseContent));
+                    } catch (DateTimeParseException e) {
                         fail(e.getMessage());
                     }
-                    assertEquals(deployedTimestamp, YESTERDAY);
+                    assertEquals(YESTERDAY.toInstant(), instant);
                 })
                 .andExpect(status().isOk());
     }
 
     @Test
     void test_getQueueDeployedTimestamp_json_deployed() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_DEPLOYED_QUEUE_DEFINITION);
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_DEPLOYED_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/queues/1/deployed")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -432,8 +441,8 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_getQueueDeployedTimestamp_json_nonDeployed() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/queues/1/deployed")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -448,8 +457,8 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_getQueueAuthRequirement_text() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/queues/1/auth")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -467,8 +476,8 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_getQueueAuthRequirement_json() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/queues/1/auth")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -486,8 +495,8 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_getQueueImageSource_text() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/queues/1/imgsrc")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -502,8 +511,8 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_getQueueImageSource_json() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/queues/1/imgsrc")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -518,19 +527,10 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_updateQueue() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.updateQueue("me", 1L, TEST_QUEUE_CONFIG_REQUEST, false)).thenReturn(QueueDefinition.from(
-                "testIdent",
-                "testTitle",
-                "testDescription",
-                "testGenerator",
-                "Test Queue Transport Identifier",
-                "me",
-                TEST_EXPORT_CONFIG,
-                "testCopyright",
-                "testLanguage",
-                null,
-                false));
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        QueueDefinition updatedQueue = copyTestQueueDefinition();
+        updatedQueue.setIdent("newIdent");
+        when(queueDefinitionService.updateQueue("me", 1L, TEST_QUEUE_CONFIG_REQUEST, false)).thenReturn(updatedQueue);
         mockMvc.perform(MockMvcRequestBuilders
                 .put("/v1/queues/1")
                 .servletPath("/v1/queues/1")
@@ -541,7 +541,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 ).andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
-                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testIdent\",\"title\":\"testTitle\",\"description\":\"testDescription\",\"generator\":\"testGenerator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"}},\"copyright\":\"testCopyright\",\"language\":\"testLanguage\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
+                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"newIdent\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
                             GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
@@ -549,19 +549,10 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_patchQueue() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.updateQueue("me", 1L, TEST_QUEUE_CONFIG_REQUEST, true)).thenReturn(QueueDefinition.from(
-                "testIdent",
-                "testTitle",
-                "testDescription",
-                "testGenerator",
-                "Test Queue Transport Identifier",
-                "me",
-                TEST_EXPORT_CONFIG,
-                "testCopyright",
-                "testLanguage",
-                null,
-                false));
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        QueueDefinition updatedQueue = copyTestQueueDefinition();
+        updatedQueue.setIdent("newIdent");
+        when(queueDefinitionService.updateQueue("me", 1L, TEST_QUEUE_CONFIG_REQUEST, true)).thenReturn(updatedQueue);
         mockMvc.perform(MockMvcRequestBuilders
                         .patch("/v1/queues/1")
                         .servletPath("/v1/queues/1")
@@ -572,7 +563,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 ).andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
-                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testIdent\",\"title\":\"testTitle\",\"description\":\"testDescription\",\"generator\":\"testGenerator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"}},\"copyright\":\"testCopyright\",\"language\":\"testLanguage\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
+                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"newIdent\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
                             GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
@@ -580,8 +571,10 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_updateQueueIdent() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.updateQueueIdent("me", 1L, "newIdent")).thenReturn("newIdent");
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        QueueDefinition updatedQueue = copyTestQueueDefinition();
+        updatedQueue.setIdent("newIdent");
+        when(queueDefinitionService.updateQueueIdent("me", 1L, "newIdent")).thenReturn(updatedQueue);
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/v1/queues/1/ident")
                         .servletPath("/v1/queues/1/ident")
@@ -592,17 +585,17 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(
-                            GSON.fromJson("{\"message\":\"Successfully updated queue Id 1\"}", JsonObject.class),
-                            GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"queueDTO\":{\"ident\":\"newIdent\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", responseContent);
                 })
                 .andExpect(status().isOk());
     }
 
     @Test
     void test_updateQueueTitle() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_DEPLOYED_QUEUE_DEFINITION);
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        QueueDefinition updatedQueue = copyTestQueueDefinition();
+        updatedQueue.setTitle("newTitle");
+        when(queueDefinitionService.updateQueueTitle("me", 1L, "newTitle")).thenReturn(updatedQueue);
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/v1/queues/1/title")
                         .servletPath("/v1/queues/1/title")
@@ -614,28 +607,19 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
-                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"}},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"lastDeployed\":\"1970-01-01T02:46:40.000+00:00\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
+                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"newTitle\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
                             GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
-        verify(this.queueDefinitionService).updateQueueTitle("me", 1L, "newTitle");
+        verify(queueDefinitionService).updateQueueTitle("me", 1L, "newTitle");
     }
 
     @Test
     void test_updateQueueDescription() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(QueueDefinition.from(
-                "testQueue",
-                "Test Queue Title",
-                "newDescription",
-                "Test Queue Feed Generator",
-                "Test Queue Transport Identifier",
-                "me",
-                TEST_EXPORT_CONFIG,
-                "Test Queue Copyright",
-                "en-US",
-                "testQueueImageSource",
-                false));
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        QueueDefinition updatedQueue = copyTestQueueDefinition();
+        updatedQueue.setTitle("newDescription");
+        when(queueDefinitionService.updateQueueDescription("me", 1L, "newDescription")).thenReturn(updatedQueue);
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/v1/queues/1/description")
                         .servletPath("/v1/queues/1/description")
@@ -647,28 +631,19 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
-                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"newDescription\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"}},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
+                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"newDescription\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
                             GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
-        verify(this.queueDefinitionService).updateQueueDescription("me", 1L, "newDescription");
+        verify(queueDefinitionService).updateQueueDescription("me", 1L, "newDescription");
     }
 
     @Test
     void test_updateQueueGenerator() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(QueueDefinition.from(
-                "testQueue",
-                "Test Queue Title",
-                "Test Queue Description",
-                "newGenerator",
-                "Test Queue Transport Identifier",
-                "me",
-                TEST_EXPORT_CONFIG,
-                "Test Queue Copyright",
-                "en-US",
-                "testQueueImageSource",
-                false));
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        QueueDefinition updatedQueue = copyTestQueueDefinition();
+        updatedQueue.setGenerator("newGenerator");
+        when(queueDefinitionService.updateQueueGenerator("me", 1L, "newGenerator")).thenReturn(updatedQueue);
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/v1/queues/1/generator")
                         .servletPath("/v1/queues/1/generator")
@@ -680,28 +655,19 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
-                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"newGenerator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"}},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
+                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"newGenerator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
                             GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
-        verify(this.queueDefinitionService).updateQueueGenerator("me", 1L, "newGenerator");
+        verify(queueDefinitionService).updateQueueGenerator("me", 1L, "newGenerator");
     }
 
     @Test
     void test_updateQueueCopyright() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(QueueDefinition.from(
-                "testQueue",
-                "Test Queue Title",
-                "Test Queue Description",
-                "Test Queue Feed Generator",
-                "Test Queue Transport Identifier",
-                "me",
-                TEST_EXPORT_CONFIG,
-                "newCopyright",
-                "en-US",
-                "testQueueImageSource",
-                false));
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        QueueDefinition updatedQueue = copyTestQueueDefinition();
+        updatedQueue.setCopyright("newCopyright");
+        when(queueDefinitionService.updateQueueCopyright("me", 1L, "newCopyright")).thenReturn(updatedQueue);
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/v1/queues/1/copyright")
                         .servletPath("/v1/queues/1/copyright")
@@ -713,28 +679,19 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
-                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"}},\"copyright\":\"newCopyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
+                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"copyright\":\"newCopyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
                             GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
-        verify(this.queueDefinitionService).updateQueueCopyright("me", 1L, "newCopyright");
+        verify(queueDefinitionService).updateQueueCopyright("me", 1L, "newCopyright");
     }
 
     @Test
     void test_updateQueueLanguage() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(QueueDefinition.from(
-                "testQueue",
-                "Test Queue Title",
-                "Test Queue Description",
-                "Test Queue Feed Generator",
-                "Test Queue Transport Identifier",
-                "me",
-                TEST_EXPORT_CONFIG,
-                "Test Queue Copyright",
-                "newLanguage",
-                "newImageSource",
-                false));
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        QueueDefinition updatedQueue = copyTestQueueDefinition();
+        updatedQueue.setLanguage("newLanguage");
+        when(queueDefinitionService.updateQueueLanguage("me", 1L, "newLanguage")).thenReturn(updatedQueue);
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/v1/queues/1/language")
                         .servletPath("/v1/queues/1/language")
@@ -746,11 +703,11 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
-                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"}},\"copyright\":\"Test Queue Copyright\",\"language\":\"newLanguage\",\"queueImgSrc\":\"newImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
+                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"copyright\":\"Test Queue Copyright\",\"language\":\"newLanguage\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
                             GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
-        verify(this.queueDefinitionService).updateQueueLanguage("me", 1L, "newLanguage");
+        verify(queueDefinitionService).updateQueueLanguage("me", 1L, "newLanguage");
     }
 
     private static final QueueAuthUpdateRequest TEST_QUEUE_AUTH_UPDATE_REQUEST = new QueueAuthUpdateRequest();
@@ -760,19 +717,10 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_updateQueueAuthRequirement() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(QueueDefinition.from(
-                "testQueue",
-                "Test Queue Title",
-                "Test Queue Description",
-                "Test Queue Feed Generator",
-                "Test Queue Transport Identifier",
-                "me",
-                TEST_EXPORT_CONFIG,
-                "Test Queue Copyright",
-                "en-US",
-                "testQueueImageSource",
-                true));
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        QueueDefinition updatedQueue = copyTestQueueDefinition();
+        updatedQueue.setIsAuthenticated(true);
+        when(queueDefinitionService.updateQueueAuthenticationRequirement("me", 1L, true)).thenReturn(updatedQueue);
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/v1/queues/1/auth")
                         .servletPath("/v1/queues/1/auth")
@@ -784,50 +732,41 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
-                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"}},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":true},\"deployResponses\":{}}", JsonObject.class),
+                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":true},\"deployResponses\":{}}", JsonObject.class),
                             GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
-        verify(this.queueDefinitionService).updateQueueAuthenticationRequirement("me", 1L, true);
+        verify(queueDefinitionService).updateQueueAuthenticationRequirement("me", 1L, true);
     }
 
     @Test
     void test_updateQueueImageSource() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(QueueDefinition.from(
-                "testQueue",
-                "Test Queue Title",
-                "Test Queue Description",
-                "Test Queue Feed Generator",
-                "Test Queue Transport Identifier",
-                "me",
-                TEST_EXPORT_CONFIG,
-                "Test Queue Copyright",
-                "en-US",
-                "newImageSource",
-                false));
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        QueueDefinition updatedQueue = copyTestQueueDefinition();
+        updatedQueue.setQueueImgSrc("newQueueImageSrc");
+        when(queueDefinitionService.updateQueueImageSource("me", 1L, "newImageSource")).thenReturn(updatedQueue);
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/v1/queues/1/imgsrc")
                         .servletPath("/v1/queues/1/imgsrc")
                         .contentType(TEXT_PLAIN_VALUE)
-                        .content("testImageSource")
+                        .content("newImageSource")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(
-                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"}},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"newImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
-                            GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"newQueueImageSrc\",\"isAuthenticated\":false},\"deployResponses\":{}}", responseContent);
                 })
                 .andExpect(status().isOk());
-        verify(this.queueDefinitionService).updateQueueImageSource("me", 1L, "testImageSource");
+        verify(queueDefinitionService).updateQueueImageSource("me", 1L, "newImageSource");
     }
 
     @Test
     void test_patchQueueIdent() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.updateQueueIdent("me", 1L, "newIdent")).thenReturn("newIdent");
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        QueueDefinition updatedQueue = copyTestQueueDefinition();
+        updatedQueue.setIdent("newIdent");
+        when(queueDefinitionService.updateQueueIdent("me", 1L, "newIdent")).thenReturn(updatedQueue);
         mockMvc.perform(MockMvcRequestBuilders
                         .patch("/v1/queues/1/ident")
                         .servletPath("/v1/queues/1/ident")
@@ -838,28 +777,17 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(
-                            GSON.fromJson("{\"message\":\"Successfully updated queue Id 1\"}", JsonObject.class),
-                            GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"queueDTO\":{\"ident\":\"newIdent\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", responseContent);
                 })
                 .andExpect(status().isOk());
     }
 
     @Test
     void test_patchQueueTitle() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(QueueDefinition.from(
-                "testQueue",
-                "newTitle",
-                "Test Queue Description",
-                "Test Queue Feed Generator",
-                "Test Queue Transport Identifier",
-                "me",
-                TEST_EXPORT_CONFIG,
-                "Test Queue Copyright",
-                "en-US",
-                "testQueueImageSource",
-                false));
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        QueueDefinition updatedQueue = copyTestQueueDefinition();
+        updatedQueue.setTitle("newTitle");
+        when(queueDefinitionService.updateQueueTitle("me", 1L, "newTitle")).thenReturn(updatedQueue);
         mockMvc.perform(MockMvcRequestBuilders
                         .patch("/v1/queues/1/title")
                         .servletPath("/v1/queues/1/title")
@@ -871,28 +799,19 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
-                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"newTitle\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"}},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
+                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"newTitle\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
                             GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
-        verify(this.queueDefinitionService).updateQueueTitle("me", 1L, "newTitle");
+        verify(queueDefinitionService).updateQueueTitle("me", 1L, "newTitle");
     }
 
     @Test
     void test_patchQueueDescription() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(QueueDefinition.from(
-                "testQueue",
-                "Test Queue Title",
-                "newDescription",
-                "Test Queue Feed Generator",
-                "Test Queue Transport Identifier",
-                "me",
-                TEST_EXPORT_CONFIG,
-                "Test Queue Copyright",
-                "en-US",
-                "testQueueImageSource",
-                false));
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        QueueDefinition updatedQueue = copyTestQueueDefinition();
+        updatedQueue.setDescription("newDescription");
+        when(queueDefinitionService.updateQueueDescription("me", 1L, "newDescription")).thenReturn(updatedQueue);
         mockMvc.perform(MockMvcRequestBuilders
                         .patch("/v1/queues/1/description")
                         .servletPath("/v1/queues/1/description")
@@ -904,28 +823,19 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
-                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"newDescription\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"}},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
+                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"newDescription\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
                             GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
-        verify(this.queueDefinitionService).updateQueueDescription("me", 1L, "newDescription");
+        verify(queueDefinitionService).updateQueueDescription("me", 1L, "newDescription");
     }
 
     @Test
     void test_patchQueueGenerator() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(QueueDefinition.from(
-                "testQueue",
-                "Test Queue Title",
-                "Test Queue Description",
-                "newGenerator",
-                "Test Queue Transport Identifier",
-                "me",
-                TEST_EXPORT_CONFIG,
-                "Test Queue Copyright",
-                "en-US",
-                "testQueueImageSource",
-                false));
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        QueueDefinition updatedQueue = copyTestQueueDefinition();
+        updatedQueue.setGenerator("newGenerator");
+        when(queueDefinitionService.updateQueueGenerator("me", 1L, "newGenerator")).thenReturn(updatedQueue);
         mockMvc.perform(MockMvcRequestBuilders
                         .patch("/v1/queues/1/generator")
                         .servletPath("/v1/queues/1/generator")
@@ -937,28 +847,19 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
-                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"newGenerator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"}},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
+                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"newGenerator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
                             GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
-        verify(this.queueDefinitionService).updateQueueGenerator("me", 1L, "newGenerator");
+        verify(queueDefinitionService).updateQueueGenerator("me", 1L, "newGenerator");
     }
 
     @Test
     void test_patchQueueCopyright() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(QueueDefinition.from(
-                "testQueue",
-                "Test Queue Title",
-                "Test Queue Description",
-                "Test Queue Feed Generator",
-                "Test Queue Transport Identifier",
-                "me",
-                TEST_EXPORT_CONFIG,
-                "newCopyright",
-                "en-US",
-                "testQueueImageSource",
-                false));
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        QueueDefinition updatedQueue = copyTestQueueDefinition();
+        updatedQueue.setCopyright("newCopyright");
+        when(queueDefinitionService.updateQueueCopyright("me", 1L, "newCopyright")).thenReturn(updatedQueue);
         mockMvc.perform(MockMvcRequestBuilders
                         .patch("/v1/queues/1/copyright")
                         .servletPath("/v1/queues/1/copyright")
@@ -970,28 +871,19 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
-                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"}},\"copyright\":\"newCopyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
+                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"copyright\":\"newCopyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
                             GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
-        verify(this.queueDefinitionService).updateQueueCopyright("me", 1L, "newCopyright");
+        verify(queueDefinitionService).updateQueueCopyright("me", 1L, "newCopyright");
     }
 
     @Test
     void test_patchQueueLanguage() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(QueueDefinition.from(
-                "testQueue",
-                "Test Queue Title",
-                "Test Queue Description",
-                "Test Queue Feed Generator",
-                "Test Queue Transport Identifier",
-                "me",
-                TEST_EXPORT_CONFIG,
-                "Test Queue Copyright",
-                "newLanguage",
-                "newImageSource",
-                false));
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        QueueDefinition updatedQueue = copyTestQueueDefinition();
+        updatedQueue.setLanguage("newLanguage");
+        when(queueDefinitionService.updateQueueLanguage("me", 1L, "newLanguage")).thenReturn(updatedQueue);
         mockMvc.perform(MockMvcRequestBuilders
                         .patch("/v1/queues/1/language")
                         .servletPath("/v1/queues/1/language")
@@ -1003,28 +895,20 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
-                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"}},\"copyright\":\"Test Queue Copyright\",\"language\":\"newLanguage\",\"queueImgSrc\":\"newImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
+                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"copyright\":\"Test Queue Copyright\",\"language\":\"newLanguage\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
                             GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
-        verify(this.queueDefinitionService).updateQueueLanguage("me", 1L, "newLanguage");
+        verify(queueDefinitionService).updateQueueLanguage("me", 1L, "newLanguage");
     }
 
     @Test
     void test_patchQueueAuthRequirement() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(QueueDefinition.from(
-                "testQueue",
-                "Test Queue Title",
-                "Test Queue Description",
-                "Test Queue Feed Generator",
-                "Test Queue Transport Identifier",
-                "me",
-                TEST_EXPORT_CONFIG,
-                "Test Queue Copyright",
-                "en-US",
-                "testQueueImageSource",
-                true));
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        QueueDefinition updatedQueue = copyTestQueueDefinition();
+        updatedQueue.setIsAuthenticated(true);
+        updatedQueue.setId(1L);
+        when(queueDefinitionService.updateQueueAuthenticationRequirement("me", 1L, true)).thenReturn(updatedQueue);
         mockMvc.perform(MockMvcRequestBuilders
                         .patch("/v1/queues/1/auth")
                         .servletPath("/v1/queues/1/auth")
@@ -1036,28 +920,19 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
-                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"}},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":true},\"deployResponses\":{}}", JsonObject.class),
+                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":true},\"deployResponses\":{}}", JsonObject.class),
                             GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
-        verify(this.queueDefinitionService).updateQueueAuthenticationRequirement("me", 1L, true);
+        verify(queueDefinitionService).updateQueueAuthenticationRequirement("me", 1L, true);
     }
 
     @Test
     void test_patchQueueImageSource() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(QueueDefinition.from(
-                "testQueue",
-                "Test Queue Title",
-                "Test Queue Description",
-                "Test Queue Feed Generator",
-                "Test Queue Transport Identifier",
-                "me",
-                TEST_EXPORT_CONFIG,
-                "Test Queue Copyright",
-                "en-US",
-                "newImageSource",
-                false));
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        QueueDefinition updatedQueue = copyTestQueueDefinition();
+        updatedQueue.setQueueImgSrc("newQueueImageSrc");
+        when(queueDefinitionService.updateQueueImageSource("me", 1L, "newImageSource")).thenReturn(updatedQueue);
         mockMvc.perform(MockMvcRequestBuilders
                         .patch("/v1/queues/1/imgsrc")
                         .servletPath("/v1/queues/1/imgsrc")
@@ -1069,16 +944,16 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
-                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"}},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"newImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
+                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"newQueueImageSrc\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
                             GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
-        verify(this.queueDefinitionService).updateQueueImageSource("me", 1L, "newImageSource");
+        verify(queueDefinitionService).updateQueueImageSource("me", 1L, "newImageSource");
     }
 
     @Test
     void test_deletePosts() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
         mockMvc.perform(MockMvcRequestBuilders
                         .delete("/v1/queues/1/posts")
                         .servletPath("/v1/queues/1/posts")
@@ -1090,13 +965,13 @@ public class QueueControllerTest extends BaseWebControllerTest {
                     assertEquals(GSON.fromJson("{\"message\":\"Deleted posts from queue Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
-        verify(this.stagingPostService).deleteByQueueId("me", 1L);
+        verify(stagingPostService).deleteByQueueId("me", 1L);
     }
 
     @Test
     void test_deleteQueue() throws Exception {
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
         mockMvc.perform(MockMvcRequestBuilders
                         .delete("/v1/queues/1")
                         .servletPath("/v1/queues/1")
@@ -1115,8 +990,8 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_deleteQueueTitle() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(QueueDefinition.from(
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(QueueDefinition.from(
                 "testQueue",
                 null,
                 "Test Queue Description",
@@ -1137,7 +1012,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
-                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"}},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
+                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
                             GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
@@ -1146,8 +1021,8 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_deleteQueueDescription() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(QueueDefinition.from(
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(QueueDefinition.from(
                 "testQueue",
                 "Test Queue Title",
                 null,
@@ -1168,7 +1043,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
-                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"}},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
+                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
                             GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
@@ -1177,8 +1052,8 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_deleteQueueGenerator() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(QueueDefinition.from(
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(QueueDefinition.from(
                 "testQueue",
                 "Test Queue Title",
                 "Test Queue Description",
@@ -1199,7 +1074,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
-                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"}},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
+                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
                             GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
@@ -1209,8 +1084,8 @@ public class QueueControllerTest extends BaseWebControllerTest {
     @Test
     void test_deleteQueueCopyright() throws Exception {
 //        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(TEST_QUEUE_DEFINITION);
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(QueueDefinition.from(
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(QueueDefinition.from(
                 "testQueue",
                 "Test Queue Title",
                 "Test Queue Description",
@@ -1231,7 +1106,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
-                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"}},\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
+                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"language\":\"en-US\",\"queueImgSrc\":\"testQueueImageSource\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
                             GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
@@ -1240,8 +1115,8 @@ public class QueueControllerTest extends BaseWebControllerTest {
 
     @Test
     void test_deleteQueueImageSource() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.queueDefinitionService.findByQueueId("me", 1L)).thenReturn(QueueDefinition.from(
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(queueDefinitionService.findByQueueId("me", 1L)).thenReturn(QueueDefinition.from(
                 "testQueue",
                 "Test Queue Title",
                 "Test Queue Description",
@@ -1262,7 +1137,7 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
-                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"}},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
+                            GSON.fromJson("{\"queueDTO\":{\"ident\":\"testQueue\",\"title\":\"Test Queue Title\",\"description\":\"Test Queue Description\",\"generator\":\"Test Queue Feed Generator\",\"transportIdent\":\"Test Queue Transport Identifier\",\"options\":{\"atomConfig\":{\"authorName\":\"testAuthorName\",\"authorEmail\":\"testAuthorEmail\",\"authorUri\":\"testAuthorUri\",\"contributorName\":\"testContributorName\",\"contributorEmail\":\"testContributorEmail\",\"contributorUri\":\"testContributorUri\",\"categoryTerm\":\"testCategoryTerm\",\"categoryLabel\":\"testCategoryLabel\",\"categoryScheme\":\"testCategoryScheme\"},\"rssConfig\":{\"managingEditor\":\"managingEditor\",\"webMaster\":\"webMaster\",\"categoryValue\":\"categoryValue\",\"categoryDomain\":\"categoryDomain\",\"docs\":\"docs\",\"cloudDomain\":\"cloudDomain\",\"cloudProtocol\":\"cloudProtocol\",\"cloudRegisterProcedure\":\"cloudRegisterProcedure\",\"cloudPort\":80,\"ttl\":60,\"rating\":\"rating\",\"textInputTitle\":\"textInputTitle\",\"textInputDescription\":\"textInputDescription\",\"textInputName\":\"textInputName\",\"textInputLink\":\"textInputLink\",\"skipHours\":\"skipHours\",\"skipDays\":\"skipDays\"},\"maxPublished\":25,\"isAutoDeploy\":false},\"copyright\":\"Test Queue Copyright\",\"language\":\"en-US\",\"isAuthenticated\":false},\"deployResponses\":{}}", JsonObject.class),
                             GSON.fromJson(responseContent, JsonObject.class));
                 })
                 .andExpect(status().isOk());
@@ -1273,27 +1148,27 @@ public class QueueControllerTest extends BaseWebControllerTest {
     //
     //
 
-    protected static final ContentObject TEST_POST_TITLE = new ContentObject();
+    private static final ContentObject TEST_POST_TITLE = new ContentObject();
     static {
         TEST_POST_TITLE.setIdent("2");
         TEST_POST_TITLE.setType("text");
         TEST_POST_TITLE.setValue("testPostTitle");
     }
 
-    protected static final ContentObject TEST_POST_DESCRIPTION = new ContentObject();
+    private static final ContentObject TEST_POST_DESCRIPTION = new ContentObject();
     static {
         TEST_POST_DESCRIPTION.setIdent("2");
         TEST_POST_DESCRIPTION.setType("text");
         TEST_POST_DESCRIPTION.setValue("testPostDescription");
     }
 
-    protected static final ContentObject TEST_POST_CONTENT = new ContentObject();
+    private static final ContentObject TEST_POST_CONTENT = new ContentObject();
     static {
         TEST_POST_CONTENT.setIdent("2");
         TEST_POST_CONTENT.setValue("testPostContent");
     }
 
-    protected static final PostMedia TEST_POST_MEDIA;
+    private static final PostMedia TEST_POST_MEDIA;
     static {
         MediaEntryModuleImpl testMediaEntryModule = new MediaEntryModuleImpl();
         Metadata metadata = new Metadata();
@@ -1301,14 +1176,14 @@ public class QueueControllerTest extends BaseWebControllerTest {
         TEST_POST_MEDIA = PostMedia.from(testMediaEntryModule);
     }
 
-    protected static final PostITunes TEST_POST_ITUNES;
+    private static final PostITunes TEST_POST_ITUNES;
     static {
         ITunes testITunes = new EntryInformationImpl();
         testITunes.setKeywords(new String[] { "test"});
         TEST_POST_ITUNES = PostITunes.from(testITunes);
     }
 
-    protected static final PostUrl TEST_POST_URL = new PostUrl();
+    private static final PostUrl TEST_POST_URL = new PostUrl();
     static {
         TEST_POST_URL.setIdent("2");
         TEST_POST_URL.setTitle("testUrlTitle");
@@ -1318,21 +1193,21 @@ public class QueueControllerTest extends BaseWebControllerTest {
         TEST_POST_URL.setRel("testUrlRel");
     }
 
-    protected static final PostPerson TEST_POST_CONTRIBUTOR = new PostPerson();
+    private static final PostPerson TEST_POST_CONTRIBUTOR = new PostPerson();
     static {
         TEST_POST_CONTRIBUTOR.setName("testContributorName");
         TEST_POST_CONTRIBUTOR.setUri("testContributorUri");
         TEST_POST_CONTRIBUTOR.setEmail("testContributorEmail");
     }
 
-    protected static final PostPerson TEST_POST_AUTHOR = new PostPerson();
+    private static final PostPerson TEST_POST_AUTHOR = new PostPerson();
     static {
         TEST_POST_AUTHOR.setName("testAuthorName");
         TEST_POST_AUTHOR.setUri("testAuthorUri");
         TEST_POST_AUTHOR.setEmail("testAuthorEmail");
     }
 
-    protected static final PostEnclosure TEST_POST_ENCLOSURE = new PostEnclosure();
+    private static final PostEnclosure TEST_POST_ENCLOSURE = new PostEnclosure();
     static {
         TEST_POST_ENCLOSURE.setIdent("2");
         TEST_POST_ENCLOSURE.setUrl("testEnclosureUrl");
@@ -1479,9 +1354,9 @@ public class QueueControllerTest extends BaseWebControllerTest {
     private static final List<PostConfigRequest> TEST_POST_CONFIG_REQUESTS = List.of(TEST_POST_CONFIG_REQUEST);
     @Test
     void test_createPost() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.stagingPostService.createPost("me", 1L, TEST_POST_CONFIG_REQUEST)).thenReturn(1L);
-        when(this.stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(stagingPostService.createPost("me", 1L, TEST_POST_CONFIG_REQUEST)).thenReturn(1L);
+        when(stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/v1/queues/1/posts")
                         .servletPath("/v1/queues/1/posts")
@@ -1492,18 +1367,15 @@ public class QueueControllerTest extends BaseWebControllerTest {
                         .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(
-                            GSON.fromJson("[{\"id\":1,\"queueIdent\":\"1\",\"postTitle\":{\"ident\":\"2\",\"type\":\"text\",\"value\":\"testPostTitle\"},\"postDesc\":{\"ident\":\"2\",\"type\":\"text\",\"value\":\"testPostDescription\"},\"postContents\":[{\"ident\":\"2\",\"value\":\"testPostContent\"}],\"postITunes\":{\"keywords\":[\"test\"],\"explicit\":false,\"block\":false,\"closeCaptioned\":false},\"postUrl\":\"testPostUrl\",\"postUrls\":[{\"ident\":\"2\",\"title\":\"testUrlTitle\",\"type\":\"testUrlType\",\"href\":\"testUrlHref\",\"hreflang\":\"testUrlHreflang\",\"rel\":\"testUrlRel\"}],\"postComment\":\"testPostComment\",\"postRights\":\"testPostRights\",\"contributors\":[{\"name\":\"testContributorName\",\"email\":\"testContributorEmail\",\"uri\":\"testContributorUri\"}],\"authors\":[{\"name\":\"testAuthorName\",\"email\":\"testAuthorEmail\",\"uri\":\"testAuthorUri\"}],\"postCategories\":[\"category\"],\"publishTimestamp\":\"1970-01-01T02:46:40.000+00:00\",\"expirationTimestamp\":\"1970-01-01T13:53:20.000+00:00\",\"enclosures\":[{\"ident\":\"2\",\"url\":\"testEnclosureUrl\",\"type\":\"testEnclosureType\",\"length\":4821}],\"lastUpdatedTimestamp\":\"1970-01-01T04:10:00.000+00:00\",\"published\":false}]", JsonArray.class),
-                            GSON.fromJson(responseContent, JsonArray.class)
-                    );
+                    assertEquals("{\"postIds\":[1],\"deployed\":false}", responseContent);
                 })
                 .andExpect(status().isCreated());
     }
 
     @Test
     void test_getPosts() throws Exception {
-        when(this.queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
-        when(this.stagingPostService.getStagingPosts("me", List.of(1L))).thenReturn(TEST_STAGING_POSTS);
+        when(queueDefinitionService.resolveQueueId("me", "1")).thenReturn(1L);
+        when(stagingPostService.getStagingPosts("me", List.of(1L), (PostPubStatus) null)).thenReturn(TEST_STAGING_POSTS);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/queues/1/posts")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -1512,10 +1384,31 @@ public class QueueControllerTest extends BaseWebControllerTest {
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
                     assertEquals(
-                            GSON.fromJson("[{\"id\":1,\"queueIdent\":\"1\",\"postTitle\":{\"ident\":\"2\",\"type\":\"text\",\"value\":\"testPostTitle\"},\"postDesc\":{\"ident\":\"2\",\"type\":\"text\",\"value\":\"testPostDescription\"},\"postContents\":[{\"ident\":\"2\",\"value\":\"testPostContent\"}],\"postITunes\":{\"keywords\":[\"test\"],\"explicit\":false,\"block\":false,\"closeCaptioned\":false},\"postUrl\":\"testPostUrl\",\"postUrls\":[{\"ident\":\"2\",\"title\":\"testUrlTitle\",\"type\":\"testUrlType\",\"href\":\"testUrlHref\",\"hreflang\":\"testUrlHreflang\",\"rel\":\"testUrlRel\"}],\"postComment\":\"testPostComment\",\"postRights\":\"testPostRights\",\"contributors\":[{\"name\":\"testContributorName\",\"email\":\"testContributorEmail\",\"uri\":\"testContributorUri\"}],\"authors\":[{\"name\":\"testAuthorName\",\"email\":\"testAuthorEmail\",\"uri\":\"testAuthorUri\"}],\"postCategories\":[\"category\"],\"publishTimestamp\":\"1970-01-01T02:46:40.000+00:00\",\"expirationTimestamp\":\"1970-01-01T13:53:20.000+00:00\",\"enclosures\":[{\"ident\":\"2\",\"url\":\"testEnclosureUrl\",\"type\":\"testEnclosureType\",\"length\":4821}],\"lastUpdatedTimestamp\":\"1970-01-01T04:10:00.000+00:00\",\"published\":false}]", JsonArray.class),
+                            GSON.fromJson("[{\"id\":1,\"queueIdent\":\"1\",\"postTitle\":{\"ident\":\"2\",\"type\":\"text\",\"value\":\"testPostTitle\"},\"postDesc\":{\"ident\":\"2\",\"type\":\"text\",\"value\":\"testPostDescription\"},\"postContents\":[{\"ident\":\"2\",\"value\":\"testPostContent\"}],\"postITunes\":{\"keywords\":[\"test\"],\"isBlock\":false,\"isExplicit\":false,\"isCloseCaptioned\":false},\"postUrl\":\"testPostUrl\",\"postUrls\":[{\"ident\":\"2\",\"title\":\"testUrlTitle\",\"type\":\"testUrlType\",\"href\":\"testUrlHref\",\"hreflang\":\"testUrlHreflang\",\"rel\":\"testUrlRel\"}],\"postComment\":\"testPostComment\",\"postRights\":\"testPostRights\",\"contributors\":[{\"name\":\"testContributorName\",\"email\":\"testContributorEmail\",\"uri\":\"testContributorUri\"}],\"authors\":[{\"name\":\"testAuthorName\",\"email\":\"testAuthorEmail\",\"uri\":\"testAuthorUri\"}],\"postCategories\":[\"category\"],\"publishTimestamp\":\"1970-01-01T02:46:40.000+00:00\",\"expirationTimestamp\":\"1970-01-01T13:53:20.000+00:00\",\"enclosures\":[{\"ident\":\"2\",\"url\":\"testEnclosureUrl\",\"type\":\"testEnclosureType\",\"length\":4821}],\"lastUpdatedTimestamp\":\"1970-01-01T04:10:00.000+00:00\",\"postPubStatus\":\"PUB_PENDING\",\"published\":false}]", JsonArray.class),
                             GSON.fromJson(responseContent, JsonArray.class)
                     );
                 })
                 .andExpect(status().isOk());
+    }
+
+    //
+    //
+    //
+
+    private static QueueDefinition copyTestQueueDefinition() {
+        QueueDefinition queueDefinition = QueueDefinition.from(
+                TEST_QUEUE_DEFINITION.getIdent(),
+                TEST_QUEUE_DEFINITION.getTitle(),
+                TEST_QUEUE_DEFINITION.getDescription(),
+                TEST_QUEUE_DEFINITION.getGenerator(),
+                TEST_QUEUE_DEFINITION.getTransportIdent(),
+                TEST_QUEUE_DEFINITION.getUsername(),
+                TEST_QUEUE_DEFINITION.getExportConfig(),
+                TEST_QUEUE_DEFINITION.getCopyright(),
+                TEST_QUEUE_DEFINITION.getLanguage(),
+                TEST_QUEUE_DEFINITION.getQueueImgSrc(),
+                TEST_QUEUE_DEFINITION.getIsAuthenticated());
+        queueDefinition.setId(TEST_QUEUE_DEFINITION.getId());
+        return queueDefinition;
     }
 }

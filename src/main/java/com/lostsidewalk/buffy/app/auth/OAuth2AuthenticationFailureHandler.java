@@ -1,29 +1,34 @@
 package com.lostsidewalk.buffy.app.auth;
 
 import com.lostsidewalk.buffy.app.utils.CookieUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 
+@Slf4j
 @Component
 public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
-    public static final String REDIRECT_URI_PARAM_COOKIE_NAME = "redirect_uri";
+    private static final String REDIRECT_URI_PARAM_COOKIE_NAME = "redirect_uri";
 
     @Autowired
     HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
 
     @Override
-    public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException {
+    public final void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException {
         String targetUrl = CookieUtils.getCookie(request, REDIRECT_URI_PARAM_COOKIE_NAME)
                 .map(Cookie::getValue)
                 .orElse(("/"));
@@ -32,13 +37,21 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
 
         if (exception instanceof OAuth2AuthenticationException) {
             OAuth2Error oAuth2Error = ((OAuth2AuthenticationException) exception).getError();
-            builder.queryParam("error", oAuth2Error.getErrorCode());
+            String errorCode = oAuth2Error.getErrorCode();
+            builder.queryParam("error", errorCode);
         }
 
-        targetUrl = builder.build().toUriString();
+        UriComponents build = builder.build();
+        String s = build.toUriString();
+        HttpCookieOAuth2AuthorizationRequestRepository.removeAuthorizationRequestCookies(request, response);
+        RedirectStrategy redirectStrategy = getRedirectStrategy();
+        redirectStrategy.sendRedirect(request, response, s);
+    }
 
-        httpCookieOAuth2AuthorizationRequestRepository.removeAuthorizationRequestCookies(request, response);
-
-        getRedirectStrategy().sendRedirect(request, response, targetUrl);
+    @Override
+    public final String toString() {
+        return "OAuth2AuthenticationFailureHandler{" +
+                "httpCookieOAuth2AuthorizationRequestRepository=" + httpCookieOAuth2AuthorizationRequestRepository +
+                '}';
     }
 }

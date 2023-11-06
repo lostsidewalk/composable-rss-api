@@ -24,37 +24,46 @@
     "apisecret" : [ ]
   } ],
   "tags" : [ {
-    "name" : "content-controller-_-update",
-    "description" : "Controller class for updating content on a post."
+    "name" : "queue-controller",
+    "description" : "Controller class for managing queue-related operations.\n <p>\n This controller provides endpoints for managing queue and subsidiary entities. Authenticated\n users with the \"VERIFIED_ROLE\" have access to these operations."
   }, {
-    "name" : "queue-controller-_-create",
-    "description" : "Controller class for creating queues and posts in the application."
+    "name" : "queue-status-controller",
+    "description" : "Controller class for managing queue status-related operations.\n <p>\n This controller provides endpoints for managing status (i.e., deployments). Authenticated\n users with the \"VERIFIED_ROLE\" have access to these operations."
   }, {
-    "name" : "queue-credentials-controller-_-create",
-    "description" : "Controller class for creating queue credentials."
+    "name" : "queue-options-controller",
+    "description" : "Controller class for managing queue export configuration-related operations.\n <p>\n This controller provides endpoints for managing export configurations within queues. Authenticated\n users with the \"VERIFIED_ROLE\" have access to these operations."
   }, {
-    "name" : "content-controller-_-create",
-    "description" : "Controller class for creating and adding new content to a post."
+    "name" : "queue-credentials-controller",
+    "description" : "Controller class for managing credential-related operations.\n <p>\n This controller provides endpoints for managing credential objects within queues. Authenticated\n users with the \"VERIFIED_ROLE\" have access to these operations."
   }, {
-    "name" : "queue-credentials-controller-_-retrieve",
-    "description" : "Controller class for retrieving queue credentials."
+    "name" : "post-controller",
+    "description" : "Controller class for managing post-related operations.\n <p>\n This controller provides endpoints for managing staging posts and subsidiary entities. Authenticated\n users with the \"VERIFIED_ROLE\" have access to these operations."
   }, {
-    "name" : "content-controller-_-retrieve",
-    "description" : "Controller class for retrieving content from a post."
+    "name" : "url-controller",
+    "description" : "Controller class for managing URL-related operations.\n <p>\n This controller provides endpoints for managing URLs within posts. Authenticated\n users with the \"VERIFIED_ROLE\" have access to these operations."
   }, {
-    "name" : "queue-controller-_-delete",
-    "description" : "Controller class for deleting queues and their attributes."
+    "name" : "post-status-controller",
+    "description" : "Controller class for managing post status-related operations.\n <p>\n This controller provides endpoints for managing post status. Authenticated\n users with the \"VERIFIED_ROLE\" have access to these operations."
   }, {
-    "name" : "queue-credentials-controller-_-delete",
-    "description" : "Controller class for deleting queue credentials."
+    "name" : "media-controller",
+    "description" : "Controller class for managing media-related operations.\n <p>\n This controller provides endpoints for managing media objects within posts. Authenticated\n users with the \"VERIFIED_ROLE\" have access to these operations."
   }, {
-    "name" : "content-controller-_-delete",
-    "description" : "Controller class for deleting content from a post."
+    "name" : "enclosure-controller",
+    "description" : "Controller class for managing enclosure-related operations.\n <p>\n This controller provides endpoints for managing enclosure objects within posts. Authenticated\n users with the \"VERIFIED_ROLE\" have access to these operations."
+  }, {
+    "name" : "contributor-controller",
+    "description" : "Controller class for managing contributor-related operations.\n <p>\n This controller provides endpoints for managing contributor objects within posts. Authenticated\n users with the \"VERIFIED_ROLE\" have access to these operations."
+  }, {
+    "name" : "content-controller",
+    "description" : "Controller class for managing content-related operations.\n <p>\n This controller provides endpoints for managing content objects within posts. Authenticated\n users with the \"VERIFIED_ROLE\" have access to these operations."
+  }, {
+    "name" : "author-controller",
+    "description" : "Base controller class for managing author-related operations.\n <p>\n This controller provides endpoints for managing author objects within posts. Authenticated\n users with the \"VERIFIED_ROLE\" have access to these operations."
   } ],
   "paths" : {
     "/v1/queues/{queueIdent}" : {
       "get" : {
-        "tags" : [ "queue-controller-_-retrieve" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Get a queue definition by identifier",
         "description" : "Get a queue definition by its identifier.",
         "operationId" : "getQueueById",
@@ -89,7 +98,7 @@
         }
       },
       "put" : {
-        "tags" : [ "queue-controller-_-update" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Update the properties of an existing queue",
         "description" : "Update the properties of an existing queue.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the properties\n of an existing queue given by its identifier. The queue's configuration properties are provided\n in the request body.",
         "operationId" : "updateQueue",
@@ -127,7 +136,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "queue-controller-_-delete" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Delete a queue given by its identifier",
         "description" : "Delete a queue given by its identifier.",
         "operationId" : "deleteQueue",
@@ -154,7 +163,7 @@
         }
       },
       "patch" : {
-        "tags" : [ "queue-controller-_-update" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Update the properties of an existing queue",
         "description" : "Update the properties of an existing queue.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the properties\n of an existing queue given by its identifier. The queue's configuration properties are provided\n in the request body.",
         "operationId" : "updateQueue_1",
@@ -194,7 +203,7 @@
     },
     "/v1/queues/{queueIdent}/title" : {
       "get" : {
-        "tags" : [ "queue-controller-_-retrieve" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Get the title of a queue given by its identifier",
         "description" : "Get the title of a queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to get the title of a\n queue given by its identifier.",
         "operationId" : "getQueueTitle",
@@ -234,7 +243,7 @@
         }
       },
       "put" : {
-        "tags" : [ "queue-controller-_-update" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Change the title of an existing queue",
         "description" : "Change the title of an existing queue.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the title\n of an existing queue.",
         "operationId" : "updateQueueTitle",
@@ -273,7 +282,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "queue-controller-_-delete" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Delete the title from a queue given by its identifier",
         "description" : "Delete the title for a queue given by its identifier.",
         "operationId" : "deleteQueueTitle",
@@ -300,7 +309,7 @@
         }
       },
       "patch" : {
-        "tags" : [ "queue-controller-_-update" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Change the title of an existing queue",
         "description" : "Change the title of an existing queue.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the title\n of an existing queue.",
         "operationId" : "updateQueueTitle_1",
@@ -339,11 +348,128 @@
         }
       }
     },
+    "/v1/queues/{queueIdent}/status" : {
+      "get" : {
+        "tags" : [ "queue-status-controller" ],
+        "summary" : "Get the status of a queue given by its identifier",
+        "description" : "Get the status of a queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to get the status of a\n queue given by its identifier.",
+        "operationId" : "getQueueStatus",
+        "parameters" : [ {
+          "name" : "Accept",
+          "in" : "header",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "application/json"
+          }
+        }, {
+          "name" : "queueIdent",
+          "in" : "path",
+          "description" : "The identifier of the queue to fetch status from",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successfully fetched queue status",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/QueueStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "queue-status-controller" ],
+        "summary" : "Change the deployment status of an existing queue",
+        "description" : "Update the deployment status of queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the deployment status\n of an existing queue.",
+        "operationId" : "updateQueueStatus",
+        "parameters" : [ {
+          "name" : "queueIdent",
+          "in" : "path",
+          "description" : "The identifier of the queue to update the deployment status for",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "description" : "The request containing the updated queue status.",
+          "content" : {
+            "*/*" : {
+              "schema" : {
+                "type" : "string",
+                "description" : "The updated queue status",
+                "enum" : [ "DEPLOY_PENDING", "PUB_ALL", "DEPUB_ALL" ]
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Successfully updated queue deployment status",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/QueueConfigResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch" : {
+        "tags" : [ "queue-status-controller" ],
+        "summary" : "Change the deployment status of an existing queue",
+        "description" : "Update the deployment status of queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the deployment status\n of an existing queue.",
+        "operationId" : "updateQueueStatus_1",
+        "parameters" : [ {
+          "name" : "queueIdent",
+          "in" : "path",
+          "description" : "The identifier of the queue to update the deployment status for",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "description" : "The request containing the updated queue status.",
+          "content" : {
+            "*/*" : {
+              "schema" : {
+                "type" : "string",
+                "description" : "The updated queue status",
+                "enum" : [ "DEPLOY_PENDING", "PUB_ALL", "DEPUB_ALL" ]
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Successfully updated queue deployment status",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/QueueConfigResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/queues/{queueIdent}/options" : {
       "get" : {
-        "tags" : [ "queue-options-controller-_-retrieve" ],
+        "tags" : [ "queue-options-controller" ],
         "summary" : "Get the export options from the queue given by its identifier",
-        "description" : "Get the export configuration from a queue given by its identifier.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n export configuration from a queue given by its identifier.",
+        "description" : "Get the export configuration from a queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n export configuration from a queue given by its identifier.",
         "operationId" : "getExportOptions",
         "parameters" : [ {
           "name" : "queueIdent",
@@ -368,9 +494,9 @@
         }
       },
       "put" : {
-        "tags" : [ "queue-options-controller-_-update" ],
+        "tags" : [ "queue-options-controller" ],
         "summary" : "Update the export options on the queue given by its identifier",
-        "description" : "Update the export options for the queue given by its identifier.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n export options of a queue given by its identifier.",
+        "description" : "Update the export options for the queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n export options of a queue given by its identifier.",
         "operationId" : "updateOptions",
         "parameters" : [ {
           "name" : "queueIdent",
@@ -405,9 +531,9 @@
         }
       },
       "delete" : {
-        "tags" : [ "queue-options-controller-_-delete" ],
+        "tags" : [ "queue-options-controller" ],
         "summary" : "Delete all export options from the queue given by identifier",
-        "description" : "Delete all queue export options from a queue given by its identifier.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete all\n queue export configuration from a queue given by its identifier.",
+        "description" : "Delete all queue export options from a queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete all\n queue export configuration from a queue given by its identifier.",
         "operationId" : "deleteOptions",
         "parameters" : [ {
           "name" : "queueIdent",
@@ -432,9 +558,9 @@
         }
       },
       "patch" : {
-        "tags" : [ "queue-options-controller-_-update" ],
+        "tags" : [ "queue-options-controller" ],
         "summary" : "Update the export options on the queue given by its identifier",
-        "description" : "Update the export options for the queue given by its identifier.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n export options of a queue given by its identifier.",
+        "description" : "Update the export options for the queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n export options of a queue given by its identifier.",
         "operationId" : "updateOptions_1",
         "parameters" : [ {
           "name" : "queueIdent",
@@ -471,9 +597,9 @@
     },
     "/v1/queues/{queueIdent}/options/rssConfig" : {
       "get" : {
-        "tags" : [ "queue-options-controller-_-retrieve" ],
+        "tags" : [ "queue-options-controller" ],
         "summary" : "Get the RSS export configuration from the queue given by Id",
-        "description" : "Get the RSS export configuration for the queue given by its identifier.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n RSS export configuration for the queue given by its identifier.",
+        "description" : "Get the RSS export configuration for the queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n RSS export configuration for the queue given by its identifier.",
         "operationId" : "getRssExportOptions",
         "parameters" : [ {
           "name" : "queueIdent",
@@ -498,9 +624,9 @@
         }
       },
       "put" : {
-        "tags" : [ "queue-options-controller-_-update" ],
+        "tags" : [ "queue-options-controller" ],
         "summary" : "Update the RSS export options on the queue given by its identifier",
-        "description" : "Update the RSS export options for the queue given by its identifier.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n RSS export options of a queue given by its identifier.",
+        "description" : "Update the RSS export options for the queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n RSS export options of a queue given by its identifier.",
         "operationId" : "updateRssOptions",
         "parameters" : [ {
           "name" : "queueIdent",
@@ -535,9 +661,9 @@
         }
       },
       "delete" : {
-        "tags" : [ "queue-options-controller-_-delete" ],
+        "tags" : [ "queue-options-controller" ],
         "summary" : "Delete RSS export options from the queue given by its identifier",
-        "description" : "Delete the RSS export configuration from a queue given by its identifier.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete\n RSS export configuration from a queue given by its identifier.",
+        "description" : "Delete the RSS export configuration from a queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete\n RSS export configuration from a queue given by its identifier.",
         "operationId" : "deleteRssOptions",
         "parameters" : [ {
           "name" : "queueIdent",
@@ -562,9 +688,9 @@
         }
       },
       "patch" : {
-        "tags" : [ "queue-options-controller-_-update" ],
+        "tags" : [ "queue-options-controller" ],
         "summary" : "Update the RSS export options on the queue given by its identifier",
-        "description" : "Update the RSS export options for the queue given by its identifier.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n RSS export options of a queue given by its identifier.",
+        "description" : "Update the RSS export options for the queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n RSS export options of a queue given by its identifier.",
         "operationId" : "updateRssOptions_1",
         "parameters" : [ {
           "name" : "queueIdent",
@@ -601,9 +727,9 @@
     },
     "/v1/queues/{queueIdent}/options/atomConfig" : {
       "get" : {
-        "tags" : [ "queue-options-controller-_-retrieve" ],
+        "tags" : [ "queue-options-controller" ],
         "summary" : "Get the ATOM export configuration from the queue given by Id",
-        "description" : "Get the ATOM export configuration for the queue given by its identifier.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n ATOM export configuration for the queue given by its identifier.",
+        "description" : "Get the ATOM export configuration for the queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n ATOM export configuration for the queue given by its identifier.",
         "operationId" : "getAtomExportOptions",
         "parameters" : [ {
           "name" : "queueIdent",
@@ -628,9 +754,9 @@
         }
       },
       "put" : {
-        "tags" : [ "queue-options-controller-_-update" ],
+        "tags" : [ "queue-options-controller" ],
         "summary" : "Update the ATOM export options on the queue given by its identifier",
-        "description" : "Update the ATOM export options for the queue given by its identifier.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n ATOM export options of a queue given by its identifier.",
+        "description" : "Update the ATOM export options for the queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n ATOM export options of a queue given by its identifier.",
         "operationId" : "updateAtomOptions",
         "parameters" : [ {
           "name" : "queueIdent",
@@ -665,9 +791,9 @@
         }
       },
       "delete" : {
-        "tags" : [ "queue-options-controller-_-delete" ],
+        "tags" : [ "queue-options-controller" ],
         "summary" : "Delete ATOM export options from the queue given by its identifier",
-        "description" : "Delete the ATOM export configuration from a queue given by its identifier.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete\n ATOM export configuration from a queue given by its identifier.",
+        "description" : "Delete the ATOM export configuration from a queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete\n ATOM export configuration from a queue given by its identifier.",
         "operationId" : "deleteAtomOptions",
         "parameters" : [ {
           "name" : "queueIdent",
@@ -692,9 +818,9 @@
         }
       },
       "patch" : {
-        "tags" : [ "queue-options-controller-_-update" ],
+        "tags" : [ "queue-options-controller" ],
         "summary" : "Update the ATOM export options on the queue given by its identifier",
-        "description" : "Update the ATOM export options for the queue given by its identifier.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n ATOM export options of a queue given by its identifier.",
+        "description" : "Update the ATOM export options for the queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n ATOM export options of a queue given by its identifier.",
         "operationId" : "updateAtomOptions_1",
         "parameters" : [ {
           "name" : "queueIdent",
@@ -731,7 +857,7 @@
     },
     "/v1/queues/{queueIdent}/language" : {
       "get" : {
-        "tags" : [ "queue-controller-_-retrieve" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Get the language of a queue given by its identifier",
         "description" : "Get the language of a queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to get the language of a\n queue given by its identifier.",
         "operationId" : "getQueueLanguage",
@@ -771,7 +897,7 @@
         }
       },
       "put" : {
-        "tags" : [ "queue-controller-_-update" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Change the language of an existing queue",
         "description" : "Change the language of an existing queue.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the language\n of an existing queue.",
         "operationId" : "updateQueueLanguage",
@@ -810,7 +936,7 @@
         }
       },
       "patch" : {
-        "tags" : [ "queue-controller-_-update" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Change the language of an existing queue",
         "description" : "Change the language of an existing queue.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the language\n of an existing queue.",
         "operationId" : "updateQueueLanguage_1",
@@ -851,7 +977,7 @@
     },
     "/v1/queues/{queueIdent}/imgsrc" : {
       "get" : {
-        "tags" : [ "queue-controller-_-retrieve" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Get the image source of a queue given by its identifier",
         "description" : "Get the image source of a queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to get the image source of a\n queue given by its identifier.",
         "operationId" : "getQueueImageSource",
@@ -891,7 +1017,7 @@
         }
       },
       "put" : {
-        "tags" : [ "queue-controller-_-update" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Change the image source of an existing queue",
         "description" : "Change the image source of an existing queue.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the image source\n of an existing queue.",
         "operationId" : "updateQueueImageSource",
@@ -930,7 +1056,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "queue-controller-_-delete" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Delete the image source from a queue givne by its identifier",
         "description" : "Delete the image source for a queue given by its identifier.",
         "operationId" : "deleteQueueImageSource",
@@ -957,7 +1083,7 @@
         }
       },
       "patch" : {
-        "tags" : [ "queue-controller-_-update" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Change the image source of an existing queue",
         "description" : "Change the image source of an existing queue.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the image source\n of an existing queue.",
         "operationId" : "updateQueueImageSource_1",
@@ -998,7 +1124,7 @@
     },
     "/v1/queues/{queueIdent}/ident" : {
       "put" : {
-        "tags" : [ "queue-controller-_-update" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Change the identifier of an existing queue",
         "description" : "Change the identifier of an existing queue.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the identifier\n of an existing queue.",
         "operationId" : "updateQueueIdent",
@@ -1029,7 +1155,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/QueueConfigResponse"
                 }
               }
             }
@@ -1037,7 +1163,7 @@
         }
       },
       "patch" : {
-        "tags" : [ "queue-controller-_-update" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Change the identifier of an existing queue",
         "description" : "Change the identifier of an existing queue.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the identifier\n of an existing queue.",
         "operationId" : "updateQueueIdent_1",
@@ -1068,7 +1194,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/QueueConfigResponse"
                 }
               }
             }
@@ -1078,7 +1204,7 @@
     },
     "/v1/queues/{queueIdent}/generator" : {
       "get" : {
-        "tags" : [ "queue-controller-_-retrieve" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Get the generator of a queue given by its identifier",
         "description" : "Get the generator of a queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to get the generator of a\n queue given by its identifier.",
         "operationId" : "getQueueGenerator",
@@ -1118,7 +1244,7 @@
         }
       },
       "put" : {
-        "tags" : [ "queue-controller-_-update" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Change the generator of an existing queue",
         "description" : "Change the generator of an existing queue.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the generator\n of an existing queue.",
         "operationId" : "updateQueueGenerator",
@@ -1157,7 +1283,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "queue-controller-_-delete" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Delete the generator from a queue given by its identifier",
         "description" : "Delete the generator for a queue given by its identifier.",
         "operationId" : "deleteQueueGenerator",
@@ -1184,7 +1310,7 @@
         }
       },
       "patch" : {
-        "tags" : [ "queue-controller-_-update" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Change the generator of an existing queue",
         "description" : "Change the generator of an existing queue.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the generator\n of an existing queue.",
         "operationId" : "updateQueueGenerator_1",
@@ -1225,7 +1351,7 @@
     },
     "/v1/queues/{queueIdent}/description" : {
       "get" : {
-        "tags" : [ "queue-controller-_-retrieve" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Get the description of a queue given by its identifier",
         "description" : "Get the description of a queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to get description of a\n queue given by its identifier.",
         "operationId" : "getQueueDescription",
@@ -1265,7 +1391,7 @@
         }
       },
       "put" : {
-        "tags" : [ "queue-controller-_-update" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Change the description of an existing queue",
         "description" : "Change the description of an existing queue.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the description\n of an existing queue.",
         "operationId" : "updateQueueDescription",
@@ -1304,7 +1430,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "queue-controller-_-delete" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Delete the description from a queue given by its identifier",
         "description" : "Delete the description for a queue given by its identifier.",
         "operationId" : "deleteQueueDescription",
@@ -1331,7 +1457,7 @@
         }
       },
       "patch" : {
-        "tags" : [ "queue-controller-_-update" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Change the description of an existing queue",
         "description" : "Change the description of an existing queue.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the description\n of an existing queue.",
         "operationId" : "updateQueueDescription_1",
@@ -1372,7 +1498,7 @@
     },
     "/v1/queues/{queueIdent}/credentials/{credentialId}" : {
       "get" : {
-        "tags" : [ "queue-credentials-controller-_-retrieve" ],
+        "tags" : [ "queue-credentials-controller" ],
         "summary" : "Get a queue credential by Id",
         "description" : "Get a queue credential by its Id in a queue given by its identifier.",
         "operationId" : "getQueueCredential",
@@ -1416,9 +1542,9 @@
         }
       },
       "put" : {
-        "tags" : [ "queue-credentials-controller-_-update" ],
+        "tags" : [ "queue-credentials-controller" ],
         "summary" : "Update the password on the queue credential given by Id, on a queue given by Id",
-        "description" : "Update the password for the queue credential given by its identifier.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n password of a queue credential object given by its Id, on a queue given by its identifier.",
+        "description" : "Update the password for the queue credential given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n password of a queue credential object given by its Id, on a queue given by its identifier.",
         "operationId" : "updatePassword",
         "parameters" : [ {
           "name" : "queueIdent",
@@ -1463,9 +1589,9 @@
         }
       },
       "delete" : {
-        "tags" : [ "queue-credentials-controller-_-delete" ],
+        "tags" : [ "queue-credentials-controller" ],
         "summary" : "Delete a queue credential by Id on a queue given by Id",
-        "description" : "Delete a queue credential given by its identifier.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete a\n queue credential given by its Id, on a queue given by its identifier.",
+        "description" : "Delete a queue credential given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete a\n queue credential given by its Id, on a queue given by its identifier.",
         "operationId" : "deleteQueueCredential",
         "parameters" : [ {
           "name" : "queueIdent",
@@ -1499,9 +1625,9 @@
         }
       },
       "patch" : {
-        "tags" : [ "queue-credentials-controller-_-update" ],
+        "tags" : [ "queue-credentials-controller" ],
         "summary" : "Update the password on the queue credential given by Id, on a queue given by Id",
-        "description" : "Update the password for the queue credential given by its identifier.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n password of a queue credential object given by its Id, on a queue given by its identifier.",
+        "description" : "Update the password for the queue credential given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n password of a queue credential object given by its Id, on a queue given by its identifier.",
         "operationId" : "updatePassword_1",
         "parameters" : [ {
           "name" : "queueIdent",
@@ -1548,7 +1674,7 @@
     },
     "/v1/queues/{queueIdent}/copyright" : {
       "get" : {
-        "tags" : [ "queue-controller-_-retrieve" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Get the copyright of a queue given by its identifier",
         "description" : "Get the copyright of a queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to get the copyright of a\n queue given by its identifier.",
         "operationId" : "getQueueCopyright",
@@ -1588,7 +1714,7 @@
         }
       },
       "put" : {
-        "tags" : [ "queue-controller-_-update" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Change the copyright of an existing queue",
         "description" : "Change the copyright of an existing queue.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the copyright\n of an existing queue.",
         "operationId" : "updateQueueCopyright",
@@ -1627,7 +1753,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "queue-controller-_-delete" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Delete the copyright from a queue given by its identifier",
         "description" : "Delete the copyright for a queue given by its identifier.",
         "operationId" : "deleteQueueCopyright",
@@ -1654,7 +1780,7 @@
         }
       },
       "patch" : {
-        "tags" : [ "queue-controller-_-update" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Change the copyright of an existing queue",
         "description" : "Change the copyright of an existing queue.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the copyright\n of an existing queue.",
         "operationId" : "updateQueueCopyright_1",
@@ -1695,7 +1821,7 @@
     },
     "/v1/queues/{queueIdent}/auth" : {
       "get" : {
-        "tags" : [ "queue-controller-_-retrieve" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Get the authentication requirement of a queue given by its identifier",
         "description" : "Get the authentication requirement of a queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to get the authentication requirement of a\n queue given by its identifier.",
         "operationId" : "getQueueAuthRequirement",
@@ -1735,7 +1861,7 @@
         }
       },
       "put" : {
-        "tags" : [ "queue-controller-_-update" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Change the authentication requirements of an existing queue",
         "description" : "Change the authentication requirement of an existing queue.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the authentication requirement\n of an existing queue.",
         "operationId" : "updateQueueAuthRequirement",
@@ -1773,7 +1899,7 @@
         }
       },
       "patch" : {
-        "tags" : [ "queue-controller-_-update" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Change the authentication requirements of an existing queue",
         "description" : "Change the authentication requirement of an existing queue.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the authentication requirement\n of an existing queue.",
         "operationId" : "updateQueueAuthRequirement_1",
@@ -1813,7 +1939,7 @@
     },
     "/v1/posts/{postId}" : {
       "get" : {
-        "tags" : [ "post-controller-_-retrieve" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Get a staging post by Id",
         "description" : "Get a staging post by its Id.",
         "operationId" : "getPost",
@@ -1849,9 +1975,9 @@
         }
       },
       "put" : {
-        "tags" : [ "post-controller-_-update" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Update the post given by Id",
-        "description" : "Update a post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update any\n attribute of a post given by its Id.",
+        "description" : "Update a post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update any\n attribute of a post given by its Id.",
         "operationId" : "updatePost",
         "parameters" : [ {
           "name" : "postId",
@@ -1880,7 +2006,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PostDTO"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -1888,9 +2014,9 @@
         }
       },
       "delete" : {
-        "tags" : [ "post-controller-_-delete" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Delete the post given by Id",
-        "description" : "Delete a post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete\n a post given by its Id.",
+        "description" : "Delete a post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete\n a post given by its Id.",
         "operationId" : "deletePost",
         "parameters" : [ {
           "name" : "postId",
@@ -1908,7 +2034,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostDeleteResponse"
                 }
               }
             }
@@ -1916,9 +2042,9 @@
         }
       },
       "patch" : {
-        "tags" : [ "post-controller-_-update" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Update the post given by Id",
-        "description" : "Update a post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update any\n attribute of a post given by its Id.",
+        "description" : "Update a post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update any\n attribute of a post given by its Id.",
         "operationId" : "updatePost_1",
         "parameters" : [ {
           "name" : "postId",
@@ -1947,7 +2073,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PostDTO"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -1957,9 +2083,9 @@
     },
     "/v1/posts/{postId}/urls" : {
       "get" : {
-        "tags" : [ "url-controller-_-retrieve" ],
+        "tags" : [ "url-controller" ],
         "summary" : "Get all URLs in a post by its Id",
-        "description" : "Get all URLs in the post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve all\n URLs in a specific post given by its Id.",
+        "description" : "Get all URLs in the post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve all\n URLs in a specific post given by its Id.",
         "operationId" : "getPostUrls",
         "parameters" : [ {
           "name" : "postId",
@@ -2006,9 +2132,9 @@
         }
       },
       "put" : {
-        "tags" : [ "url-controller-_-update" ],
+        "tags" : [ "url-controller" ],
         "summary" : "Update all post URLs on a post given by Id",
-        "description" : "Update all post URLs on a post a given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update all\n post URLs on a post given by its Id.",
+        "description" : "Update all post URLs on a post a given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update all\n post URLs on a post given by its Id.",
         "operationId" : "updatePostURLs",
         "parameters" : [ {
           "name" : "postId",
@@ -2040,7 +2166,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -2048,9 +2174,9 @@
         }
       },
       "post" : {
-        "tags" : [ "url-controller-_-create" ],
+        "tags" : [ "url-controller" ],
         "summary" : "Add a new URL to the post given by its Id",
-        "description" : "Add a new URL to the post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to add a new URLs\n to a specific post given by its Id.",
+        "description" : "Add a new URL to the post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to add a new URLs\n to a specific post given by its Id.",
         "operationId" : "addPostUrl",
         "parameters" : [ {
           "name" : "postId",
@@ -2079,7 +2205,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -2087,9 +2213,9 @@
         }
       },
       "delete" : {
-        "tags" : [ "url-controller-_-delete" ],
+        "tags" : [ "url-controller" ],
         "summary" : "Delete all post URLs on a post given by Id",
-        "description" : "Delete all post URLs on a post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete all\n post URLs on a post given by its Id.",
+        "description" : "Delete all post URLs on a post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete all\n post URLs on a post given by its Id.",
         "operationId" : "deletePostUrls",
         "parameters" : [ {
           "name" : "postId",
@@ -2107,7 +2233,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -2115,9 +2241,9 @@
         }
       },
       "patch" : {
-        "tags" : [ "url-controller-_-update" ],
+        "tags" : [ "url-controller" ],
         "summary" : "Update all post URLs on a post given by Id",
-        "description" : "Update all post URLs on a post a given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update all\n post URLs on a post given by its Id.",
+        "description" : "Update all post URLs on a post a given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update all\n post URLs on a post given by its Id.",
         "operationId" : "updatePostURLs_1",
         "parameters" : [ {
           "name" : "postId",
@@ -2149,7 +2275,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -2159,9 +2285,9 @@
     },
     "/v1/posts/{postId}/urls/{urlIdent}" : {
       "get" : {
-        "tags" : [ "url-controller-_-retrieve" ],
+        "tags" : [ "url-controller" ],
         "summary" : "Get a single URL in a post by its Id",
-        "description" : "Get a single URL in the post given by its identifier.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve a single\n URL in a post given by its Id.",
+        "description" : "Get a single URL in the post given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve a single\n URL in a post given by its Id.",
         "operationId" : "getPostUrl",
         "parameters" : [ {
           "name" : "postId",
@@ -2195,9 +2321,9 @@
         }
       },
       "put" : {
-        "tags" : [ "url-controller-_-update" ],
+        "tags" : [ "url-controller" ],
         "summary" : "Update a post URL on a post given by Ident",
-        "description" : "Update a post URL given by its identifier.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update a\n post URL given by its identifier, on a post given by its Id.",
+        "description" : "Update a post URL given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update a\n post URL given by its identifier, on a post given by its Id.",
         "operationId" : "updatePostUrl",
         "parameters" : [ {
           "name" : "postId",
@@ -2234,7 +2360,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -2242,9 +2368,9 @@
         }
       },
       "delete" : {
-        "tags" : [ "url-controller-_-delete" ],
+        "tags" : [ "url-controller" ],
         "summary" : "Delete a post URL by its identifier on a post given by Id",
-        "description" : "Delete a post URL given by its identifier.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete a\n post URL given by its identifier, on a post given by its Id.",
+        "description" : "Delete a post URL given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete a\n post URL given by its identifier, on a post given by its Id.",
         "operationId" : "deletePostUrl",
         "parameters" : [ {
           "name" : "postId",
@@ -2270,7 +2396,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -2278,9 +2404,9 @@
         }
       },
       "patch" : {
-        "tags" : [ "url-controller-_-update" ],
+        "tags" : [ "url-controller" ],
         "summary" : "Update a post URL on a post given by Ident",
-        "description" : "Update a post URL given by its identifier.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update a\n post URL given by its identifier, on a post given by its Id.",
+        "description" : "Update a post URL given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update a\n post URL given by its identifier, on a post given by its Id.",
         "operationId" : "updatePostUrl_1",
         "parameters" : [ {
           "name" : "postId",
@@ -2317,7 +2443,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -2327,9 +2453,9 @@
     },
     "/v1/posts/{postId}/title" : {
       "get" : {
-        "tags" : [ "post-controller-_-retrieve" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Get the title of a post given by its Id.",
-        "description" : "Get the title of a post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n title of a post given by its Id.",
+        "description" : "Get the title of a post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n title of a post given by its Id.",
         "operationId" : "getPostTitle",
         "parameters" : [ {
           "name" : "postId",
@@ -2355,9 +2481,9 @@
         }
       },
       "put" : {
-        "tags" : [ "post-controller-_-update" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Update the title of the post given by Id",
-        "description" : "Update the title of the post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n title of a post given by its Id.",
+        "description" : "Update the title of the post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n title of a post given by its Id.",
         "operationId" : "updatePostTitle",
         "parameters" : [ {
           "name" : "postId",
@@ -2386,7 +2512,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ContentObject"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -2394,9 +2520,9 @@
         }
       },
       "patch" : {
-        "tags" : [ "post-controller-_-update" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Update the title of the post given by Id",
-        "description" : "Update the title of the post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n title of a post given by its Id.",
+        "description" : "Update the title of the post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n title of a post given by its Id.",
         "operationId" : "updatePostTitle_1",
         "parameters" : [ {
           "name" : "postId",
@@ -2425,7 +2551,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ContentObject"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -2435,9 +2561,9 @@
     },
     "/v1/posts/{postId}/status" : {
       "get" : {
-        "tags" : [ "post-controller-_-retrieve" ],
+        "tags" : [ "post-status-controller" ],
         "summary" : "Get the status of a post given by its Id",
-        "description" : "Get the status of a post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to get the status of a\n posts given by its Id.  The status of a post is given by the PostPubStatus enumeration.",
+        "description" : "Get the status of a post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to get the status of a\n posts given by its Id.  The status of a post is given by the PostPubStatus enumeration.",
         "operationId" : "getPostStatus",
         "parameters" : [ {
           "name" : "postId",
@@ -2463,9 +2589,9 @@
         }
       },
       "put" : {
-        "tags" : [ "post-controller-_-update" ],
+        "tags" : [ "post-status-controller" ],
         "summary" : "Update the publication status of the post given by Id",
-        "description" : "Update the publication status of the post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n publication status of a post given by its Id. The status can be 'PUB_PENDING',\n 'DEPUB_PENDING', or null.",
+        "description" : "Update the publication status of the post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n publication status of a post given by its Id. The status can be 'PUB_PENDING',\n 'DEPUB_PENDING', or null.",
         "operationId" : "updatePostStatus",
         "parameters" : [ {
           "name" : "postId",
@@ -2496,7 +2622,7 @@
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "$ref" : "#/components/schemas/DeployResponse"
+                    "$ref" : "#/components/schemas/PostConfigResponse"
                   }
                 }
               }
@@ -2505,9 +2631,9 @@
         }
       },
       "patch" : {
-        "tags" : [ "post-controller-_-update" ],
+        "tags" : [ "post-status-controller" ],
         "summary" : "Update the publication status of the post given by Id",
-        "description" : "Update the publication status of the post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n publication status of a post given by its Id. The status can be 'PUB_PENDING',\n 'DEPUB_PENDING', or null.",
+        "description" : "Update the publication status of the post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n publication status of a post given by its Id. The status can be 'PUB_PENDING',\n 'DEPUB_PENDING', or null.",
         "operationId" : "updatePostStatus_1",
         "parameters" : [ {
           "name" : "postId",
@@ -2538,7 +2664,7 @@
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "$ref" : "#/components/schemas/DeployResponse"
+                    "$ref" : "#/components/schemas/PostConfigResponse"
                   }
                 }
               }
@@ -2549,9 +2675,9 @@
     },
     "/v1/posts/{postId}/rights" : {
       "get" : {
-        "tags" : [ "post-controller-_-retrieve" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Get the rights string of a post given by its Id.",
-        "description" : "Get the rights string of a post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n rights string of a post given by its Id.",
+        "description" : "Get the rights string of a post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n rights string of a post given by its Id.",
         "operationId" : "getPostRights",
         "parameters" : [ {
           "name" : "Accept",
@@ -2590,9 +2716,9 @@
         }
       },
       "put" : {
-        "tags" : [ "post-controller-_-update" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Update the rights string of the post given by Id",
-        "description" : "Update the rights string of the post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n rights string of a post given by its Id.",
+        "description" : "Update the rights string of the post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n rights string of a post given by its Id.",
         "operationId" : "updatePostRights",
         "parameters" : [ {
           "name" : "Accept",
@@ -2636,7 +2762,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "string"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -2644,9 +2770,9 @@
         }
       },
       "delete" : {
-        "tags" : [ "post-controller-_-delete" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Delete the rights string from a post given by Id",
-        "description" : "Delete the rights string for a post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete\n the rights string from a post given by its Id.",
+        "description" : "Delete the rights string for a post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete\n the rights string from a post given by its Id.",
         "operationId" : "deletePostRights",
         "parameters" : [ {
           "name" : "postId",
@@ -2664,7 +2790,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -2672,9 +2798,9 @@
         }
       },
       "patch" : {
-        "tags" : [ "post-controller-_-update" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Update the rights string of the post given by Id",
-        "description" : "Update the rights string of the post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n rights string of a post given by its Id.",
+        "description" : "Update the rights string of the post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n rights string of a post given by its Id.",
         "operationId" : "updatePostRights_1",
         "parameters" : [ {
           "name" : "Accept",
@@ -2718,7 +2844,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "string"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -2728,9 +2854,9 @@
     },
     "/v1/posts/{postId}/media" : {
       "get" : {
-        "tags" : [ "media-controller-_-retrieve" ],
+        "tags" : [ "media-controller" ],
         "summary" : "Get the media in the post given by its Id",
-        "description" : "Get the media in the post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n media in a post given by its Id.",
+        "description" : "Get the media in the post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n media in a post given by its Id.",
         "operationId" : "getPostMedia",
         "parameters" : [ {
           "name" : "postId",
@@ -2756,9 +2882,9 @@
         }
       },
       "put" : {
-        "tags" : [ "media-controller-_-update" ],
+        "tags" : [ "media-controller" ],
         "summary" : "Update the post media object on a post given by Id",
-        "description" : "Update a post media object on a post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update a\n post media object on a post given by its Id.",
+        "description" : "Update a post media object on a post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update a\n post media object on a post given by its Id.",
         "operationId" : "updatePostMedia",
         "parameters" : [ {
           "name" : "postId",
@@ -2787,7 +2913,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -2795,9 +2921,9 @@
         }
       },
       "delete" : {
-        "tags" : [ "media-controller-_-delete" ],
+        "tags" : [ "media-controller" ],
         "summary" : "Delete a post media object from a post given by Id",
-        "description" : "Delete a post media object from a post given by Id,\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete a\n a post media object on a post given by its Id.",
+        "description" : "Delete a post media object from a post given by Id,\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete a\n a post media object on a post given by its Id.",
         "operationId" : "deletePostMedia",
         "parameters" : [ {
           "name" : "postId",
@@ -2815,7 +2941,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -2823,9 +2949,9 @@
         }
       },
       "patch" : {
-        "tags" : [ "media-controller-_-update" ],
+        "tags" : [ "media-controller" ],
         "summary" : "Update the post media object on a post given by Id",
-        "description" : "Update a post media object on a post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update a\n post media object on a post given by its Id.",
+        "description" : "Update a post media object on a post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update a\n post media object on a post given by its Id.",
         "operationId" : "updatePostMedia_1",
         "parameters" : [ {
           "name" : "postId",
@@ -2854,7 +2980,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -2864,9 +2990,9 @@
     },
     "/v1/posts/{postId}/itunes" : {
       "get" : {
-        "tags" : [ "post-controller-_-retrieve" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Get the iTunes descriptor of a post given by its Id.",
-        "description" : "Get the iTunes descriptor of a post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n iTunes descriptor of a post given by its Id.",
+        "description" : "Get the iTunes descriptor of a post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n iTunes descriptor of a post given by its Id.",
         "operationId" : "getPostITunes",
         "parameters" : [ {
           "name" : "postId",
@@ -2892,9 +3018,9 @@
         }
       },
       "put" : {
-        "tags" : [ "post-controller-_-update" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Update the iTunes descriptor of the post given by Id",
-        "description" : "Update the iTunes descriptor of the post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n iTunes descriptor of a post given by its Id.",
+        "description" : "Update the iTunes descriptor of the post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n iTunes descriptor of a post given by its Id.",
         "operationId" : "updatePostITunes",
         "parameters" : [ {
           "name" : "postId",
@@ -2923,7 +3049,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PostITunes"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -2931,9 +3057,9 @@
         }
       },
       "delete" : {
-        "tags" : [ "post-controller-_-delete" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Delete the iTunes descriptor from a post given by Id",
-        "description" : "Delete the iTunes descriptor for a post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete\n the iTunes descriptor from a post given by its Id.",
+        "description" : "Delete the iTunes descriptor for a post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete\n the iTunes descriptor from a post given by its Id.",
         "operationId" : "deletePostITunes",
         "parameters" : [ {
           "name" : "postId",
@@ -2951,7 +3077,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -2959,9 +3085,9 @@
         }
       },
       "patch" : {
-        "tags" : [ "post-controller-_-update" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Update the iTunes descriptor of the post given by Id",
-        "description" : "Update the iTunes descriptor of the post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n iTunes descriptor of a post given by its Id.",
+        "description" : "Update the iTunes descriptor of the post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n iTunes descriptor of a post given by its Id.",
         "operationId" : "updatePostITunes_1",
         "parameters" : [ {
           "name" : "postId",
@@ -2990,7 +3116,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PostITunes"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -3000,9 +3126,9 @@
     },
     "/v1/posts/{postId}/expiration" : {
       "get" : {
-        "tags" : [ "post-controller-_-retrieve" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Get the expiration timestamp of a post given by its Id.",
-        "description" : "Get the expiration timestamp of a post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n expiration timestamp of a post given by its Id.",
+        "description" : "Get the expiration timestamp of a post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n expiration timestamp of a post given by its Id.",
         "operationId" : "getExpirationTimestamp",
         "parameters" : [ {
           "name" : "Accept",
@@ -3041,19 +3167,11 @@
         }
       },
       "put" : {
-        "tags" : [ "post-controller-_-update" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Update the expiration timestamp of the post given by Id",
-        "description" : "Update the expiration timestamp of the post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n expiration timestamp of a post given by its Id.",
+        "description" : "Update the expiration timestamp of the post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n expiration timestamp of a post given by its Id.",
         "operationId" : "updateExpirationTimestamp",
         "parameters" : [ {
-          "name" : "Accept",
-          "in" : "header",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "default" : "application/json"
-          }
-        }, {
           "name" : "postId",
           "in" : "path",
           "description" : "The Id of the post to update",
@@ -3080,7 +3198,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "string"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -3088,9 +3206,9 @@
         }
       },
       "delete" : {
-        "tags" : [ "post-controller-_-delete" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Delete the expiration timestamp from a post given by Id",
-        "description" : "Delete the expiration timestamp for a post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete\n the expiration timestamp from a post given by its Id.",
+        "description" : "Delete the expiration timestamp for a post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete\n the expiration timestamp from a post given by its Id.",
         "operationId" : "deleteExpirationTimestamp",
         "parameters" : [ {
           "name" : "postId",
@@ -3108,7 +3226,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -3116,19 +3234,11 @@
         }
       },
       "patch" : {
-        "tags" : [ "post-controller-_-update" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Update the expiration timestamp of the post given by Id",
-        "description" : "Update the expiration timestamp of the post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n expiration timestamp of a post given by its Id.",
+        "description" : "Update the expiration timestamp of the post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n expiration timestamp of a post given by its Id.",
         "operationId" : "updateExpirationTimestamp_1",
         "parameters" : [ {
-          "name" : "Accept",
-          "in" : "header",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "default" : "application/json"
-          }
-        }, {
           "name" : "postId",
           "in" : "path",
           "description" : "The Id of the post to update",
@@ -3155,7 +3265,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "string"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -3165,9 +3275,9 @@
     },
     "/v1/posts/{postId}/enclosures" : {
       "get" : {
-        "tags" : [ "enclosure-controller-_-retrieve" ],
+        "tags" : [ "enclosure-controller" ],
         "summary" : "Get all enclosures in a post by its Id",
-        "description" : "Get all enclosures in the post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve all\n enclosures in a specific post given by its Id.",
+        "description" : "Get all enclosures in the post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve all\n enclosures in a specific post given by its Id.",
         "operationId" : "getPostEnclosures",
         "parameters" : [ {
           "name" : "postId",
@@ -3214,9 +3324,9 @@
         }
       },
       "put" : {
-        "tags" : [ "enclosure-controller-_-update" ],
+        "tags" : [ "enclosure-controller" ],
         "summary" : "Update all post enclosures on a post given by Id",
-        "description" : "Update all post enclosures on a post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update all\n post enclosures, on a post given by its Id.",
+        "description" : "Update all post enclosures on a post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update all\n post enclosures, on a post given by its Id.",
         "operationId" : "updatePostEnclosures",
         "parameters" : [ {
           "name" : "postId",
@@ -3248,7 +3358,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -3256,9 +3366,9 @@
         }
       },
       "post" : {
-        "tags" : [ "enclosure-controller-_-create" ],
+        "tags" : [ "enclosure-controller" ],
         "summary" : "Add a new enclosure to the post given by its Id",
-        "description" : "Add a new enclosure to the post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to add a new enclosure\n to a specific post given by its Id.",
+        "description" : "Add a new enclosure to the post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to add a new enclosure\n to a specific post given by its Id.",
         "operationId" : "addPostEnclosure",
         "parameters" : [ {
           "name" : "postId",
@@ -3287,7 +3397,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -3295,9 +3405,9 @@
         }
       },
       "delete" : {
-        "tags" : [ "enclosure-controller-_-delete" ],
+        "tags" : [ "enclosure-controller" ],
         "summary" : "Delete all post enclosures on a post given by Id",
-        "description" : "Delete all post enclosures on a post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete all\n post enclosures on a post given by its Id.",
+        "description" : "Delete all post enclosures on a post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete all\n post enclosures on a post given by its Id.",
         "operationId" : "deletePostEnclosures",
         "parameters" : [ {
           "name" : "postId",
@@ -3315,7 +3425,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -3323,9 +3433,9 @@
         }
       },
       "patch" : {
-        "tags" : [ "enclosure-controller-_-update" ],
+        "tags" : [ "enclosure-controller" ],
         "summary" : "Update all post enclosures on a post given by Id",
-        "description" : "Update all post enclosures on a post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update all\n post enclosures, on a post given by its Id.",
+        "description" : "Update all post enclosures on a post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update all\n post enclosures, on a post given by its Id.",
         "operationId" : "updatePostEnclosures_1",
         "parameters" : [ {
           "name" : "postId",
@@ -3357,7 +3467,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -3367,9 +3477,9 @@
     },
     "/v1/posts/{postId}/enclosures/{enclosureIdent}" : {
       "get" : {
-        "tags" : [ "enclosure-controller-_-retrieve" ],
+        "tags" : [ "enclosure-controller" ],
         "summary" : "Get a single enclosure in a post by its Id",
-        "description" : "Get a single enclosure in the post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve a single\n enclosure in a specific post given by its Id.",
+        "description" : "Get a single enclosure in the post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve a single\n enclosure in a specific post given by its Id.",
         "operationId" : "getPostEnclosure",
         "parameters" : [ {
           "name" : "postId",
@@ -3403,9 +3513,9 @@
         }
       },
       "put" : {
-        "tags" : [ "enclosure-controller-_-update" ],
+        "tags" : [ "enclosure-controller" ],
         "summary" : "Update a post enclosure on a post given by Ident",
-        "description" : "Update a post enclosure given by its identifier on a post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update a\n post enclosure given by its identifier, on a post given by its Id.",
+        "description" : "Update a post enclosure given by its identifier on a post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update a\n post enclosure given by its identifier, on a post given by its Id.",
         "operationId" : "updatePostEnclosure",
         "parameters" : [ {
           "name" : "postId",
@@ -3442,7 +3552,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -3450,9 +3560,9 @@
         }
       },
       "delete" : {
-        "tags" : [ "enclosure-controller-_-delete" ],
+        "tags" : [ "enclosure-controller" ],
         "summary" : "Delete a post enclosure by its identifier on a post given by Id",
-        "description" : "Delete a post enclosure given by its identifier.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete a\n post enclosure given by its identifier, on a post given by its Id.",
+        "description" : "Delete a post enclosure given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete a\n post enclosure given by its identifier, on a post given by its Id.",
         "operationId" : "deletePostEnclosure",
         "parameters" : [ {
           "name" : "postId",
@@ -3478,7 +3588,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -3486,9 +3596,9 @@
         }
       },
       "patch" : {
-        "tags" : [ "enclosure-controller-_-update" ],
+        "tags" : [ "enclosure-controller" ],
         "summary" : "Update a post enclosure on a post given by Ident",
-        "description" : "Update a post enclosure given by its identifier on a post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update a\n post enclosure given by its identifier, on a post given by its Id.",
+        "description" : "Update a post enclosure given by its identifier on a post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update a\n post enclosure given by its identifier, on a post given by its Id.",
         "operationId" : "updatePostEnclosure_1",
         "parameters" : [ {
           "name" : "postId",
@@ -3525,7 +3635,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -3535,9 +3645,9 @@
     },
     "/v1/posts/{postId}/description" : {
       "get" : {
-        "tags" : [ "post-controller-_-retrieve" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Get the description of a post given by its Id.",
-        "description" : "Get the description of a post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n description of a post given by its Id.",
+        "description" : "Get the description of a post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n description of a post given by its Id.",
         "operationId" : "getPostDesc",
         "parameters" : [ {
           "name" : "postId",
@@ -3563,9 +3673,9 @@
         }
       },
       "put" : {
-        "tags" : [ "post-controller-_-update" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Update the description of the post given by Id",
-        "description" : "Update the description of the post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n description of a post given by its Id.",
+        "description" : "Update the description of the post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n description of a post given by its Id.",
         "operationId" : "updatePostDescription",
         "parameters" : [ {
           "name" : "postId",
@@ -3594,7 +3704,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ContentObject"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -3602,9 +3712,9 @@
         }
       },
       "patch" : {
-        "tags" : [ "post-controller-_-update" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Update the description of the post given by Id",
-        "description" : "Update the description of the post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n description of a post given by its Id.",
+        "description" : "Update the description of the post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n description of a post given by its Id.",
         "operationId" : "updatePostDescription_1",
         "parameters" : [ {
           "name" : "postId",
@@ -3633,7 +3743,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ContentObject"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -3643,7 +3753,7 @@
     },
     "/v1/posts/{postId}/contributors" : {
       "get" : {
-        "tags" : [ "contributor-controller-_-retrieve" ],
+        "tags" : [ "contributor-controller" ],
         "summary" : "Get all contributors in a post by its Id",
         "description" : "Get all contributors in a post given its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve all\n contributors in a specific post given by its Id.",
         "operationId" : "getPostContributors",
@@ -3692,7 +3802,7 @@
         }
       },
       "put" : {
-        "tags" : [ "contributor-controller-_-update" ],
+        "tags" : [ "contributor-controller" ],
         "summary" : "Update all post contributors on a post by its Id",
         "description" : "Update all post contributors on a post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update all\n post contributors on a post given by its Id.",
         "operationId" : "updatePostContributors",
@@ -3726,7 +3836,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -3734,7 +3844,7 @@
         }
       },
       "post" : {
-        "tags" : [ "contributor-controller-_-create" ],
+        "tags" : [ "contributor-controller" ],
         "summary" : "Add a new contributor to a post by its Id",
         "description" : "Add a new contributor to a specific post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to add new contributor\n to a specific post given by its Id.",
         "operationId" : "addPostContributor",
@@ -3765,7 +3875,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -3773,7 +3883,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "contributor-controller-_-delete" ],
+        "tags" : [ "contributor-controller" ],
         "summary" : "Delete all contributors from a post by its Id",
         "description" : "Delete all contributors from a post given its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete all\n contributors from a post given by its Id.",
         "operationId" : "deletePostContributors",
@@ -3793,7 +3903,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -3801,7 +3911,7 @@
         }
       },
       "patch" : {
-        "tags" : [ "contributor-controller-_-update" ],
+        "tags" : [ "contributor-controller" ],
         "summary" : "Update all post contributors on a post by its Id",
         "description" : "Update all post contributors on a post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update all\n post contributors on a post given by its Id.",
         "operationId" : "updatePostContributors_1",
@@ -3835,7 +3945,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -3845,7 +3955,7 @@
     },
     "/v1/posts/{postId}/contributors/{contributorIdent}" : {
       "get" : {
-        "tags" : [ "contributor-controller-_-retrieve" ],
+        "tags" : [ "contributor-controller" ],
         "summary" : "Get a single contributor in a post by its Id and contributor ident",
         "description" : "Get a single contributor in a post given its Id and the contributor identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve a single\n contributor in a specific post given by its Id.",
         "operationId" : "getPostContributor",
@@ -3881,7 +3991,7 @@
         }
       },
       "put" : {
-        "tags" : [ "contributor-controller-_-update" ],
+        "tags" : [ "contributor-controller" ],
         "summary" : "Update a post contributor by identifier on a post by Id",
         "description" : "Update a post contributor given by identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update a\n post contributor given by its identifier, on a post given by its Id.",
         "operationId" : "updatePostContributor",
@@ -3920,7 +4030,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -3928,7 +4038,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "contributor-controller-_-delete" ],
+        "tags" : [ "contributor-controller" ],
         "summary" : "Delete a contributor from a post by Id and the contributor ident",
         "description" : "Delete a contributor from a post given its Id and contributor identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete a\n contributor from a post given by its Id and the contributor's identifier.",
         "operationId" : "deletePostContributor",
@@ -3956,7 +4066,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -3964,7 +4074,7 @@
         }
       },
       "patch" : {
-        "tags" : [ "contributor-controller-_-update" ],
+        "tags" : [ "contributor-controller" ],
         "summary" : "Update a post contributor by identifier on a post by Id",
         "description" : "Update a post contributor given by identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update a\n post contributor given by its identifier, on a post given by its Id.",
         "operationId" : "updatePostContributor_1",
@@ -4003,7 +4113,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -4013,7 +4123,7 @@
     },
     "/v1/posts/{postId}/content" : {
       "get" : {
-        "tags" : [ "content-controller-_-retrieve" ],
+        "tags" : [ "content-controller" ],
         "summary" : "Get all content in the post given by its Id",
         "description" : "Get all content in the post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve all\n content in a specific post given by its Id.",
         "operationId" : "getPostContent",
@@ -4062,7 +4172,7 @@
         }
       },
       "put" : {
-        "tags" : [ "content-controller-_-update" ],
+        "tags" : [ "content-controller" ],
         "summary" : "Update the post contents on a post given by Id",
         "description" : "Update all post content on a post a given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update all\n post content on a post given by its Id.",
         "operationId" : "updatePostContents",
@@ -4096,7 +4206,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -4104,7 +4214,7 @@
         }
       },
       "post" : {
-        "tags" : [ "content-controller-_-create" ],
+        "tags" : [ "content-controller" ],
         "summary" : "Add new content to the post given by its Id",
         "description" : "Add new content to the post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to add new content\n to a specific post given by its Id.",
         "operationId" : "addPostContent",
@@ -4135,7 +4245,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -4143,7 +4253,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "content-controller-_-delete" ],
+        "tags" : [ "content-controller" ],
         "summary" : "Delete all post contents on a post given by Id",
         "description" : "Delete all post contents on a post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete all\n post content on a post given by its Id.",
         "operationId" : "deletePostContents",
@@ -4163,7 +4273,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -4171,7 +4281,7 @@
         }
       },
       "patch" : {
-        "tags" : [ "content-controller-_-update" ],
+        "tags" : [ "content-controller" ],
         "summary" : "Update the post contents on a post given by Id",
         "description" : "Update all post content on a post a given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update all\n post content on a post given by its Id.",
         "operationId" : "updatePostContents_1",
@@ -4205,7 +4315,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -4215,7 +4325,7 @@
     },
     "/v1/posts/{postId}/content/{contentIdent}" : {
       "get" : {
-        "tags" : [ "content-controller-_-retrieve" ],
+        "tags" : [ "content-controller" ],
         "summary" : "Get a single content in the post given by its Id",
         "description" : "Get a single content in the post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve a single\n content in a specific post given by its Id.",
         "operationId" : "getPostContent_1",
@@ -4251,7 +4361,7 @@
         }
       },
       "put" : {
-        "tags" : [ "content-controller-_-update" ],
+        "tags" : [ "content-controller" ],
         "summary" : "Update the post content given by Ident, on a post given by Id",
         "description" : "Update a post content object given by its identifier on a post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update a\n post content object given by its identifier, on a post given by its Id.",
         "operationId" : "updatePostContent",
@@ -4290,7 +4400,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -4298,7 +4408,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "content-controller-_-delete" ],
+        "tags" : [ "content-controller" ],
         "summary" : "Delete the post content given by Ident, on a post given by Id",
         "description" : "Delete a post content object given by its identifier on a post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete a\n post content object given by its identifier, on a post given by its Id.",
         "operationId" : "deletePostContent",
@@ -4326,7 +4436,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -4334,7 +4444,7 @@
         }
       },
       "patch" : {
-        "tags" : [ "content-controller-_-update" ],
+        "tags" : [ "content-controller" ],
         "summary" : "Update the post content given by Ident, on a post given by Id",
         "description" : "Update a post content object given by its identifier on a post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update a\n post content object given by its identifier, on a post given by its Id.",
         "operationId" : "updatePostContent_1",
@@ -4373,7 +4483,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -4383,9 +4493,9 @@
     },
     "/v1/posts/{postId}/comment" : {
       "get" : {
-        "tags" : [ "post-controller-_-retrieve" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Get the comment string of a post given by its Id.",
-        "description" : "Get the comment string of a post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n comment string of a post given by its Id.",
+        "description" : "Get the comment string of a post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n comment string of a post given by its Id.",
         "operationId" : "getPostComment",
         "parameters" : [ {
           "name" : "Accept",
@@ -4424,9 +4534,9 @@
         }
       },
       "put" : {
-        "tags" : [ "post-controller-_-update" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Update the comment string of the post given by Id",
-        "description" : "Update the comment string of the post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n comment string of a post given by its Id.",
+        "description" : "Update the comment string of the post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n comment string of a post given by its Id.",
         "operationId" : "updatePostComment",
         "parameters" : [ {
           "name" : "Accept",
@@ -4470,7 +4580,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "string"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -4478,9 +4588,9 @@
         }
       },
       "delete" : {
-        "tags" : [ "post-controller-_-delete" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Delete the comment string from a post given by Id",
-        "description" : "Delete the comment string for a post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete\n the comment string from a post given by its Id.",
+        "description" : "Delete the comment string for a post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete\n the comment string from a post given by its Id.",
         "operationId" : "deletePostComment",
         "parameters" : [ {
           "name" : "postId",
@@ -4498,7 +4608,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -4506,9 +4616,9 @@
         }
       },
       "patch" : {
-        "tags" : [ "post-controller-_-update" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Update the comment string of the post given by Id",
-        "description" : "Update the comment string of the post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n comment string of a post given by its Id.",
+        "description" : "Update the comment string of the post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n comment string of a post given by its Id.",
         "operationId" : "updatePostComment_1",
         "parameters" : [ {
           "name" : "Accept",
@@ -4552,7 +4662,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "string"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -4562,9 +4672,9 @@
     },
     "/v1/posts/{postId}/categories" : {
       "get" : {
-        "tags" : [ "post-controller-_-retrieve" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Get all categories in the post given by its Id",
-        "description" : "Get all categories in the post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve all\n categories in a specific post given by its Id.",
+        "description" : "Get all categories in the post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve all\n categories in a specific post given by its Id.",
         "operationId" : "getPostCategories",
         "parameters" : [ {
           "name" : "postId",
@@ -4611,9 +4721,9 @@
         }
       },
       "put" : {
-        "tags" : [ "post-controller-_-update" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Update the categories of the post given by Id",
-        "description" : "Update the categories of the post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n categories of a post given by its Id.",
+        "description" : "Update the categories of the post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n categories of a post given by its Id.",
         "operationId" : "updatePostCategories",
         "parameters" : [ {
           "name" : "postId",
@@ -4645,7 +4755,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "string"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -4653,9 +4763,9 @@
         }
       },
       "delete" : {
-        "tags" : [ "post-controller-_-delete" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Delete the categories from a post given by Id",
-        "description" : "Delete the categories for a post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete\n the categories from a post given by its Id.",
+        "description" : "Delete the categories for a post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete\n the categories from a post given by its Id.",
         "operationId" : "deletePostCategories",
         "parameters" : [ {
           "name" : "postId",
@@ -4673,7 +4783,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -4681,9 +4791,9 @@
         }
       },
       "patch" : {
-        "tags" : [ "post-controller-_-update" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Update the categories of the post given by Id",
-        "description" : "Update the categories of the post given by Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n categories of a post given by its Id.",
+        "description" : "Update the categories of the post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update the\n categories of a post given by its Id.",
         "operationId" : "updatePostCategories_1",
         "parameters" : [ {
           "name" : "postId",
@@ -4715,7 +4825,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "string"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -4725,7 +4835,7 @@
     },
     "/v1/posts/{postId}/authors" : {
       "get" : {
-        "tags" : [ "author-controller-_-retrieve" ],
+        "tags" : [ "author-controller" ],
         "summary" : "Get all authors in a post by its Id",
         "description" : "Get all authors in a post given its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve all\n authors in a specific post given by its Id.",
         "operationId" : "getPostAuthors",
@@ -4774,7 +4884,7 @@
         }
       },
       "put" : {
-        "tags" : [ "author-controller-_-update" ],
+        "tags" : [ "author-controller" ],
         "summary" : "Update all post authors on a post by its Id",
         "description" : "Update all post authors on a post given its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update all\n post authors on a post given by its Id.",
         "operationId" : "updatePostAuthors",
@@ -4808,7 +4918,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -4816,7 +4926,7 @@
         }
       },
       "post" : {
-        "tags" : [ "author-controller-_-create" ],
+        "tags" : [ "author-controller" ],
         "summary" : "Add a new author to a post by its Id",
         "description" : "Add a new author to a specific post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to add a new author\n to a specific post given by its Id.",
         "operationId" : "addPostAuthor",
@@ -4847,7 +4957,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -4855,7 +4965,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "author-controller-_-delete" ],
+        "tags" : [ "author-controller" ],
         "summary" : "Delete all authors from a post by its Id",
         "description" : "Delete all authors from a post given its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete all\n authors from a post given by its Id.",
         "operationId" : "deletePostAuthors",
@@ -4875,7 +4985,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -4883,7 +4993,7 @@
         }
       },
       "patch" : {
-        "tags" : [ "author-controller-_-update" ],
+        "tags" : [ "author-controller" ],
         "summary" : "Update all post authors on a post by its Id",
         "description" : "Update all post authors on a post given its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update all\n post authors on a post given by its Id.",
         "operationId" : "updatePostAuthors_1",
@@ -4917,7 +5027,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -4927,7 +5037,7 @@
     },
     "/v1/posts/{postId}/authors/{authorIdent}" : {
       "get" : {
-        "tags" : [ "author-controller-_-retrieve" ],
+        "tags" : [ "author-controller" ],
         "summary" : "Get a single author in a post by its Id and author ident",
         "description" : "Get a single author given by its identifier on a post given its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve a single\n author given by its identifier on a post given by its Id.",
         "operationId" : "getPostAuthor",
@@ -4963,7 +5073,7 @@
         }
       },
       "put" : {
-        "tags" : [ "author-controller-_-update" ],
+        "tags" : [ "author-controller" ],
         "summary" : "Update a post author by identifier on a post by Id",
         "description" : "Update a post author given by its identifier on a post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update a\n post author given by its identifier, on a post given by its Id.",
         "operationId" : "updatePostAuthor",
@@ -5002,7 +5112,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -5010,7 +5120,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "author-controller-_-delete" ],
+        "tags" : [ "author-controller" ],
         "summary" : "Delete an author from a post by Id and author ident",
         "description" : "Delete an author from a post given its Id and author identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete an\n author from a post given by its Id and the author's identifier.",
         "operationId" : "deletePostAuthor",
@@ -5038,7 +5148,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -5046,7 +5156,7 @@
         }
       },
       "patch" : {
-        "tags" : [ "author-controller-_-update" ],
+        "tags" : [ "author-controller" ],
         "summary" : "Update a post author by identifier on a post by Id",
         "description" : "Update a post author given by its identifier on a post given by Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to update a\n post author given by its identifier, on a post given by its Id.",
         "operationId" : "updatePostAuthor_1",
@@ -5085,7 +5195,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostConfigResponse"
                 }
               }
             }
@@ -5095,7 +5205,7 @@
     },
     "/v1/queues" : {
       "get" : {
-        "tags" : [ "queue-controller-_-retrieve" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Get all queue definitions",
         "description" : "Get all queue definitions for the authenticated user.",
         "operationId" : "getQueues",
@@ -5143,7 +5253,7 @@
         }
       },
       "post" : {
-        "tags" : [ "queue-controller-_-create" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Create a new feed queue",
         "description" : "Create a new feed queue with the provided configuration.\n <p>\n This endpoint is used to create a new feed queue with the provided configuration.\n A feed queue is a structure used to manage, organize, and publish syndicated content in various formats\n such as RSS 2.0, ATOM, and JSON.",
         "operationId" : "createQueue",
@@ -5174,7 +5284,7 @@
     },
     "/v1/queues/{queueIdent}/posts" : {
       "get" : {
-        "tags" : [ "queue-controller-_-retrieve" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Get all posts in the queue given by its identifier",
         "description" : "Get all posts in the queue given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve all\n posts in a queue given by its identifier.",
         "operationId" : "getPosts",
@@ -5185,6 +5295,15 @@
           "required" : true,
           "schema" : {
             "type" : "string"
+          }
+        }, {
+          "name" : "Limit the results to posts with the provided status",
+          "in" : "query",
+          "description" : "Limit the results to posts with the provided status.",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "PUB_PENDING", "DEPUB_PENDING" ]
           }
         }, {
           "name" : "The number of items to skip before returning results",
@@ -5230,7 +5349,7 @@
         }
       },
       "post" : {
-        "tags" : [ "queue-controller-_-create" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Create new posts in the specified queue",
         "description" : "Create new posts in the specified queue.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to create new posts\n in a queue given by its Id.",
         "operationId" : "createPosts",
@@ -5262,7 +5381,7 @@
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "$ref" : "#/components/schemas/PostDTO"
+                    "$ref" : "#/components/schemas/PostCreateResponse"
                   }
                 }
               }
@@ -5271,7 +5390,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "queue-controller-_-delete" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Delete all posts from a queue",
         "description" : "Delete all posts from a queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete all\n posts from a queue.",
         "operationId" : "deletePosts",
@@ -5290,7 +5409,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResponseMessage"
+                  "$ref" : "#/components/schemas/PostDeleteResponse"
                 }
               }
             }
@@ -5300,9 +5419,9 @@
     },
     "/v1/queues/{queueIdent}/credentials" : {
       "get" : {
-        "tags" : [ "queue-credentials-controller-_-retrieve" ],
+        "tags" : [ "queue-credentials-controller" ],
         "summary" : "Get all credentials in the queue given by its Id",
-        "description" : "Get all credentials in the queue given by its identifier. Passwords are masked.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve all\n credentials in a specific queue given by its identifier.",
+        "description" : "Get all credentials in the queue given by its identifier. Passwords are masked.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve all\n credentials in a specific queue given by its identifier.",
         "operationId" : "getQueueCredentials",
         "parameters" : [ {
           "name" : "queueIdent",
@@ -5356,9 +5475,9 @@
         }
       },
       "post" : {
-        "tags" : [ "queue-credentials-controller-_-create" ],
+        "tags" : [ "queue-credentials-controller" ],
         "summary" : "Add a new credential to the queue given by its identifier",
-        "description" : "Add a new credential to the queue given by its identifier.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to add a new credential\n to a specific queue given by its identifier.",
+        "description" : "Add a new credential to the queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to add a new credential\n to a specific queue given by its identifier.",
         "operationId" : "addQueueCredential",
         "parameters" : [ {
           "name" : "queueIdent",
@@ -5394,9 +5513,9 @@
         }
       },
       "delete" : {
-        "tags" : [ "queue-credentials-controller-_-delete" ],
+        "tags" : [ "queue-credentials-controller" ],
         "summary" : "Delete all queue credentials from the queue given by its identifier",
-        "description" : "Delete all queue credentials from a queue given by its identifier.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete all\n queue credentials from a queue given by its identifier.",
+        "description" : "Delete all queue credentials from a queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to delete all\n queue credentials from a queue given by its identifier.",
         "operationId" : "deleteQueueCredentials",
         "parameters" : [ {
           "name" : "queueIdent",
@@ -5423,7 +5542,7 @@
     },
     "/v1/queues/{queueIdent}/transport" : {
       "get" : {
-        "tags" : [ "queue-controller-_-retrieve" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Get the transport identifier of a queue given by its identifier",
         "description" : "Get the transport identifier of a queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to get the transport identifier of a\n queue given by its identifier.",
         "operationId" : "getQueueTransport",
@@ -5465,7 +5584,7 @@
     },
     "/v1/queues/{queueIdent}/deployed" : {
       "get" : {
-        "tags" : [ "queue-controller-_-retrieve" ],
+        "tags" : [ "queue-controller" ],
         "summary" : "Get the deployed timestamp of a queue given by its identifier",
         "description" : "Get the deployed timestamp of a queue given by its identifier.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to get the deployed timestamp of a\n queue given by its identifier.",
         "operationId" : "getQueueDeployedTimestamp",
@@ -5507,9 +5626,9 @@
     },
     "/v1/posts/{postId}/updated" : {
       "get" : {
-        "tags" : [ "post-controller-_-retrieve" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Get the last updated timestamp of a post given by its Id.",
-        "description" : "Get the last updated timestamp of a post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n last updated timestamp of a post given by its Id.",
+        "description" : "Get the last updated timestamp of a post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n last updated timestamp of a post given by its Id.",
         "operationId" : "getLastUpdatedTimestamp",
         "parameters" : [ {
           "name" : "Accept",
@@ -5550,9 +5669,9 @@
     },
     "/v1/posts/{postId}/queue" : {
       "get" : {
-        "tags" : [ "post-controller-_-retrieve" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Get the queue identifier of a post given by its Id.",
-        "description" : "Get the queue identifier of a post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n queue identifier of a post given by its Id.",
+        "description" : "Get the queue identifier of a post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n queue identifier of a post given by its Id.",
         "operationId" : "getPostQueueId",
         "parameters" : [ {
           "name" : "Accept",
@@ -5593,9 +5712,9 @@
     },
     "/v1/posts/{postId}/published" : {
       "get" : {
-        "tags" : [ "post-controller-_-retrieve" ],
+        "tags" : [ "post-controller" ],
         "summary" : "Get the published timestamp of a post given by its Id.",
-        "description" : "Get the published timestamp of a post given by its Id.\n\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n published timestamp of a post given by its Id.",
+        "description" : "Get the published timestamp of a post given by its Id.\n <p>\n This endpoint allows authenticated users with the \"VERIFIED_ROLE\" to retrieve the\n published timestamp of a post given by its Id.",
         "operationId" : "getPublishedTimestamp",
         "parameters" : [ {
           "name" : "Accept",
@@ -5677,6 +5796,13 @@
           },
           "rssConfig" : {
             "$ref" : "#/components/schemas/RSS20Config"
+          },
+          "maxPublished" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "isAutoDeploy" : {
+            "type" : "boolean"
           }
         }
       },
@@ -5798,6 +5924,13 @@
           },
           "rssConfig" : {
             "$ref" : "#/components/schemas/RSS20Config"
+          },
+          "maxPublished" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "isAutoDeploy" : {
+            "type" : "boolean"
           }
         }
       },
@@ -5881,8 +6014,17 @@
             "minLength" : 0,
             "type" : "string"
           },
-          "url" : {
-            "type" : "string"
+          "urls" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "errors" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         }
       },
@@ -5932,15 +6074,6 @@
           },
           "value" : {
             "type" : "string"
-          }
-        }
-      },
-      "Duration" : {
-        "type" : "object",
-        "properties" : {
-          "milliseconds" : {
-            "type" : "integer",
-            "format" : "int64"
           }
         }
       },
@@ -6051,15 +6184,6 @@
             "type" : "string",
             "description" : "The author associated with this post"
           },
-          "isExplicitNullable" : {
-            "type" : "boolean",
-            "description" : "Indicates if the explicit status is nullable"
-          },
-          "image" : {
-            "type" : "string",
-            "description" : "The URL of the image associated with the post",
-            "format" : "url"
-          },
           "imageUri" : {
             "type" : "string",
             "description" : "The URI of the image associated with the post"
@@ -6080,7 +6204,9 @@
             "description" : "Summary of the post"
           },
           "duration" : {
-            "$ref" : "#/components/schemas/Duration"
+            "type" : "integer",
+            "description" : "Duration of the post",
+            "format" : "int64"
           },
           "episode" : {
             "type" : "integer",
@@ -6105,14 +6231,17 @@
             "type" : "string",
             "description" : "Title of the post"
           },
-          "explicit" : {
-            "type" : "boolean"
+          "isBlock" : {
+            "type" : "boolean",
+            "description" : "Indicates if the post is blocked"
           },
-          "closeCaptioned" : {
-            "type" : "boolean"
+          "isExplicit" : {
+            "type" : "boolean",
+            "description" : "Indicates if the post is explicit"
           },
-          "block" : {
-            "type" : "boolean"
+          "isCloseCaptioned" : {
+            "type" : "boolean",
+            "description" : "Indicates if the post is close captioned"
           }
         },
         "description" : "Represents iTunes-specific metadata associated with a post."
@@ -6178,6 +6307,27 @@
           }
         },
         "description" : "Represents a content object within a post.\n\n <p>A content object is an entity that can be included within a post to represent various types of content,\n such as text, images, links, or multimedia. It typically includes a unique identifier, a type that describes\n the content format, and the actual content value."
+      },
+      "PostConfigResponse" : {
+        "required" : [ "deployResponses", "postDTO" ],
+        "type" : "object",
+        "properties" : {
+          "postDTO" : {
+            "$ref" : "#/components/schemas/PostDTO"
+          },
+          "deployed" : {
+            "type" : "boolean",
+            "description" : "True if the updated post was deployed."
+          },
+          "deployResponses" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/DeployResponse"
+            },
+            "description" : "The results of deployment on all publishers."
+          }
+        },
+        "description" : "A response model for post configuration operations."
       },
       "PostDTO" : {
         "required" : [ "importTimestamp", "postDesc", "postTitle", "queueIdent" ],
@@ -6363,6 +6513,7 @@
         "description" : "Represents a URL associated with a post."
       },
       "PostStatusUpdateRequest" : {
+        "required" : [ "newStatus" ],
         "type" : "object",
         "properties" : {
           "newStatus" : {
@@ -6926,6 +7077,29 @@
       "Type" : {
         "type" : "object"
       },
+      "PostCreateResponse" : {
+        "required" : [ "deployResponses", "postIds" ],
+        "type" : "object",
+        "properties" : {
+          "postIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "deployed" : {
+            "type" : "boolean"
+          },
+          "deployResponses" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/DeployResponse"
+            }
+          }
+        },
+        "description" : "A response model for post create operations."
+      },
       "QueueCredentialConfigRequest" : {
         "required" : [ "basicPassword", "basicUsername" ],
         "type" : "object",
@@ -6944,6 +7118,25 @@
           }
         },
         "description" : "A credential object"
+      },
+      "QueueStatusResponse" : {
+        "type" : "object",
+        "properties" : {
+          "publishedCt" : {
+            "type" : "integer",
+            "description" : "The number of published posts in the queue.",
+            "format" : "int32"
+          },
+          "countByStatus" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "integer",
+              "format" : "int32"
+            },
+            "description" : "The number of posts inthe queue, grouped by PostPubStatus (i.e., PUB_PENDING, DEPUB_PENDING, ARCHIVED, etc.)."
+          }
+        },
+        "description" : "A response model for queue status operations."
       },
       "QueueCredential" : {
         "type" : "object",
@@ -6982,6 +7175,22 @@
           }
         },
         "description" : "Represents a credential for a feed queue."
+      },
+      "PostDeleteResponse" : {
+        "required" : [ "deployResponses", "message" ],
+        "type" : "object",
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "deployResponses" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/DeployResponse"
+            }
+          }
+        },
+        "description" : "A response model for post delete operations."
       }
     },
     "securitySchemes" : {

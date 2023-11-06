@@ -9,29 +9,38 @@ import com.lostsidewalk.buffy.app.model.v1.Atom10Config;
 import com.lostsidewalk.buffy.app.model.v1.RSS20Config;
 import com.lostsidewalk.buffy.app.model.v1.request.ExportConfigRequest;
 import com.lostsidewalk.buffy.app.model.v1.request.QueueConfigRequest;
-import com.lostsidewalk.buffy.app.model.v1.response.ExportConfigDTO;
+import com.lostsidewalk.buffy.app.model.v1.response.QueueStatusResponse;
+import com.lostsidewalk.buffy.post.StagingPost.PostPubStatus;
+import com.lostsidewalk.buffy.post.StagingPostDao;
 import com.lostsidewalk.buffy.queue.QueueDefinition;
 import com.lostsidewalk.buffy.queue.QueueDefinitionDao;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static java.util.Collections.emptyList;
 
+
+@Slf4j
 @Service
 public class QueueDefinitionService {
 
     @Autowired
     QueueDefinitionDao queueDefinitionDao;
 
-    public QueueDefinition findByQueueId(String username, Long id) throws DataAccessException {
+    @Autowired
+    StagingPostDao stagingPostDao;
+
+    public final QueueDefinition findByQueueId(String username, Long id) throws DataAccessException {
         return queueDefinitionDao.findByQueueId(username, id);
     }
 
-    public List<QueueDefinition> findByUser(String username) throws DataAccessException {
+    public final List<QueueDefinition> findByUser(String username) throws DataAccessException {
         List<QueueDefinition> list = queueDefinitionDao.findByUser(username);
         if (list != null) {
             return list;
@@ -39,28 +48,31 @@ public class QueueDefinitionService {
         return emptyList();
     }
 
-    public Long createQueue(String username, QueueConfigRequest queueConfigRequest) throws DataAccessException, DataUpdateException, DataConflictException {
+    @SuppressWarnings("NestedMethodCall")
+    public final Long createQueue(String username, QueueConfigRequest queueConfigRequest) throws DataAccessException, DataUpdateException, DataConflictException {
+        Serializable newTransportIdent = getNewTransportIdent();
         QueueDefinition newQueueDefinition = QueueDefinition.from(
                 queueConfigRequest.getIdent(),
                 queueConfigRequest.getTitle(),
                 queueConfigRequest.getDescription(),
                 queueConfigRequest.getGenerator(),
-                getNewTransportIdent().toString(),
+                newTransportIdent.toString(),
                 username,
                 serializeExportConfig(queueConfigRequest),
                 queueConfigRequest.getCopyright(),
                 getLanguage(queueConfigRequest.getLanguage()),
                 queueConfigRequest.getImgSrc(),
                 false
-            );
+        );
         return queueDefinitionDao.add(newQueueDefinition);
     }
 
-    private Serializable getNewTransportIdent() {
+    private static Serializable getNewTransportIdent() {
         return UUID.randomUUID().toString();
     }
 
-    public QueueDefinition updateQueue(String username, Long id, QueueConfigRequest queueConfigRequest, boolean mergeUpdate) throws DataAccessException, DataUpdateException, DataConflictException {
+    @SuppressWarnings("NestedMethodCall")
+    public final QueueDefinition updateQueue(String username, Long id, QueueConfigRequest queueConfigRequest, Boolean mergeUpdate) throws DataAccessException, DataUpdateException, DataConflictException {
         queueDefinitionDao.updateQueue(username, id,
                 queueConfigRequest.getIdent(),
                 queueConfigRequest.getDescription(),
@@ -71,134 +83,133 @@ public class QueueDefinitionService {
                 getLanguage(queueConfigRequest.getLanguage()),
                 queueConfigRequest.getImgSrc(),
                 false
-            );
+        );
         return queueDefinitionDao.findByQueueId(username, id);
     }
 
-    public String updateQueueIdent(String username, Long id, String ident) throws DataAccessException, DataUpdateException, DataConflictException {
+    public final QueueDefinition updateQueueIdent(String username, Long id, String ident) throws DataAccessException, DataUpdateException, DataConflictException {
         queueDefinitionDao.updateQueueIdent(username, id, ident);
-        return queueDefinitionDao.findByQueueId(username, id).getIdent();
+        return queueDefinitionDao.findByQueueId(username, id);
     }
 
-    public String updateQueueTitle(String username, Long id, String title) throws DataAccessException, DataUpdateException {
+    public final QueueDefinition updateQueueTitle(String username, Long id, String title) throws DataAccessException, DataUpdateException {
         queueDefinitionDao.updateQueueTitle(username, id, title);
-        return queueDefinitionDao.findByQueueId(username, id).getTitle();
+        return queueDefinitionDao.findByQueueId(username, id);
     }
 
-    public String updateQueueDescription(String username, Long id, String description) throws DataAccessException, DataUpdateException {
+    public final QueueDefinition updateQueueDescription(String username, Long id, String description) throws DataAccessException, DataUpdateException {
         queueDefinitionDao.updateQueueDescription(username, id, description);
-        return queueDefinitionDao.findByQueueId(username, id).getDescription();
+        return queueDefinitionDao.findByQueueId(username, id);
     }
 
-    public String updateQueueGenerator(String username, Long id, String generator) throws DataAccessException, DataUpdateException {
+    public final QueueDefinition updateQueueGenerator(String username, Long id, String generator) throws DataAccessException, DataUpdateException {
         queueDefinitionDao.updateQueueGenerator(username, id, generator);
-        return queueDefinitionDao.findByQueueId(username, id).getGenerator();
+        return queueDefinitionDao.findByQueueId(username, id);
     }
 
-    public String updateQueueCopyright(String username, Long id, String copyright) throws DataAccessException, DataUpdateException {
+    public final QueueDefinition updateQueueCopyright(String username, Long id, String copyright) throws DataAccessException, DataUpdateException {
         queueDefinitionDao.updateCopyright(username, id, copyright);
-        return queueDefinitionDao.findByQueueId(username, id).getCopyright();
+        return queueDefinitionDao.findByQueueId(username, id);
     }
 
-    public String updateQueueLanguage(String username, Long id, String language) throws DataAccessException, DataUpdateException {
+    public final QueueDefinition updateQueueLanguage(String username, Long id, String language) throws DataAccessException, DataUpdateException {
         queueDefinitionDao.updateLanguage(username, id, language);
-        return queueDefinitionDao.findByQueueId(username, id).getLanguage();
+        return queueDefinitionDao.findByQueueId(username, id);
     }
 
-    public Boolean updateQueueAuthenticationRequirement(String username, Long id, Boolean isRequired) throws DataAccessException, DataUpdateException {
+    public final QueueDefinition updateQueueAuthenticationRequirement(String username, Long id, Boolean isRequired) throws DataAccessException, DataUpdateException {
         queueDefinitionDao.updateQueueAuthenticationRequirement(username, id, isRequired);
-        return queueDefinitionDao.findByQueueId(username, id).getIsAuthenticated();
+        return queueDefinitionDao.findByQueueId(username, id);
     }
 
-    public String updateQueueImageSource(String username, Long id, String queueImgSource) throws DataAccessException, DataUpdateException {
+    public final QueueDefinition updateQueueImageSource(String username, Long id, String queueImgSource) throws DataAccessException, DataUpdateException {
         queueDefinitionDao.updateQueueImageSource(username, id, queueImgSource);
-        return queueDefinitionDao.findByQueueId(username, id).getQueueImgSrc();
+        return queueDefinitionDao.findByQueueId(username, id);
     }
 
-    public Serializable updateExportConfig(String username, Long id, ExportConfigRequest exportConfigRequest, boolean mergeUpdate) throws DataAccessException, DataUpdateException {
-        queueDefinitionDao.updateExportConfig(username, id, GSON.toJson(exportConfigRequest));
-        return queueDefinitionDao.findByQueueId(username, id).getExportConfig();
+    public final QueueDefinition updateExportConfig(String username, Long id, ExportConfigRequest exportConfigRequest, Boolean mergeUpdate) throws DataAccessException, DataUpdateException {
+        String exportConfig = GSON.toJson(exportConfigRequest);
+        queueDefinitionDao.updateExportConfig(username, id, exportConfig);
+        return queueDefinitionDao.findByQueueId(username, id);
     }
 
-    public Atom10Config updateAtomExportConfig(String username, Long id, Atom10Config atomConfig, boolean mergeUpdate) throws DataAccessException, DataUpdateException {
+    @SuppressWarnings("NestedMethodCall")
+    public final QueueDefinition updateAtomExportConfig(String username, Long id, Atom10Config atomConfig, Boolean mergeUpdate) throws DataAccessException, DataUpdateException {
         QueueDefinition queueDefinition = queueDefinitionDao.findByQueueId(username, id);
         JsonObject exportConfig;
-        Serializable s = queueDefinition.getExportConfig();
-        if (s != null) {
-            exportConfig = GSON.fromJson(s.toString(), JsonObject.class);
+        Serializable serializable = queueDefinition.getExportConfig();
+        if (serializable != null) {
+            exportConfig = GSON.fromJson(serializable.toString(), JsonObject.class);
         } else {
             exportConfig = new JsonObject();
         }
         exportConfig.add("atomConfig", GSON.toJsonTree(atomConfig));
         queueDefinitionDao.updateExportConfig(username, id, exportConfig.toString());
-        ExportConfigDTO updatedExportConfig = GSON.fromJson(
-                queueDefinitionDao.findByQueueId(username, id).getExportConfig().toString(),
-                ExportConfigDTO.class);
-        return updatedExportConfig.getAtomConfig();
+        return queueDefinitionDao.findByQueueId(username, id);
     }
 
-    public RSS20Config updateRssExportConfig(String username, Long id, RSS20Config rssConfig, boolean mergeUpdate) throws DataAccessException, DataUpdateException {
+    @SuppressWarnings("NestedMethodCall")
+    public final QueueDefinition updateRssExportConfig(String username, Long id, RSS20Config rssConfig, Boolean mergeUpdate) throws DataAccessException, DataUpdateException {
         QueueDefinition queueDefinition = queueDefinitionDao.findByQueueId(username, id);
         JsonObject exportConfig;
-        Serializable s = queueDefinition.getExportConfig();
-        if (s != null) {
-            exportConfig = GSON.fromJson(s.toString(), JsonObject.class);
+        Serializable serializable = queueDefinition.getExportConfig();
+        if (serializable != null) {
+            exportConfig = GSON.fromJson(serializable.toString(), JsonObject.class);
         } else {
             exportConfig = new JsonObject();
         }
         exportConfig.add("rssConfig", GSON.toJsonTree(rssConfig));
         queueDefinitionDao.updateExportConfig(username, id, exportConfig.toString());
-        ExportConfigDTO updatedExportConfig = GSON.fromJson(
-                queueDefinitionDao.findByQueueId(username, id).getExportConfig().toString(),
-                ExportConfigDTO.class);
-        return updatedExportConfig.getRssConfig();
+        return queueDefinitionDao.findByQueueId(username, id);
     }
 
+    // TODO: implement this method
     private String getLanguage(String lang) {
         return "en-US";
     }
 
     private static final Gson GSON = new Gson();
 
-    private Serializable serializeExportConfig(QueueConfigRequest queueConfigRequest) {
+    private static Serializable serializeExportConfig(QueueConfigRequest queueConfigRequest) {
         ExportConfigRequest e = queueConfigRequest.getOptions();
         return e == null ? null : GSON.toJson(e);
     }
 
-    public void deleteById(String username, Long id) throws DataAccessException, DataUpdateException {
+    public final void deleteById(String username, Long id) throws DataAccessException, DataUpdateException {
         // delete this queue
         queueDefinitionDao.deleteById(username, id);
     }
 
-    public void clearQueueTitle(String username, Long id) throws DataAccessException, DataUpdateException {
+    public final void clearQueueTitle(String username, Long id) throws DataAccessException, DataUpdateException {
         queueDefinitionDao.clearQueueTitle(username, id);
     }
 
-    public void clearQueueDescription(String username, Long id) throws DataAccessException, DataUpdateException {
+    public final void clearQueueDescription(String username, Long id) throws DataAccessException, DataUpdateException {
         queueDefinitionDao.clearQueueDescription(username, id);
     }
 
-    public void clearQueueGenerator(String username, Long id) throws DataAccessException, DataUpdateException {
+    public final void clearQueueGenerator(String username, Long id) throws DataAccessException, DataUpdateException {
         queueDefinitionDao.clearQueueGenerator(username, id);
     }
 
-    public void clearQueueCopyright(String username, Long id) throws DataAccessException, DataUpdateException {
+    public final void clearQueueCopyright(String username, Long id) throws DataAccessException, DataUpdateException {
         queueDefinitionDao.clearQueueCopyright(username, id);
     }
 
-    public void clearQueueImageSource(String username, Long id) throws DataAccessException, DataUpdateException {
+    public final void clearQueueImageSource(String username, Long id) throws DataAccessException, DataUpdateException {
         queueDefinitionDao.clearQueueImageSource(username, id);
     }
 
-    public void clearExportConfig(String username, Long id) throws DataAccessException, DataUpdateException {
+    public final void clearExportConfig(String username, Long id) throws DataAccessException, DataUpdateException {
         queueDefinitionDao.clearExportConfig(username, id);
     }
 
-    public void clearAtomExportConfig(String username, Long id) throws DataAccessException, DataUpdateException {
+    @SuppressWarnings("NestedMethodCall")
+    public final void clearAtomExportConfig(String username, Long id) throws DataAccessException, DataUpdateException {
         QueueDefinition queueDefinition = queueDefinitionDao.findByQueueId(username, id);
-        Serializable s = queueDefinition.getExportConfig();
-        if (s != null) {
-            JsonObject exportConfig = GSON.fromJson(s.toString(), JsonObject.class);
+        Serializable serializable = queueDefinition.getExportConfig();
+        if (serializable != null) {
+            JsonObject exportConfig = GSON.fromJson(serializable.toString(), JsonObject.class);
             if (exportConfig.has("atomConfig")) {
                 exportConfig.remove("atomConfig");
                 queueDefinitionDao.updateExportConfig(username, id, exportConfig.toString());
@@ -206,11 +217,12 @@ public class QueueDefinitionService {
         }
     }
 
-    public void clearRssExportConfig(String username, Long id) throws DataAccessException, DataUpdateException {
+    @SuppressWarnings("NestedMethodCall")
+    public final void clearRssExportConfig(String username, Long id) throws DataAccessException, DataUpdateException {
         QueueDefinition queueDefinition = queueDefinitionDao.findByQueueId(username, id);
-        Serializable s = queueDefinition.getExportConfig();
-        if (s != null) {
-            JsonObject exportConfig = GSON.fromJson(s.toString(), JsonObject.class);
+        Serializable serializable = queueDefinition.getExportConfig();
+        if (serializable != null) {
+            JsonObject exportConfig = GSON.fromJson(serializable.toString(), JsonObject.class);
             if (exportConfig.has("rssConfig")) {
                 exportConfig.remove("rssConfig");
                 queueDefinitionDao.updateExportConfig(username, id, exportConfig.toString());
@@ -218,11 +230,41 @@ public class QueueDefinitionService {
         }
     }
 
-    public long resolveQueueId(String username, String queueIdent) throws DataAccessException {
+    public final long resolveQueueId(String username, String queueIdent) throws DataAccessException {
         return queueDefinitionDao.resolveId(username, queueIdent);
     }
 
-    public String resolveQueueIdent(String username, Long queueId) throws DataAccessException {
+    public final String resolveQueueIdent(String username, Long queueId) throws DataAccessException {
         return queueDefinitionDao.resolveIdent(username, queueId);
+    }
+
+    public final boolean isAutoDeploy(String username, long queueId) throws DataAccessException {
+        QueueDefinition queueDefinition = queueDefinitionDao.findByQueueId(username, queueId);
+        JsonObject exportConfig;
+        Serializable serializable = queueDefinition.getExportConfig();
+        if (serializable != null) {
+            exportConfig = GSON.fromJson(serializable.toString(), JsonObject.class);
+            if (exportConfig.has("autoDeploy")) {
+                return exportConfig.get("autoDeploy").getAsBoolean();
+            }
+        }
+        return false;
+    }
+
+    public final QueueStatusResponse checkStatus(String username, long queueId) throws DataAccessException {
+        //
+        int publishedCt = stagingPostDao.countPublishedByQueueId(username, queueId);
+        //
+        Map<PostPubStatus, Integer> countByStatus = stagingPostDao.countStatusByQueueId(username, queueId);
+        //
+        return QueueStatusResponse.from(publishedCt, countByStatus);
+    }
+
+    @Override
+    public final String toString() {
+        return "QueueDefinitionService{" +
+                "queueDefinitionDao=" + queueDefinitionDao +
+                ", stagingPostDao=" + stagingPostDao +
+                '}';
     }
 }

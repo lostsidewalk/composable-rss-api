@@ -8,6 +8,7 @@ import com.lostsidewalk.buffy.app.model.v1.request.PostUrlConfigRequest;
 import com.lostsidewalk.buffy.post.ContentObject;
 import com.lostsidewalk.buffy.post.PostUrl;
 import com.lostsidewalk.buffy.post.StagingPost;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,9 +28,11 @@ import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+
+@Slf4j
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(controllers = URLController.class)
-public class URLControllerTest extends BaseWebControllerTest {
+class URLControllerTest extends BaseWebControllerTest {
 
     @BeforeEach
     void test_setup() throws Exception {
@@ -49,11 +52,12 @@ public class URLControllerTest extends BaseWebControllerTest {
         TEST_POST_URL_REQUEST.setTitle("testTitle");
     }
 
-    private static final List<PostUrlConfigRequest> TEST_POST_URLS_REQUEST = List.of(TEST_POST_URL_REQUEST);
+    private static final List<PostUrlConfigRequest> TEST_POST_URL_REQUESTS = List.of(TEST_POST_URL_REQUEST);
 
     @Test
-    public void test_addPostUrl() throws Exception {
-        when(this.stagingPostService.addPostUrl("me", 1L, TEST_POST_URL_REQUEST)).thenReturn("testUrl");
+    void test_addPostUrl() throws Exception {
+        when(stagingPostService.addPostUrl("me", 1L, TEST_POST_URL_REQUEST)).thenReturn("testUrl");
+        when(stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/v1/posts/1/urls")
                         .contentType(APPLICATION_JSON_VALUE)
@@ -63,15 +67,15 @@ public class URLControllerTest extends BaseWebControllerTest {
                         .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"message\":\"Added URL 'testUrl' to post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"postDTO\":{\"postTitle\":{\"ident\":\"testTitleIdent\",\"type\":\"testTitleType\",\"value\":\"testTitleValue\"},\"postDesc\":{\"ident\":\"testDescIdent\",\"type\":\"testDescType\",\"value\":\"testDescValue\"},\"postUrl\":\"testHref\",\"postUrls\":[{\"ident\":\"2\",\"title\":\"testTitle\",\"type\":\"testURLType\",\"href\":\"testHref\",\"hreflang\":\"testHreflang\",\"rel\":\"testRel\"}],\"published\":false},\"deployed\":false}", responseContent);
                 })
                 .andExpect(status().isCreated());
-        verify(this.stagingPostService).addPostUrl("me", 1L, TEST_POST_URL_REQUEST);
+        verify(stagingPostService).addPostUrl("me", 1L, TEST_POST_URL_REQUEST);
     }
 
-    private static final ContentObject TEST_POST_TITLE = ContentObject.from("testTitleType", "testTitleValue");
+    private static final ContentObject TEST_POST_TITLE = ContentObject.from("testTitleIdent", "testTitleType", "testTitleValue");
 
-    private static final ContentObject TEST_POST_DESC = ContentObject.from("testDescType", "testDescValue");
+    private static final ContentObject TEST_POST_DESC = ContentObject.from("testDescIdent", "testDescType", "testDescValue");
 
     private static final PostUrl TEST_POST_URL = new PostUrl();
     static {
@@ -118,8 +122,8 @@ public class URLControllerTest extends BaseWebControllerTest {
     );
 
     @Test
-    public void test_getPostUrls() throws Exception {
-        when(this.stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
+    void test_getPostUrls() throws Exception {
+        when(stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/posts/1/urls")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -133,8 +137,8 @@ public class URLControllerTest extends BaseWebControllerTest {
     }
 
     @Test
-    public void test_getPostUrl() throws Exception {
-        when(this.stagingPostService.findUrlByIdent("me", 1L, "1")).thenReturn(TEST_POST_URL);
+    void test_getPostUrl() throws Exception {
+        when(stagingPostService.findUrlByIdent("me", 1L, "1")).thenReturn(TEST_POST_URL);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/posts/1/urls/1")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -148,7 +152,8 @@ public class URLControllerTest extends BaseWebControllerTest {
     }
 
     @Test
-    public void test_updatePostUrl() throws Exception {
+    void test_updatePostUrl() throws Exception {
+        when(stagingPostService.updatePostUrl("me", 1L, "2", TEST_POST_URL_REQUEST, false)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/v1/posts/1/urls/2")
                         .servletPath("/v1/posts/1/urls/2")
@@ -159,32 +164,34 @@ public class URLControllerTest extends BaseWebControllerTest {
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"message\":\"Updated URL '2' on post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"postDTO\":{\"postTitle\":{\"ident\":\"testTitleIdent\",\"type\":\"testTitleType\",\"value\":\"testTitleValue\"},\"postDesc\":{\"ident\":\"testDescIdent\",\"type\":\"testDescType\",\"value\":\"testDescValue\"},\"postUrl\":\"testHref\",\"postUrls\":[{\"ident\":\"2\",\"title\":\"testTitle\",\"type\":\"testURLType\",\"href\":\"testHref\",\"hreflang\":\"testHreflang\",\"rel\":\"testRel\"}],\"published\":false},\"deployed\":false}", responseContent);
                 })
                 .andExpect(status().isOk());
-        verify(this.stagingPostService).updatePostUrl("me", 1L, "2", TEST_POST_URL_REQUEST, false);
+        verify(stagingPostService).updatePostUrl("me", 1L, "2", TEST_POST_URL_REQUEST, false);
     }
 
     @Test
-    public void test_updatePostUrls() throws Exception {
+    void test_updatePostUrls() throws Exception {
+        when(stagingPostService.updatePostUrls("me", 1L, TEST_POST_URL_REQUESTS, false)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/v1/posts/1/urls")
                         .servletPath("/v1/posts/1/urls")
                         .contentType(APPLICATION_JSON_VALUE)
-                        .content(GSON.toJson(TEST_POST_URLS_REQUEST))
+                        .content(GSON.toJson(TEST_POST_URL_REQUESTS))
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"message\":\"Updated URLs on post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"postDTO\":{\"postTitle\":{\"ident\":\"testTitleIdent\",\"type\":\"testTitleType\",\"value\":\"testTitleValue\"},\"postDesc\":{\"ident\":\"testDescIdent\",\"type\":\"testDescType\",\"value\":\"testDescValue\"},\"postUrl\":\"testHref\",\"postUrls\":[{\"ident\":\"2\",\"title\":\"testTitle\",\"type\":\"testURLType\",\"href\":\"testHref\",\"hreflang\":\"testHreflang\",\"rel\":\"testRel\"}],\"published\":false},\"deployed\":false}", responseContent);
                 })
                 .andExpect(status().isOk());
-        verify(this.stagingPostService).updatePostUrls("me", 1L, TEST_POST_URLS_REQUEST, false);
+        verify(stagingPostService).updatePostUrls("me", 1L, TEST_POST_URL_REQUESTS, false);
     }
 
     @Test
-    public void test_patchPostUrl() throws Exception {
+    void test_patchPostUrl() throws Exception {
+        when(stagingPostService.updatePostUrl("me", 1L, "2", TEST_POST_URL_REQUEST, true)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .patch("/v1/posts/1/urls/2")
                         .servletPath("/v1/posts/1/urls/2")
@@ -195,32 +202,36 @@ public class URLControllerTest extends BaseWebControllerTest {
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"message\":\"Updated URL '2' on post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"postDTO\":{\"postTitle\":{\"ident\":\"testTitleIdent\",\"type\":\"testTitleType\",\"value\":\"testTitleValue\"},\"postDesc\":{\"ident\":\"testDescIdent\",\"type\":\"testDescType\",\"value\":\"testDescValue\"},\"postUrl\":\"testHref\",\"postUrls\":[{\"ident\":\"2\",\"title\":\"testTitle\",\"type\":\"testURLType\",\"href\":\"testHref\",\"hreflang\":\"testHreflang\",\"rel\":\"testRel\"}],\"published\":false},\"deployed\":false}", responseContent);
                 })
                 .andExpect(status().isOk());
-        verify(this.stagingPostService).updatePostUrl("me", 1L, "2", TEST_POST_URL_REQUEST, true);
+        verify(stagingPostService).updatePostUrl("me", 1L, "2", TEST_POST_URL_REQUEST, true);
     }
 
     @Test
-    public void test_patchPostUrls() throws Exception {
+    void test_patchPostUrls() throws Exception {
+        when(stagingPostService.updatePostUrls("me", 1L, TEST_POST_URL_REQUESTS, true)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .patch("/v1/posts/1/urls")
                         .servletPath("/v1/posts/1/urls")
                         .contentType(APPLICATION_JSON_VALUE)
-                        .content(GSON.toJson(TEST_POST_URLS_REQUEST))
+                        .content(GSON.toJson(TEST_POST_URL_REQUESTS))
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"message\":\"Updated URLs on post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"postDTO\":{\"postTitle\":{\"ident\":\"testTitleIdent\",\"type\":\"testTitleType\",\"value\":\"testTitleValue\"},\"postDesc\":{\"ident\":\"testDescIdent\",\"type\":\"testDescType\",\"value\":\"testDescValue\"},\"postUrl\":\"testHref\",\"postUrls\":[{\"ident\":\"2\",\"title\":\"testTitle\",\"type\":\"testURLType\",\"href\":\"testHref\",\"hreflang\":\"testHreflang\",\"rel\":\"testRel\"}],\"published\":false},\"deployed\":false}", responseContent);
                 })
                 .andExpect(status().isOk());
-        verify(this.stagingPostService).updatePostUrls("me", 1L, TEST_POST_URLS_REQUEST, true);
+        verify(stagingPostService).updatePostUrls("me", 1L, TEST_POST_URL_REQUESTS, true);
     }
 
     @Test
-    public void test_deletePostUrls() throws Exception {
+    void test_deletePostUrls() throws Exception {
+        StagingPost updatedPost = copyTestStagingPost();
+        updatedPost.setPostUrls(null);
+        when(stagingPostService.deletePostUrls("me", 1L)).thenReturn(updatedPost);
         mockMvc.perform(MockMvcRequestBuilders
                         .delete("/v1/posts/1/urls")
                         .servletPath("/v1/posts/1/urls")
@@ -229,14 +240,17 @@ public class URLControllerTest extends BaseWebControllerTest {
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"message\":\"Deleted URLs from post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"postDTO\":{\"postTitle\":{\"ident\":\"testTitleIdent\",\"type\":\"testTitleType\",\"value\":\"testTitleValue\"},\"postDesc\":{\"ident\":\"testDescIdent\",\"type\":\"testDescType\",\"value\":\"testDescValue\"},\"postUrl\":\"testHref\",\"published\":false},\"deployed\":false}", responseContent);
                 })
                 .andExpect(status().isOk());
-        verify(this.stagingPostService).deletePostUrls("me", 1L);
+        verify(stagingPostService).deletePostUrls("me", 1L);
     }
 
     @Test
-    public void test_deletePostUrl() throws Exception {
+    void test_deletePostUrl() throws Exception {
+        StagingPost updatedPost = copyTestStagingPost();
+        updatedPost.setPostUrls(null);
+        when(stagingPostService.deletePostUrl("me", 1L, "2")).thenReturn(updatedPost);
         mockMvc.perform(MockMvcRequestBuilders
                         .delete("/v1/posts/1/urls/2")
                         .servletPath("/v1/posts/1/urls/2")
@@ -245,9 +259,48 @@ public class URLControllerTest extends BaseWebControllerTest {
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"message\":\"Deleted URL '2' from post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"postDTO\":{\"postTitle\":{\"ident\":\"testTitleIdent\",\"type\":\"testTitleType\",\"value\":\"testTitleValue\"},\"postDesc\":{\"ident\":\"testDescIdent\",\"type\":\"testDescType\",\"value\":\"testDescValue\"},\"postUrl\":\"testHref\",\"published\":false},\"deployed\":false}", responseContent);
                 })
                 .andExpect(status().isOk());
-        verify(this.stagingPostService).deletePostUrl("me", 1L, "2");
+        verify(stagingPostService).deletePostUrl("me", 1L, "2");
+    }
+
+    //
+    //
+    //
+
+    private static StagingPost copyTestStagingPost() {
+        StagingPost stagingPost = StagingPost.from(
+                TEST_STAGING_POST.getImporterId(),
+                TEST_STAGING_POST.getQueueId(),
+                TEST_STAGING_POST.getImporterDesc(),
+                TEST_STAGING_POST.getSubscriptionId(),
+                TEST_STAGING_POST.getPostTitle(),
+                TEST_STAGING_POST.getPostDesc(),
+                TEST_STAGING_POST.getPostContents(),
+                TEST_STAGING_POST.getPostMedia(),
+                TEST_STAGING_POST.getPostITunes(),
+                TEST_STAGING_POST.getPostUrl(),
+                TEST_STAGING_POST.getPostUrls(),
+                TEST_STAGING_POST.getPostImgUrl(),
+                TEST_STAGING_POST.getPostImgTransportIdent(),
+                TEST_STAGING_POST.getImportTimestamp(),
+                TEST_STAGING_POST.getPostHash(),
+                TEST_STAGING_POST.getUsername(),
+                TEST_STAGING_POST.getPostComment(),
+                TEST_STAGING_POST.getPostRights(),
+                TEST_STAGING_POST.getContributors(),
+                TEST_STAGING_POST.getAuthors(),
+                TEST_STAGING_POST.getPostCategories(),
+                TEST_STAGING_POST.getPublishTimestamp(),
+                TEST_STAGING_POST.getExpirationTimestamp(),
+                TEST_STAGING_POST.getEnclosures(),
+                TEST_STAGING_POST.getLastUpdatedTimestamp(),
+                TEST_STAGING_POST.getCreated(),
+                TEST_STAGING_POST.getLastModified()
+        );
+        stagingPost.setId(TEST_STAGING_POST.getId());
+
+        return stagingPost;
     }
 }

@@ -3,11 +3,15 @@ package com.lostsidewalk.buffy.app.model.v1.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.lostsidewalk.buffy.queue.QueueDefinition;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.Serializable;
 import java.util.Date;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT;
@@ -172,11 +176,41 @@ public class QueueDTO {
     /**
      * Static factory method to create a Queue data transfer object from the supplied parameters.
      */
+    @SuppressWarnings("WeakerAccess")
     public static QueueDTO from(Long id, String ident, String title, String description, String generator,
                                 String transportIdent, boolean isEnabled, ExportConfigDTO options, String copyright,
                                 String language, String queueImgSrc, Date lastDeployed, Boolean isAuthenticated) {
         return new QueueDTO(id, ident, title, description, generator,
                 transportIdent, isEnabled, options, copyright,
                 language, queueImgSrc, lastDeployed, isAuthenticated);
+    }
+
+    protected static final Gson GSON = new GsonBuilder()
+            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX")
+            .create();
+
+    public static QueueDTO from(QueueDefinition q) {
+        ExportConfigDTO exportConfigDTO;
+        Serializable exportConfig = q.getExportConfig();
+        if (exportConfig instanceof String) {
+            exportConfigDTO = GSON.fromJson(exportConfig.toString(), ExportConfigDTO.class);
+        } else { // TODO: remove this path
+            exportConfigDTO = GSON.fromJson(GSON.toJson(exportConfig), ExportConfigDTO.class);
+        }
+
+        return from(q.getId(),
+                q.getIdent(),
+                q.getTitle(),
+                q.getDescription(),
+                q.getGenerator(),
+                q.getTransportIdent(),
+                q.getIsAuthenticated(),
+                exportConfigDTO,
+                q.getCopyright(),
+                q.getLanguage(),
+                q.getQueueImgSrc(),
+                q.getLastDeployed(),
+                q.getIsAuthenticated()
+        );
     }
 }

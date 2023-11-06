@@ -5,6 +5,7 @@ import com.lostsidewalk.buffy.app.audit.AuthClaimException;
 import com.lostsidewalk.buffy.app.audit.TokenValidationException;
 import com.lostsidewalk.buffy.app.token.TokenService;
 import com.lostsidewalk.buffy.app.token.TokenService.JwtUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +15,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import static com.lostsidewalk.buffy.app.model.TokenType.APP_AUTH_REFRESH;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+@Slf4j
 @Component
 class CurrentUserAuthHandler {
 
@@ -26,7 +28,7 @@ class CurrentUserAuthHandler {
     @Autowired
     JwtProcessor jwtProcessor;
 
-    void processCurrentUser(HttpServletRequest request, HttpServletResponse response) throws AuthClaimException, TokenValidationException, DataAccessException {
+    final void processCurrentUser(HttpServletRequest request, HttpServletResponse response) throws AuthClaimException, TokenValidationException, DataAccessException {
         String cValue = authService.getTokenCookieFromRequest(APP_AUTH_REFRESH, request);
         if (isNotBlank(cValue)) {
             JwtUtil jwtUtil = tokenService.instanceFor(APP_AUTH_REFRESH, cValue);
@@ -42,5 +44,14 @@ class CurrentUserAuthHandler {
         } else {
             throw new TokenValidationException("Unable to validate authentication token");
         }
+    }
+
+    @Override
+    public final String toString() {
+        return "CurrentUserAuthHandler{" +
+                "authService=" + authService +
+                ", tokenService=" + tokenService +
+                ", jwtProcessor=" + jwtProcessor +
+                '}';
     }
 }

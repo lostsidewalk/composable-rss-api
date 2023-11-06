@@ -8,6 +8,7 @@ import com.lostsidewalk.buffy.app.model.v1.request.PostEnclosureConfigRequest;
 import com.lostsidewalk.buffy.post.ContentObject;
 import com.lostsidewalk.buffy.post.PostEnclosure;
 import com.lostsidewalk.buffy.post.StagingPost;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,9 +28,11 @@ import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+
+@Slf4j
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(controllers = EnclosureController.class)
-public class EnclosureControllerTest extends BaseWebControllerTest {
+class EnclosureControllerTest extends BaseWebControllerTest {
 
     @BeforeEach
     void test_setup() throws Exception {
@@ -47,11 +50,12 @@ public class EnclosureControllerTest extends BaseWebControllerTest {
         TEST_POST_ENCLOSURE_REQUEST.setType("testEnclosureType");
     }
 
-    private static final List<PostEnclosureConfigRequest> TEST_POST_ENCLOSURES_REQUEST = List.of(TEST_POST_ENCLOSURE_REQUEST);
+    private static final List<PostEnclosureConfigRequest> TEST_POST_ENCLOSURE_REQUESTS = List.of(TEST_POST_ENCLOSURE_REQUEST);
 
     @Test
-    public void test_addPostEnclosure() throws Exception {
-        when(this.stagingPostService.addEnclosure("me", 1L, TEST_POST_ENCLOSURE_REQUEST)).thenReturn("testEnclosure");
+    void test_addPostEnclosure() throws Exception {
+        when(stagingPostService.addEnclosure("me", 1L, TEST_POST_ENCLOSURE_REQUEST)).thenReturn("testEnclosure");
+        when(stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/v1/posts/1/enclosures")
                         .contentType(APPLICATION_JSON_VALUE)
@@ -61,15 +65,15 @@ public class EnclosureControllerTest extends BaseWebControllerTest {
                         .accept(APPLICATION_JSON_VALUE))
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"message\":\"Added enclosure 'testEnclosure' to post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"postDTO\":{\"postTitle\":{\"ident\":\"testTitleIdent\",\"type\":\"testTitleType\",\"value\":\"testTitleValue\"},\"postDesc\":{\"ident\":\"testDescIdent\",\"type\":\"testDescType\",\"value\":\"testDescValue\"},\"postUrl\":\"testPostUrl\",\"enclosures\":[{\"ident\":\"2\",\"url\":\"https://localhost\",\"type\":\"testEnclosureType\",\"length\":64}],\"published\":false},\"deployed\":false}", responseContent);
                 })
                 .andExpect(status().isCreated());
-        verify(this.stagingPostService).addEnclosure("me", 1L, TEST_POST_ENCLOSURE_REQUEST);
+        verify(stagingPostService).addEnclosure("me", 1L, TEST_POST_ENCLOSURE_REQUEST);
     }
 
-    private static final ContentObject TEST_POST_TITLE = ContentObject.from("testTitleType", "testTitleValue");
+    private static final ContentObject TEST_POST_TITLE = ContentObject.from("testTitleIdent", "testTitleType", "testTitleValue");
 
-    private static final ContentObject TEST_POST_DESC = ContentObject.from("testDescType", "testDescValue");
+    private static final ContentObject TEST_POST_DESC = ContentObject.from("testDescIdent", "testDescType", "testDescValue");
 
     private static final PostEnclosure TEST_POST_ENCLOSURE = new PostEnclosure();
     static {
@@ -114,8 +118,8 @@ public class EnclosureControllerTest extends BaseWebControllerTest {
     );
 
     @Test
-    public void test_getPostEnclosures() throws Exception {
-        when(this.stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
+    void test_getPostEnclosures() throws Exception {
+        when(stagingPostService.findById("me", 1L)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/posts/1/enclosures")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -129,8 +133,8 @@ public class EnclosureControllerTest extends BaseWebControllerTest {
     }
 
     @Test
-    public void test_getPostEnclosure() throws Exception {
-        when(this.stagingPostService.findEnclosureByIdent("me", 1L, "1")).thenReturn(TEST_POST_ENCLOSURE);
+    void test_getPostEnclosure() throws Exception {
+        when(stagingPostService.findEnclosureByIdent("me", 1L, "1")).thenReturn(TEST_POST_ENCLOSURE);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/v1/posts/1/enclosures/1")
                         .header(API_KEY_HEADER_NAME, "testApiKey")
@@ -144,25 +148,27 @@ public class EnclosureControllerTest extends BaseWebControllerTest {
     }
 
     @Test
-    public void test_updatePostEnclosures() throws Exception {
+    void test_updatePostEnclosures() throws Exception {
+        when(stagingPostService.updateEnclosures("me", 1L, TEST_POST_ENCLOSURE_REQUESTS, false)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/v1/posts/1/enclosures")
                         .servletPath("/v1/posts/1/enclosures")
                         .contentType(APPLICATION_JSON_VALUE)
-                        .content(GSON.toJson(TEST_POST_ENCLOSURES_REQUEST))
+                        .content(GSON.toJson(TEST_POST_ENCLOSURE_REQUESTS))
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"message\":\"Updated enclosures on post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"postDTO\":{\"postTitle\":{\"ident\":\"testTitleIdent\",\"type\":\"testTitleType\",\"value\":\"testTitleValue\"},\"postDesc\":{\"ident\":\"testDescIdent\",\"type\":\"testDescType\",\"value\":\"testDescValue\"},\"postUrl\":\"testPostUrl\",\"enclosures\":[{\"ident\":\"2\",\"url\":\"https://localhost\",\"type\":\"testEnclosureType\",\"length\":64}],\"published\":false},\"deployed\":false}", responseContent);
                 })
                 .andExpect(status().isOk());
-        verify(this.stagingPostService).updateEnclosures("me", 1L, TEST_POST_ENCLOSURES_REQUEST, false);
+        verify(stagingPostService).updateEnclosures("me", 1L, TEST_POST_ENCLOSURE_REQUESTS, false);
     }
 
     @Test
-    public void test_updatePostEnclosure() throws Exception {
+    void test_updatePostEnclosure() throws Exception {
+        when(stagingPostService.updateEnclosure("me", 1L, "2", TEST_POST_ENCLOSURE_REQUEST, false)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .put("/v1/posts/1/enclosures/2")
                         .servletPath("/v1/posts/1/enclosures/2")
@@ -173,32 +179,34 @@ public class EnclosureControllerTest extends BaseWebControllerTest {
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"message\":\"Updated enclosure '2' on post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"postDTO\":{\"postTitle\":{\"ident\":\"testTitleIdent\",\"type\":\"testTitleType\",\"value\":\"testTitleValue\"},\"postDesc\":{\"ident\":\"testDescIdent\",\"type\":\"testDescType\",\"value\":\"testDescValue\"},\"postUrl\":\"testPostUrl\",\"enclosures\":[{\"ident\":\"2\",\"url\":\"https://localhost\",\"type\":\"testEnclosureType\",\"length\":64}],\"published\":false},\"deployed\":false}", responseContent);
                 })
                 .andExpect(status().isOk());
-        verify(this.stagingPostService).updateEnclosure("me", 1L, "2", TEST_POST_ENCLOSURE_REQUEST, false);
+        verify(stagingPostService).updateEnclosure("me", 1L, "2", TEST_POST_ENCLOSURE_REQUEST, false);
     }
 
     @Test
-    public void test_patchPostEnclosures() throws Exception {
+    void test_patchPostEnclosures() throws Exception {
+        when(stagingPostService.updateEnclosures("me", 1L, TEST_POST_ENCLOSURE_REQUESTS, true)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .patch("/v1/posts/1/enclosures")
                         .servletPath("/v1/posts/1/enclosures")
                         .contentType(APPLICATION_JSON_VALUE)
-                        .content(GSON.toJson(TEST_POST_ENCLOSURES_REQUEST))
+                        .content(GSON.toJson(TEST_POST_ENCLOSURE_REQUESTS))
                         .header(API_KEY_HEADER_NAME, "testApiKey")
                         .header(API_SECRET_HEADER_NAME, "testApiSecret")
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"message\":\"Updated enclosures on post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"postDTO\":{\"postTitle\":{\"ident\":\"testTitleIdent\",\"type\":\"testTitleType\",\"value\":\"testTitleValue\"},\"postDesc\":{\"ident\":\"testDescIdent\",\"type\":\"testDescType\",\"value\":\"testDescValue\"},\"postUrl\":\"testPostUrl\",\"enclosures\":[{\"ident\":\"2\",\"url\":\"https://localhost\",\"type\":\"testEnclosureType\",\"length\":64}],\"published\":false},\"deployed\":false}", responseContent);
                 })
                 .andExpect(status().isOk());
-        verify(this.stagingPostService).updateEnclosures("me", 1L, TEST_POST_ENCLOSURES_REQUEST, true);
+        verify(stagingPostService).updateEnclosures("me", 1L, TEST_POST_ENCLOSURE_REQUESTS, true);
     }
 
     @Test
-    public void test_patchPostEnclosure() throws Exception {
+    void test_patchPostEnclosure() throws Exception {
+        when(stagingPostService.updateEnclosure("me", 1L, "2", TEST_POST_ENCLOSURE_REQUEST, true)).thenReturn(TEST_STAGING_POST);
         mockMvc.perform(MockMvcRequestBuilders
                         .patch("/v1/posts/1/enclosures/2")
                         .servletPath("/v1/posts/1/enclosures/2")
@@ -209,14 +217,17 @@ public class EnclosureControllerTest extends BaseWebControllerTest {
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"message\":\"Updated enclosure '2' on post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"postDTO\":{\"postTitle\":{\"ident\":\"testTitleIdent\",\"type\":\"testTitleType\",\"value\":\"testTitleValue\"},\"postDesc\":{\"ident\":\"testDescIdent\",\"type\":\"testDescType\",\"value\":\"testDescValue\"},\"postUrl\":\"testPostUrl\",\"enclosures\":[{\"ident\":\"2\",\"url\":\"https://localhost\",\"type\":\"testEnclosureType\",\"length\":64}],\"published\":false},\"deployed\":false}", responseContent);
                 })
                 .andExpect(status().isOk());
-        verify(this.stagingPostService).updateEnclosure("me", 1L, "2", TEST_POST_ENCLOSURE_REQUEST, true);
+        verify(stagingPostService).updateEnclosure("me", 1L, "2", TEST_POST_ENCLOSURE_REQUEST, true);
     }
 
     @Test
-    public void test_deletePostEnclosures() throws Exception {
+    void test_deletePostEnclosures() throws Exception {
+        StagingPost updatedPost = copyTestStagingPost();
+        updatedPost.setEnclosures(null);
+        when(stagingPostService.deleteEnclosures("me", 1L)).thenReturn(updatedPost);
         mockMvc.perform(MockMvcRequestBuilders
                         .delete("/v1/posts/1/enclosures")
                         .servletPath("/v1/posts/1/enclosures")
@@ -225,14 +236,17 @@ public class EnclosureControllerTest extends BaseWebControllerTest {
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"message\":\"Deleted all enclosures from post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"postDTO\":{\"postTitle\":{\"ident\":\"testTitleIdent\",\"type\":\"testTitleType\",\"value\":\"testTitleValue\"},\"postDesc\":{\"ident\":\"testDescIdent\",\"type\":\"testDescType\",\"value\":\"testDescValue\"},\"postUrl\":\"testPostUrl\",\"published\":false},\"deployed\":false}", responseContent);
                 })
                 .andExpect(status().isOk());
-        verify(this.stagingPostService).deleteEnclosures("me", 1L);
+        verify(stagingPostService).deleteEnclosures("me", 1L);
     }
 
     @Test
-    public void test_deletePostEnclosure() throws Exception {
+    void test_deletePostEnclosure() throws Exception {
+        StagingPost updatedPost = copyTestStagingPost();
+        updatedPost.setEnclosures(null);
+        when(stagingPostService.deleteEnclosure("me", 1L, "2")).thenReturn(updatedPost);
         mockMvc.perform(MockMvcRequestBuilders
                         .delete("/v1/posts/1/enclosures/2")
                         .servletPath("/v1/posts/1/enclosures/2")
@@ -241,9 +255,48 @@ public class EnclosureControllerTest extends BaseWebControllerTest {
                 )
                 .andExpect(result -> {
                     String responseContent = result.getResponse().getContentAsString();
-                    assertEquals(GSON.fromJson("{\"message\":\"Deleted enclosure '2' from post Id 1\"}", JsonObject.class), GSON.fromJson(responseContent, JsonObject.class));
+                    assertEquals("{\"postDTO\":{\"postTitle\":{\"ident\":\"testTitleIdent\",\"type\":\"testTitleType\",\"value\":\"testTitleValue\"},\"postDesc\":{\"ident\":\"testDescIdent\",\"type\":\"testDescType\",\"value\":\"testDescValue\"},\"postUrl\":\"testPostUrl\",\"published\":false},\"deployed\":false}", responseContent);
                 })
                 .andExpect(status().isOk());
-        verify(this.stagingPostService).deleteEnclosure("me", 1L, "2");
+        verify(stagingPostService).deleteEnclosure("me", 1L, "2");
+    }
+
+    //
+    //
+    //
+
+    private static StagingPost copyTestStagingPost() {
+        StagingPost stagingPost = StagingPost.from(
+                TEST_STAGING_POST.getImporterId(),
+                TEST_STAGING_POST.getQueueId(),
+                TEST_STAGING_POST.getImporterDesc(),
+                TEST_STAGING_POST.getSubscriptionId(),
+                TEST_STAGING_POST.getPostTitle(),
+                TEST_STAGING_POST.getPostDesc(),
+                TEST_STAGING_POST.getPostContents(),
+                TEST_STAGING_POST.getPostMedia(),
+                TEST_STAGING_POST.getPostITunes(),
+                TEST_STAGING_POST.getPostUrl(),
+                TEST_STAGING_POST.getPostUrls(),
+                TEST_STAGING_POST.getPostImgUrl(),
+                TEST_STAGING_POST.getPostImgTransportIdent(),
+                TEST_STAGING_POST.getImportTimestamp(),
+                TEST_STAGING_POST.getPostHash(),
+                TEST_STAGING_POST.getUsername(),
+                TEST_STAGING_POST.getPostComment(),
+                TEST_STAGING_POST.getPostRights(),
+                TEST_STAGING_POST.getContributors(),
+                TEST_STAGING_POST.getAuthors(),
+                TEST_STAGING_POST.getPostCategories(),
+                TEST_STAGING_POST.getPublishTimestamp(),
+                TEST_STAGING_POST.getExpirationTimestamp(),
+                TEST_STAGING_POST.getEnclosures(),
+                TEST_STAGING_POST.getLastUpdatedTimestamp(),
+                TEST_STAGING_POST.getCreated(),
+                TEST_STAGING_POST.getLastModified()
+        );
+        stagingPost.setId(TEST_STAGING_POST.getId());
+
+        return stagingPost;
     }
 }

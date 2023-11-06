@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.lostsidewalk.buffy.app.model.request.RegistrationRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,23 +20,24 @@ import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Slf4j
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(controllers = RegistrationController.class)
-public class RegistrationControllerTest extends BaseWebControllerTest {
+class RegistrationControllerTest extends BaseWebControllerTest {
 
     private static final Gson GSON = new GsonBuilder()
             .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX")
             .create();
 
     @BeforeEach
-    void test_setup() throws Exception {
-        when(this.tokenService.instanceFor(APP_AUTH, "testToken")).thenReturn(TEST_JWT_UTIL);
-        when(this.authService.requireAuthClaim("me")).thenReturn("testAuthClaim");
-        when(this.userService.loadUserByUsername("me")).thenReturn(TEST_USER_DETAILS);
+    final void test_setup() throws Exception {
+        when(tokenService.instanceFor(APP_AUTH, "testToken")).thenReturn(TEST_JWT_UTIL);
+        when(authService.requireAuthClaim("me")).thenReturn("testAuthClaim");
+        when(userService.loadUserByUsername("me")).thenReturn(TEST_USER_DETAILS);
     }
 
     @Test
-    public void test_register() throws Exception {
+    final void test_register() throws Exception {
         RegistrationRequest testRegistrationRequest = new RegistrationRequest("testUsername", "me@localhost", "testPassword");
         mockMvc.perform(MockMvcRequestBuilders
                         .post("/register")
@@ -52,20 +54,20 @@ public class RegistrationControllerTest extends BaseWebControllerTest {
     }
 
     @Test
-    public void test_verify() throws Exception {
-        when(this.tokenService.instanceFor(VERIFICATION, "testToken")).thenReturn(TEST_JWT_UTIL);
+    final void test_verify() throws Exception {
+        when(tokenService.instanceFor(VERIFICATION, "testToken")).thenReturn(TEST_JWT_UTIL);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/verify/testToken")
                         .servletPath("/verify/testToken")
                         .header("Authorization", "Bearer testToken")
                         .accept(APPLICATION_JSON_VALUE))
                 .andExpect(status().is3xxRedirection());
-        verify(this.userService).markAsVerified("me");
-        verify(this.authService).finalizeVerificationClaim("me");
+        verify(userService).markAsVerified("me");
+        verify(authService).finalizeVerificationClaim("me");
     }
 
     @Test
-    public void test_deregister() throws Exception {
+    final void test_deregister() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders
                         .delete("/deregister")
                         .servletPath("/deregister")
