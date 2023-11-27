@@ -2,6 +2,7 @@ package com.lostsidewalk.buffy.app.security;
 
 import com.lostsidewalk.buffy.app.auth.*;
 import com.lostsidewalk.buffy.app.user.CustomOAuth2UserService;
+import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +46,11 @@ class WebSecurityConfig {
 
     @Autowired
     PasswordEncoder passwordEncoder;
+
+    @PostConstruct
+    void postConstruct() {
+        log.info("Web security configuration initializating.. compRssOriginUrl={}", compRssOriginUrl);
+    }
 
     @SuppressWarnings("DesignForExtension")
     @Bean

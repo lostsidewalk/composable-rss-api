@@ -74,11 +74,12 @@ dependencies {
     implementation 'com.rometools:rome-modules:2.1.0'
     // jsoup
     implementation 'org.jsoup:jsoup:1.15.4'
+    // flyway-core
+    implementation 'org.flywaydb:flyway-core:9.22.2'
     // bucket4j
     implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:7.6.0'
     // bucket4j-redis
     implementation 'com.github.vladimir-bukhtoyarov:bucket4j-redis:7.6.0'
-
 
     // postgresql driver
     runtimeOnly 'org.postgresql:postgresql:42.5.4'

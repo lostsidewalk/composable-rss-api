@@ -6,6 +6,7 @@ import com.lostsidewalk.buffy.app.audit.ApiKeyException;
 import com.lostsidewalk.buffy.app.audit.AuthClaimException;
 import com.lostsidewalk.buffy.app.audit.TokenValidationException;
 import com.lostsidewalk.buffy.app.auth.OptionsAuthHandler.MissingOptionsHeaderException;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,6 +15,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -23,7 +25,7 @@ import java.util.Date;
 import java.util.stream.Stream;
 
 import static com.lostsidewalk.buffy.app.audit.ErrorLogService.logDataAccessException;
-import static org.apache.commons.lang3.StringUtils.isNoneBlank;
+import static org.apache.commons.lang3.StringUtils.*;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 @Slf4j
@@ -32,6 +34,12 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
     @Autowired
     OptionsAuthHandler optionsAuthHandler;
+
+    @Autowired
+    SingleUserModeProcessor singleUserModeProcessor;
+
+    @Value("${comprss.singleUserMode:false}")
+    boolean singleUserMode;
 
     @Autowired
     CurrentUserAuthHandler currentUserAuthHandler;
@@ -44,6 +52,11 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
     @Autowired
     ApplicationAuthHandler applicationAuthHandler;
+
+    @PostConstruct
+    void postConstruct() {
+        log.info("Auth token filter initializing, singleUserMode={}", singleUserMode);
+    }
 
     @Override
     protected final void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
@@ -67,8 +80,12 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                 if (StringUtils.equals(method, "OPTIONS")) {
                     OptionsAuthHandler.processRequest(request);
                 } else if (StringUtils.equals(requestPath, "/currentuser")) {
-                    currentUserAuthHandler.processCurrentUser(request, response);
-                } else if (StringUtils.startsWith(requestPath, "/pw_update")) {
+                    if (singleUserMode) {
+                        singleUserModeProcessor.setupLocalSession();
+                    } else {
+                        currentUserAuthHandler.processCurrentUser(request, response);
+                    }
+                } else if (startsWith(requestPath, "/pw_update")) {
                     //
                     // pw_reset->POST => password reset init call (no filter)
                     // pw_reset->GET => password reset callback (continuation, no filter)
@@ -77,12 +94,16 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                     passwordUpdateAuthHandler.processPasswordUpdate(request);
                 } else {
                     String apiKey = request.getHeader(API_KEY_HEADER_NAME);
-                    String apiSecret = request.getHeader(API_SECRET_HEADER_NAME);
-                    if (isNoneBlank(apiKey, apiSecret)) {
+                    if (isNotBlank(apiKey) && !singleUserMode) {
+                        String apiSecret = request.getHeader(API_SECRET_HEADER_NAME);
                         String r = requestURL.toString();
                         apiAuthHandler.processApiRequest(apiKey, apiSecret, r, method, response);
-                    } else {
+                    } else if (isNotBlank(apiKey) && singleUserMode) {
+                        singleUserModeProcessor.setupApiSession();
+                    } else if (isBlank(apiKey) && !singleUserMode) {
                         applicationAuthHandler.processAllOthers(request, response);
+                    } else if (isBlank(apiKey) && singleUserMode) {
+                        singleUserModeProcessor.setupLocalSession();
                     }
                 }
             } catch (MissingOptionsHeaderException e) {
