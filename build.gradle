@@ -24,7 +24,7 @@ repositories {
 
 dependencies {
     // NewsGears publisher
-    implementation 'com.lostsidewalk.newsgears:newsgears-publisher:0.5.10'
+    implementation 'com.lostsidewalk.newsgears:newsgears-publisher:0.5.11'
     // adds RSS/ATOM to the publishing path
     implementation 'com.lostsidewalk.newsgears:newsgears-rss-publisher:0.5.10'
     // add JSON to the publishing path
